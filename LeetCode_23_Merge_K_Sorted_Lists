@@ -1,0 +1,272 @@
+For LeetCode 23 / Merge K Sorted Lists, you can present the solutions on GitHub in increasing order of efficiency.
+
+# 1. Brute Force Solution
+
+## Idea
+
+* Traverse all linked lists.
+* Store every node value in an array.
+* Sort the array.
+* Create a new sorted linked list from the sorted values.
+
+## Code
+
+```python
+class Solution:
+    def mergeKSortedLists(self, lists):
+
+        all_values = []
+
+        for head in lists:
+            while head:
+                all_values.append(head.val)
+                head = head.next
+
+        all_values.sort()
+
+        dummy = ListNode(0)
+        current = dummy
+
+        for val in all_values:
+            current.next = ListNode(val)
+            current = current.next
+
+        return dummy.next
+```
+
+## Time Complexity
+
+* Collect all nodes: **O(N)**
+* Sort all values: **O(N log N)**
+* Build result list: **O(N)**
+
+Total:
+
+[
+O(N \log N)
+]
+
+where `N` is the total number of nodes.
+
+## Space Complexity
+
+[
+O(N)
+]
+
+because all node values are stored in an array.
+
+## Why It Is Not Optimal
+
+* Ignores the fact that each linked list is already sorted.
+* Sorting all nodes again performs unnecessary work.
+* Requires extra memory for storing all values.
+
+---
+
+# 2. Min Heap (Priority Queue) Solution
+
+## Idea
+
+* Put the first node of every linked list into a min heap.
+* Extract the smallest node.
+* Add it to the answer.
+* Insert the next node from the same list into the heap.
+* Repeat until the heap becomes empty.
+
+## Code
+
+```python
+import heapq
+
+class Solution:
+    def mergeKLists(self, lists):
+
+        min_heap = []
+
+        for i, node in enumerate(lists):
+            if node:
+                heapq.heappush(min_heap, (node.val, i, node))
+
+        dummy = ListNode(0)
+        tail = dummy
+
+        while min_heap:
+
+            val, i, node = heapq.heappop(min_heap)
+
+            tail.next = node
+            tail = tail.next
+
+            if node.next:
+                heapq.heappush(
+                    min_heap,
+                    (node.next.val, i, node.next)
+                )
+
+        return dummy.next
+```
+
+## Time Complexity
+
+There are `N` total nodes.
+
+For every node:
+
+* One heap insertion → `O(log k)`
+* One heap removal → `O(log k)`
+
+Therefore:
+
+[
+O(N \log k)
+]
+
+where:
+
+* `N` = total nodes
+* `k` = number of linked lists
+
+## Space Complexity
+
+[
+O(k)
+]
+
+because the heap contains at most one node from each list.
+
+## Why It Is Optimal
+
+* Uses the sorted nature of each list.
+* Never stores all nodes simultaneously.
+* Heap size remains at most `k`.
+* Achieves the best possible asymptotic time complexity:
+
+[
+O(N \log k)
+]
+
+---
+
+# 3. Divide and Conquer Solution
+
+## Idea
+
+This works exactly like Merge Sort.
+
+* Divide the `k` lists into two halves.
+* Recursively merge the left half.
+* Recursively merge the right half.
+* Merge the two sorted results.
+
+## Code
+
+```python
+class Solution:
+
+    def mergeTwoLists(self, l1, l2):
+
+        dummy = ListNode(0)
+        tail = dummy
+
+        while l1 and l2:
+
+            if l1.val <= l2.val:
+                tail.next = l1
+                l1 = l1.next
+            else:
+                tail.next = l2
+                l2 = l2.next
+
+            tail = tail.next
+
+        tail.next = l1 if l1 else l2
+
+        return dummy.next
+
+    def partitionAndMerge(self, start, end, lists):
+
+        if start > end:
+            return None
+
+        if start == end:
+            return lists[start]
+
+        mid = (start + end) // 2
+
+        left = self.partitionAndMerge(start, mid, lists)
+        right = self.partitionAndMerge(mid + 1, end, lists)
+
+        return self.mergeTwoLists(left, right)
+
+    def mergeKLists(self, lists):
+
+        if not lists:
+            return None
+
+        return self.partitionAndMerge(
+            0,
+            len(lists) - 1,
+            lists
+        )
+```
+
+## Time Complexity
+
+Each level merges all `N` nodes once.
+
+Number of levels:
+
+[
+\log k
+]
+
+Therefore:
+
+[
+O(N \log k)
+]
+
+## Space Complexity
+
+Recursive calls:
+
+[
+O(\log k)
+]
+
+## Why It Is Optimal
+
+* Similar efficiency to Merge Sort.
+* Uses the already sorted property of linked lists.
+* Performs balanced merging.
+* Achieves the optimal complexity:
+
+[
+O(N \log k)
+]
+
+---
+
+# Comparison
+
+| Approach         | Time       | Space    | Optimal |
+| ---------------- | ---------- | -------- | ------- |
+| Brute Force      | O(N log N) | O(N)     | ❌ No    |
+| Min Heap         | O(N log k) | O(k)     | ✅ Yes   |
+| Divide & Conquer | O(N log k) | O(log k) | ✅ Yes   |
+
+# Which Solution Should You Mention First?
+
+For a GitHub solution write-up:
+
+1. Brute Force
+2. Min Heap (Priority Queue)
+3. Divide & Conquer
+
+This progression clearly shows how the solution improves from a naive approach to the optimal approaches.
+
+**Interview preference:**
+
+* Min Heap is the most commonly expected solution.
+* Divide & Conquer is equally optimal and often impresses interviewers because it leverages the Merge Sort pattern.
