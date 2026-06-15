@@ -1,0 +1,447 @@
+This is the kind of note worth keeping in your GitHub DSA repository for fast interview revision.
+
+# LeetCode 621 — Task Scheduler
+
+## Problem Pattern
+
+**Keywords:**
+
+* Cooling period
+* Rearrangement
+* Frequency counting
+* Greedy
+* Max Heap
+* Scheduling
+
+---
+
+# Approach 1: Greedy + Math (Optimal)
+
+## Core Observation
+
+The task with the **highest frequency** controls the schedule.
+
+Suppose:
+
+```text
+A = 5
+n = 2
+```
+
+First place all A's:
+
+```text
+A _ _ A _ _ A _ _ A _ _ A
+```
+
+Between every pair of A's we need:
+
+```text
+n = 2
+```
+
+cooling slots.
+
+---
+
+### Formula Building
+
+If maximum frequency is:
+
+```text
+max_freq
+```
+
+then
+
+```text
+chunks = max_freq - 1
+```
+
+because the last occurrence doesn't create a gap.
+
+Example:
+
+```text
+A A A A
+
+Gap  Gap  Gap
+
+3 gaps
+```
+
+```python
+chunks = max_freq - 1
+```
+
+Each chunk requires:
+
+```python
+n
+```
+
+cooling spaces.
+
+```python
+idle_spots = chunks * n
+```
+
+Now fill those idle spots using all other tasks.
+
+```python
+idle_spots -= min(chunks, freq_of_other_task)
+```
+
+Why?
+
+Because one task can contribute at most one position per chunk.
+
+Example:
+
+```text
+A _ _ A _ _ A
+```
+
+B can fill:
+
+```text
+A B _ A B _ A
+```
+
+Only 2 spots.
+
+Even if:
+
+```text
+B = 100
+```
+
+it can still fill only:
+
+```text
+chunks = 2
+```
+
+spots inside gaps.
+
+Hence:
+
+```python
+min(chunks, freq)
+```
+
+---
+
+## Template
+
+```python
+from collections import Counter
+
+class Solution:
+    def leastInterval(self, tasks, n):
+
+        if n == 0:
+            return len(tasks)
+
+        freq = sorted(Counter(tasks).values())
+
+        max_freq = freq[-1]
+
+        chunks = max_freq - 1
+        idle_spots = chunks * n
+
+        for i in range(len(freq) - 2, -1, -1):
+            idle_spots -= min(chunks, freq[i])
+
+        return len(tasks) + max(0, idle_spots)
+```
+
+---
+
+## Complexity
+
+### Time
+
+Frequency count:
+
+```text
+O(N)
+```
+
+Sort frequencies:
+
+```text
+O(26 log 26)
+```
+
+constant
+
+Overall:
+
+```text
+O(N)
+```
+
+### Space
+
+```text
+O(1)
+```
+
+(only 26 possible task types)
+
+---
+
+## Why Interviewers Love This
+
+Because you discovered:
+
+```text
+Scheduling Problem
+      ↓
+Frequency Problem
+      ↓
+Math Formula
+```
+
+No simulation needed.
+
+This is the most optimized solution.
+
+---
+
+# Approach 2: Max Heap Simulation
+
+## When to Think About Heap?
+
+Whenever interviewer says:
+
+```text
+Always pick task with highest remaining frequency
+```
+
+think:
+
+```text
+Max Heap
+```
+
+---
+
+## Logic
+
+Store frequencies in a max heap.
+
+At every cycle:
+
+```text
+n + 1
+```
+
+tasks can be executed.
+
+Why?
+
+Because after executing one task:
+
+```text
+A
+```
+
+you need:
+
+```text
+n
+```
+
+other positions before A appears again.
+
+Therefore process:
+
+```python
+n + 1
+```
+
+slots together.
+
+---
+
+## Example
+
+```python
+tasks = [A,A,A,B,B,B]
+n = 2
+```
+
+Heap:
+
+```text
+[3,3]
+```
+
+Cycle size:
+
+```text
+n+1 = 3
+```
+
+Round 1:
+
+```text
+A B idle
+```
+
+Remaining:
+
+```text
+[2,2]
+```
+
+Round 2:
+
+```text
+A B idle
+```
+
+Remaining:
+
+```text
+[1,1]
+```
+
+Round 3:
+
+```text
+A B
+```
+
+Done.
+
+Answer:
+
+```text
+8
+```
+
+---
+
+## Template
+
+```python
+import heapq
+from collections import Counter
+
+class Solution:
+    def leastInterval(self, tasks, n):
+
+        freq = Counter(tasks)
+
+        max_heap = [-f for f in freq.values()]
+        heapq.heapify(max_heap)
+
+        time = 0
+
+        while max_heap:
+
+            temp = []
+            cycle = n + 1
+
+            while cycle > 0 and max_heap:
+
+                count = 1 + heapq.heappop(max_heap)
+
+                if count != 0:
+                    temp.append(count)
+
+                time += 1
+                cycle -= 1
+
+            for count in temp:
+                heapq.heappush(max_heap, count)
+
+            if max_heap:
+                time += cycle
+
+        return time
+```
+
+---
+
+## Complexity
+
+Let:
+
+```text
+N = total tasks
+K = unique task types
+```
+
+### Time
+
+```text
+O(N log K)
+```
+
+LeetCode:
+
+```text
+K <= 26
+```
+
+so practically:
+
+```text
+O(N)
+```
+
+but heap operations still exist.
+
+### Space
+
+```text
+O(K)
+```
+
+---
+
+# Interview Decision Table
+
+| Situation                            | Use           |
+| ------------------------------------ | ------------- |
+| Need only minimum time               | Greedy + Math |
+| Need actual schedule order           | Heap          |
+| Variable cooldown rules              | Heap          |
+| Follow-up asks schedule construction | Heap          |
+| LeetCode 621 original                | Greedy + Math |
+
+---
+
+# Recognition Template
+
+When you see:
+
+```text
+Most frequent element controls answer
+```
+
+think:
+
+```text
+Frequency Greedy
+```
+
+Examples:
+
+* Task Scheduler (621)
+* Rearrange String K Distance Apart
+* Reorganize String
+* Distant Barcodes
+* CPU Scheduling variants
+
+---
+
+# One-Line Interview Answer
+
+> "I know two approaches. A Max Heap simulation that repeatedly schedules the highest-frequency task in O(N log K), and the optimal Greedy-Math solution that treats the most frequent task as the bottleneck, computes required idle slots, fills them using remaining frequencies, and achieves O(N) time with O(1) extra space."
+
+This is exactly the level of explanation expected from strong candidates in coding interviews.
