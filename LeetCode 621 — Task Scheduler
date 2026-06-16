@@ -1,447 +1,287 @@
-This is the kind of note worth keeping in your GitHub DSA repository for fast interview revision.
-
-# LeetCode 621 — Task Scheduler
-
-## Problem Pattern
-
-**Keywords:**
-
-* Cooling period
-* Rearrangement
-* Frequency counting
-* Greedy
-* Max Heap
-* Scheduling
+# 🗓️ LeetCode 621 — Task Scheduler
+**Difficulty:** Medium | **Topic:** Greedy + Math / Heap
 
 ---
 
-# Approach 1: Greedy + Math (Optimal)
+## 📌 Problem Summary
 
-## Core Observation
+> Given a list of CPU tasks and a cooldown `n`, return the **minimum number of intervals** needed to finish all tasks.
+> Same task must wait at least `n` intervals before re-executing.
 
-The task with the **highest frequency** controls the schedule.
-
-Suppose:
-
-```text
-A = 5
-n = 2
+**Example:**
 ```
-
-First place all A's:
-
-```text
-A _ _ A _ _ A _ _ A _ _ A
-```
-
-Between every pair of A's we need:
-
-```text
-n = 2
-```
-
-cooling slots.
-
----
-
-### Formula Building
-
-If maximum frequency is:
-
-```text
-max_freq
-```
-
-then
-
-```text
-chunks = max_freq - 1
-```
-
-because the last occurrence doesn't create a gap.
-
-Example:
-
-```text
-A A A A
-
-Gap  Gap  Gap
-
-3 gaps
-```
-
-```python
-chunks = max_freq - 1
-```
-
-Each chunk requires:
-
-```python
-n
-```
-
-cooling spaces.
-
-```python
-idle_spots = chunks * n
-```
-
-Now fill those idle spots using all other tasks.
-
-```python
-idle_spots -= min(chunks, freq_of_other_task)
-```
-
-Why?
-
-Because one task can contribute at most one position per chunk.
-
-Example:
-
-```text
-A _ _ A _ _ A
-```
-
-B can fill:
-
-```text
-A B _ A B _ A
-```
-
-Only 2 spots.
-
-Even if:
-
-```text
-B = 100
-```
-
-it can still fill only:
-
-```text
-chunks = 2
-```
-
-spots inside gaps.
-
-Hence:
-
-```python
-min(chunks, freq)
+tasks = ["A","A","A","B","B","B"], n = 2
+Output: 8
+Explanation: A→B→idle→A→B→idle→A→B = 8 intervals
 ```
 
 ---
 
-## Template
+## 🧠 Intuition — How to Think About It
+
+1. The **most frequent task** controls the schedule.
+2. Arrange most frequent task into **chunks** separated by cooldown slots.
+3. Fill those idle slots with other tasks.
+4. If enough tasks exist → no idle time needed.
+
+**Visual Layout:**
+```
+Max freq task = A (freq=3), n=2
+
+Chunks = freq(A) - 1 = 2
+
+[ A _ _ ] [ A _ _ ] [ A ]
+  chunk1     chunk2   last
+
+idle_spots = chunks * n = 2 * 2 = 4
+
+Fill with B (freq=3):
+[ A B _ ] [ A B _ ] [ A B ]
+
+Used from B = min(chunks, freq(B)) = min(2, 3) = 2
+Remaining idle = 4 - 2 = 2
+
+But B still has 1 left → appends at end
+Final = len(tasks) + max(0, remaining_idle) = 6 + 2 = 8  ✅
+```
+
+---
+
+## ✅ Approach 1 — Greedy + Math (OPTIMAL)
+
+### 🔑 Key Insight
+- Calculate idle slots mathematically — no simulation needed.
+- Sort task frequencies → fill idle slots from most frequent downward.
+
+### 📋 Template Code
 
 ```python
 from collections import Counter
+from typing import List
 
 class Solution:
-    def leastInterval(self, tasks, n):
+    def leastInterval(self, tasks: List[str], n: int) -> int:
 
+        # ── Edge Case ──────────────────────────────────────────
+        if n == 0:
+            return len(tasks)          # No cooldown → just run all
+
+        # ── Step 1: Count frequencies ──────────────────────────
+        freq = sorted(Counter(tasks).values())
+        #   sorted() → ascending order, freq[-1] = max frequency
+
+        # ── Step 2: Build the "frame" ──────────────────────────
+        max_freq  = freq[-1]           # most frequent task count
+        chunks    = max_freq - 1       # number of full "slots"
+        idle_spots = chunks * n        # total idle slots in frame
+
+        # ── Step 3: Fill idle slots with remaining tasks ───────
+        for i in range(len(freq) - 2, -1, -1):
+            idle_spots -= min(chunks, freq[i])
+            # min(chunks, freq[i]) → a task can fill at most
+            # one slot per chunk (not the last task position)
+
+        # ── Step 4: Result ─────────────────────────────────────
+        return len(tasks) + max(0, idle_spots)
+        # If idle_spots <= 0 → tasks fill all gaps, no idle needed
+```
+
+### 🔍 Step-by-Step Dry Run
+
+```
+tasks = ["A","A","A","B","B","B","C","D"], n = 2
+
+Counter  → {A:3, B:3, C:1, D:1}
+freq     → [1, 1, 3, 3]  (sorted)
+max_freq → 3
+chunks   → 2
+idle_spots → 2 * 2 = 4
+
+i=2 → freq[2]=3 → idle -= min(2,3) = 2  → idle=2
+i=1 → freq[1]=1 → idle -= min(2,1) = 1  → idle=1
+i=0 → freq[0]=1 → idle -= min(2,1) = 1  → idle=0
+
+Answer = 8 + max(0, 0) = 8  ✅
+```
+
+### ⏱️ Complexity
+
+| | Complexity | Why |
+|---|---|---|
+| **Time** | `O(N)` | Count N tasks + sort 26 letters (constant) |
+| **Space** | `O(1)` | Counter has at most 26 keys (constant) |
+
+### ✅ Why Use This Approach?
+- No simulation, no priority queue
+- Pure math — calculate frame size, fill, return
+- Fastest solution for this problem
+
+---
+
+## ✅ Approach 2 — Max Heap (Simulation)
+
+### 🔑 Key Insight
+- Always execute the **most frequent remaining task**.
+- Use a max-heap to pick greedily each round.
+- Simulate `n+1` sized rounds.
+
+### 📋 Template Code
+
+```python
+from collections import Counter
+import heapq
+from typing import List
+
+class Solution:
+    def leastInterval(self, tasks: List[str], n: int) -> int:
+
+        # ── Edge Case ──────────────────────────────────────────
         if n == 0:
             return len(tasks)
 
-        freq = sorted(Counter(tasks).values())
-
-        max_freq = freq[-1]
-
-        chunks = max_freq - 1
-        idle_spots = chunks * n
-
-        for i in range(len(freq) - 2, -1, -1):
-            idle_spots -= min(chunks, freq[i])
-
-        return len(tasks) + max(0, idle_spots)
-```
-
----
-
-## Complexity
-
-### Time
-
-Frequency count:
-
-```text
-O(N)
-```
-
-Sort frequencies:
-
-```text
-O(26 log 26)
-```
-
-constant
-
-Overall:
-
-```text
-O(N)
-```
-
-### Space
-
-```text
-O(1)
-```
-
-(only 26 possible task types)
-
----
-
-## Why Interviewers Love This
-
-Because you discovered:
-
-```text
-Scheduling Problem
-      ↓
-Frequency Problem
-      ↓
-Math Formula
-```
-
-No simulation needed.
-
-This is the most optimized solution.
-
----
-
-# Approach 2: Max Heap Simulation
-
-## When to Think About Heap?
-
-Whenever interviewer says:
-
-```text
-Always pick task with highest remaining frequency
-```
-
-think:
-
-```text
-Max Heap
-```
-
----
-
-## Logic
-
-Store frequencies in a max heap.
-
-At every cycle:
-
-```text
-n + 1
-```
-
-tasks can be executed.
-
-Why?
-
-Because after executing one task:
-
-```text
-A
-```
-
-you need:
-
-```text
-n
-```
-
-other positions before A appears again.
-
-Therefore process:
-
-```python
-n + 1
-```
-
-slots together.
-
----
-
-## Example
-
-```python
-tasks = [A,A,A,B,B,B]
-n = 2
-```
-
-Heap:
-
-```text
-[3,3]
-```
-
-Cycle size:
-
-```text
-n+1 = 3
-```
-
-Round 1:
-
-```text
-A B idle
-```
-
-Remaining:
-
-```text
-[2,2]
-```
-
-Round 2:
-
-```text
-A B idle
-```
-
-Remaining:
-
-```text
-[1,1]
-```
-
-Round 3:
-
-```text
-A B
-```
-
-Done.
-
-Answer:
-
-```text
-8
-```
-
----
-
-## Template
-
-```python
-import heapq
-from collections import Counter
-
-class Solution:
-    def leastInterval(self, tasks, n):
-
-        freq = Counter(tasks)
-
-        max_heap = [-f for f in freq.values()]
-        heapq.heapify(max_heap)
+        # ── Step 1: Max-Heap (negate for max behavior) ─────────
+        freq   = Counter(tasks)
+        heap   = [-cnt for cnt in freq.values()]
+        heapq.heapify(heap)            # O(k) where k ≤ 26
 
         time = 0
 
-        while max_heap:
+        # ── Step 2: Simulate rounds of size n+1 ───────────────
+        while heap:
+            temp  = []                 # tasks used this round
+            cycle = n + 1              # one full cooling cycle
 
-            temp = []
-            cycle = n + 1
+            while cycle > 0 and heap:
+                cnt = heapq.heappop(heap)   # most frequent
+                cnt += 1                    # reduce count (negated)
+                if cnt < 0:
+                    temp.append(cnt)        # still has remaining
+                cycle  -= 1
+                time   += 1
 
-            while cycle > 0 and max_heap:
+            for item in temp:
+                heapq.heappush(heap, item)  # push back remaining
 
-                count = 1 + heapq.heappop(max_heap)
-
-                if count != 0:
-                    temp.append(count)
-
-                time += 1
-                cycle -= 1
-
-            for count in temp:
-                heapq.heappush(max_heap, count)
-
-            if max_heap:
-                time += cycle
+            if heap:                        # more tasks remain
+                time += cycle              # add idle slots
 
         return time
 ```
 
----
+### 🔍 Step-by-Step Dry Run
 
-## Complexity
+```
+tasks = ["A","A","A","B","B","B"], n = 2
 
-Let:
+heap = [-3, -3]   (A=3, B=3)
 
-```text
-N = total tasks
-K = unique task types
+Round 1: cycle=3
+  pop -3 (A) → -2 → temp=[-2], time=1, cycle=2
+  pop -3 (B) → -2 → temp=[-2,-2], time=2, cycle=1
+  heap empty → time+=1 (idle), cycle=0
+  push back [-2,-2]
+  heap has items → time += cycle(=0)
+
+Round 2: same → time=5, push[-1,-1]
+Round 3: pop A(time=6), pop B(time=7), no more heap
+         heap empty → no idle added
+         time += 1 idle from cycle remaining
+
+Final time = 8  ✅
 ```
 
-### Time
+### ⏱️ Complexity
 
-```text
-O(N log K)
-```
+| | Complexity | Why |
+|---|---|---|
+| **Time** | `O(N log 26)` ≈ `O(N)` | Each task pushed/popped from heap (size ≤26) |
+| **Space** | `O(26)` = `O(1)` | Heap stores at most 26 distinct tasks |
 
-LeetCode:
-
-```text
-K <= 26
-```
-
-so practically:
-
-```text
-O(N)
-```
-
-but heap operations still exist.
-
-### Space
-
-```text
-O(K)
-```
+### ✅ Why Use This Approach?
+- More intuitive — mirrors actual CPU scheduling
+- Easier to extend (e.g., dynamic task arrivals)
+- Good for explaining in interviews
 
 ---
 
-# Interview Decision Table
+## 🆚 Approach Comparison
 
-| Situation                            | Use           |
-| ------------------------------------ | ------------- |
-| Need only minimum time               | Greedy + Math |
-| Need actual schedule order           | Heap          |
-| Variable cooldown rules              | Heap          |
-| Follow-up asks schedule construction | Heap          |
-| LeetCode 621 original                | Greedy + Math |
+| Feature | Greedy + Math | Max Heap |
+|---|---|---|
+| Time Complexity | `O(N)` | `O(N log 26)` ≈ `O(N)` |
+| Space Complexity | `O(1)` | `O(1)` |
+| Constant Factor | ✅ Lower | Slightly higher (heap ops) |
+| Intuition | Math formula | Simulation |
+| Code Length | Short | Longer |
+| Interview Clarity | Needs explanation | Easier to walk through |
+| **Best For** | Optimal submission | Interview explanation |
 
----
-
-# Recognition Template
-
-When you see:
-
-```text
-Most frequent element controls answer
-```
-
-think:
-
-```text
-Frequency Greedy
-```
-
-Examples:
-
-* Task Scheduler (621)
-* Rearrange String K Distance Apart
-* Reorganize String
-* Distant Barcodes
-* CPU Scheduling variants
+> 🏆 **Recommendation:** Know both. Start with Greedy+Math for submission, explain Heap in interviews for clarity.
 
 ---
 
-# One-Line Interview Answer
+## 🚨 Common Mistakes & Edge Cases
 
-> "I know two approaches. A Max Heap simulation that repeatedly schedules the highest-frequency task in O(N log K), and the optimal Greedy-Math solution that treats the most frequent task as the bottleneck, computes required idle slots, fills them using remaining frequencies, and achieves O(N) time with O(1) extra space."
+```python
+# ❌ Mistake 1: Forgetting n=0 edge case
+# When n=0, there's no cooldown → answer is just len(tasks)
+if n == 0: return len(tasks)
 
-This is exactly the level of explanation expected from strong candidates in coding interviews.
+# ❌ Mistake 2: Using idle_spots directly (can go negative)
+return len(tasks) + idle_spots          # WRONG if idle_spots < 0
+return len(tasks) + max(0, idle_spots)  # CORRECT
+
+# ❌ Mistake 3: Off-by-one on chunks
+chunks = max_freq      # WRONG
+chunks = max_freq - 1  # CORRECT (last slot has no trailing cooldown)
+
+# ✅ Edge Case: All tasks same type
+tasks = ["A","A","A"], n = 2
+# A _ _ A _ _ A → answer = 7
+# chunks=2, idle=4, other tasks=0 → 3 + 4 = 7 ✅
+
+# ✅ Edge Case: More task variety than cooldown
+tasks = ["A","A","B","B","C","C"], n = 1
+# A B A B C C → answer = 6 (= len(tasks), no idle)
+# chunks=1, idle=1, B fills 1 → idle=0 → 6 + 0 = 6 ✅
+```
+
+---
+
+## 💡 Pattern Recognition
+
+Use **Task Scheduler pattern** when you see:
+- "Minimum time with cooldown"
+- "CPU scheduling"
+- "At least k gap between same elements"
+- "Rearrange string with distance apart"
+
+**Related Problems:**
+| Problem | Link | Pattern |
+|---|---|---|
+| 767. Reorganize String | LC-767 | Same greedy idea, k=1 |
+| 358. Rearrange String k Distance Apart | LC-358 | Generalized version |
+| 1405. Longest Happy String | LC-1405 | Greedy max-freq |
+| 984. String Without AAA or BBB | LC-984 | Similar greedy |
+
+---
+
+## 📝 Quick Cheat Sheet
+
+```
+GREEDY + MATH (3 lines of logic):
+  chunks     = max_freq - 1
+  idle_spots = chunks * n
+  for each other task: idle_spots -= min(chunks, freq)
+  return len(tasks) + max(0, idle_spots)
+
+MAX HEAP (simulate n+1 rounds):
+  each round: pick top min(n+1, heap_size) tasks
+  add idle if heap not empty after round
+  repeat until heap empty
+```
+
+---
+
+*Template created for revision and interview prep.*
+*LeetCode 621 — Task Scheduler | Greedy + Math + Heap Approaches*
