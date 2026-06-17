@@ -1,0 +1,207 @@
+# 📅 LeetCode Daily Challenge — Day 3
+
+**Date:** 17-06-2026
+**Difficulty:** Hard 🔴
+**Topics:** `Simulation` `String` `Math` `Two Pointers`
+**Link:** [LeetCode Problem](https://leetcode.com/problems/PROBLEM-SLUG/)
+
+---
+
+## 📝 Problem Statement
+
+You are given a string `s` consisting of lowercase English letters and the special characters `'*'`, `'#'`, and `'%'`.
+You are also given an integer `k`.
+
+Build a new string `result` by processing `s` according to the following rules from left to right:
+
+- If the letter is a lowercase English letter, append it to `result`.
+- A `'*'` removes the last character from `result`, if it exists.
+- A `'#'` duplicates the current `result` and appends it to itself.
+- A `'%'` reverses the current `result`.
+
+Return the `k`th character of the final string `result`. If `k` is out of bounds of `result`, return `'.'`.
+
+---
+
+## 📌 Examples
+
+**Example 1:**
+```
+Input: s = "a#b%*", k = 1
+Output: "a"
+```
+| i | s[i] | Operation        | Current result |
+|---|------|------------------|-----------------|
+| 0 | a    | Append 'a'       | "a"             |
+| 1 | #    | Duplicate result | "aa"            |
+| 2 | b    | Append 'b'       | "aab"           |
+| 3 | %    | Reverse result   | "baa"           |
+| 4 | *    | Remove last char | "ba"            |
+
+Final result = `"ba"` → index `k=1` → `'a'`
+
+**Example 2:**
+```
+Input: s = "cd%#*#", k = 3
+Output: "d"
+```
+
+**Example 3:**
+```
+Input: s = "z*#", k = 0
+Output: "."
+```
+(`result` ends up empty, so `k=0` is out of bounds.)
+
+---
+
+## 🔒 Constraints
+
+- `1 <= s.length <= 10^5`
+- `s` consists only of lowercase English letters and `'*'`, `'#'`, `'%'`
+- `0 <= k <= 10^15`
+- The length of `result` after processing `s` will not exceed `10^15`
+
+---
+
+## ❌ Brute Force (Why It Fails)
+
+```python
+class Solution:
+    def processStr(self, s: str, k: int) -> str:
+        result = []
+        for ch in s:
+            if 'a' <= ch <= 'z':
+                result.append(ch)
+            elif ch == '*':
+                if result:
+                    result.pop()
+            elif ch == '#':
+                result.extend(result)
+            elif ch == '%':
+                result.reverse()
+
+        if k >= len(result):
+            return '.'
+        return result[k]
+```
+
+**Problems:**
+1. `'#'` doubles the actual list in memory — with length up to `10^15`, this is an instant **MemoryError / TLE**.
+2. `result.extend(result)` and `result.reverse()` are O(length) operations every time they occur, compounding the blow-up as the list keeps doubling.
+3. Even with the bounds check and correct indexing now in place, the fundamental issue remains: this code still tries to *materialize* a list whose length can reach `10^15`, which is infeasible regardless of how cleanly it's written.
+
+This approach only works for tiny inputs and breaks under the given constraints, where the constructed string can be astronomically large. **It is not a viable solution, not just a "missing edge case."**
+
+---
+
+## ✅ Optimal Approach
+
+**Key idea:** Never build the actual string. Track only its **length** at every step (forward pass). Then, starting from the final length, work **backwards** through the operations to trace which original index/character index `k` corresponds to — until it resolves to an actual letter append.
+
+This is the classic "simulate the size, then invert the operations on the index" technique used whenever a string/array can explode in size but you only need one final index.
+
+### Approach Breakdown
+1. **Forward pass:** For each operation, update `curr_len` (length only) and store it in `lengths[i]`.
+   - letter → `len += 1`
+   - `*` → `len -= 1` (floored at 0)
+   - `#` → `len *= 2`
+   - `%` → length unchanged
+2. **Bounds check:** If `k >= final_len`, return `'.'` immediately.
+3. **Backward pass:** Walk operations in reverse, transforming `k` to "undo" each operation's effect on position, until a letter-append step matches `k` exactly:
+   - letter → if `k == curr_len - 1`, this letter is the answer
+   - `*` → no change to `k` (removal only affected the tail beyond `k`)
+   - `#` → `k %= prev_len` (maps either half back to the original)
+   - `%` → `k = curr_len - 1 - k` (reverse the index)
+
+---
+
+## 💡 Optimal Solution
+
+```python
+class Solution:
+    def processStr(self, s: str, k: int) -> str:
+        n = len(s)
+        # lengths[i] = length of result right after processing s[i]
+        lengths = [0] * n
+        curr_len = 0
+
+        # Forward pass: track length only, never build the actual string
+        for i, ch in enumerate(s):
+            if 'a' <= ch <= 'z':
+                curr_len += 1
+            elif ch == '*':
+                if curr_len > 0:
+                    curr_len -= 1
+            elif ch == '#':
+                curr_len *= 2
+            elif ch == '%':
+                pass  # reversal doesn't change length
+            lengths[i] = curr_len
+
+        # k is out of bounds of the final result
+        if k >= curr_len:
+            return '.'
+
+        # Backward pass: trace index k back to its origin (a letter append)
+        for i in range(n - 1, -1, -1):
+            ch = s[i]
+            curr_len = lengths[i]
+
+            if 'a' <= ch <= 'z':
+                prev_len = curr_len - 1
+                if k == prev_len:
+                    return ch
+                # else: k refers to an earlier part of the string, unaffected
+
+            elif ch == '*':
+                # last char was removed; indices before it are unaffected
+                pass
+
+            elif ch == '#':
+                prev_len = curr_len // 2
+                k %= prev_len  # maps both halves back to original index
+
+            elif ch == '%':
+                k = curr_len - 1 - k  # reverse the index
+
+        return '.'
+```
+
+---
+
+## 🧠 Line-by-Line Explanation
+
+- `lengths = [0] * n`, `curr_len = 0` — we only ever track *length*, never the actual string content.
+- **Forward pass:** simulates how each operation changes the length, recording it at every step so we know the string's length at any point in history.
+- `if k >= curr_len: return '.'` — the bounds check your brute force was missing; done once, in O(1), right after the forward pass.
+- **Backward pass:** for each operation (in reverse), we ask "what index in the *pre-operation* string does `k` correspond to?"
+  - **Letter:** the newly appended character is always at the last index (`curr_len - 1`) of the string at that point. If `k` matches, that's the answer — otherwise `k` is untouched and refers to a part of the string built before this letter.
+  - **`*`:** removing the last character doesn't shift any earlier indices, so `k` is unaffected.
+  - **`#`:** the string was `[original][original]`. If `k` lands in the second half, it's really `k - prev_len` in the original; `k %= prev_len` handles both halves in one line.
+  - **`%`:** reversal maps index `k` to `curr_len - 1 - k` in the pre-reversal string.
+- We keep walking backward until `k` resolves to a freshly-appended letter — guaranteed to happen before `i` reaches the start, since the bounds check already confirmed `k` is valid.
+
+---
+
+## ⏱️ Complexity Analysis
+
+| Metric | Complexity | Explanation |
+|--------|-----------|--------------|
+| **Time** | `O(n)` | One forward pass + one backward pass over `s`, O(1) work per character |
+| **Space** | `O(n)` | The `lengths` array (can be reduced to O(1) by recomputing lengths during the backward walk instead of storing them) |
+
+This avoids ever constructing the actual `result` string, which is essential since its length can reach `10^15` — far beyond what can be stored or manipulated directly.
+
+---
+
+## 🔑 Key Takeaways
+
+- Whenever a string/array can grow exponentially (via doubling operations like `'#'`) but you only need to answer queries about specific indices, **track size/length instead of content**, and **invert operations on the index** rather than replaying them on data.
+- Always do the **bounds check first** — it's cheap and avoids unnecessary work in the backward pass.
+- This pattern (forward pass for size, backward pass for index-tracing) generalizes to many "virtual string/array" problems on LeetCode.
+
+---
+
+## 🏷️ Tags
+`#LeetCodeDaily` `#Simulation` `#StringManipulation` `#TwoPass` `#IndexTracing`
