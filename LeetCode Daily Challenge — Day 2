@@ -1,0 +1,207 @@
+# 3612. Process String with Special Operations I
+
+**Difficulty:** Medium
+**LeetCode Daily Challenge**
+
+## Problem Statement
+
+Given a string `s` consisting of lowercase English letters and the special characters `*`, `#`, and `%`, process the string from left to right according to these rules:
+
+* Lowercase letter: append it to the result.
+* `*`: remove the last character from the result (if it exists).
+* `#`: duplicate the current result and append it to itself.
+* `%`: reverse the current result.
+
+Return the final string after processing all characters.
+
+---
+
+## Approach 1: Direct String Simulation
+
+### Idea
+
+Simulate the operations exactly as described using a string.
+
+* Append character using `+=`.
+* Remove last character using slicing.
+* Duplicate using `res += res`.
+* Reverse using `res[::-1]`.
+
+### Python Code
+
+```python
+class Solution:
+    def processStr(self, s: str) -> str:
+        res = ""
+
+        for ch in s:
+
+            if 'a' <= ch <= 'z':
+                res += ch
+
+            elif ch == '*':
+                res = res[:-1]
+
+            elif ch == '#':
+                res += res
+
+            elif ch == '%':
+                res = res[::-1]
+
+        return res
+```
+
+### Time Complexity
+
+Let `M` be the maximum length reached by the result string.
+
+* Append: O(M)
+* Delete: O(M)
+* Duplicate: O(M)
+* Reverse: O(M)
+
+**Overall Time Complexity:** `O(n × M)`
+
+### Space Complexity
+
+**O(M)**
+
+---
+
+## Approach 2: List Simulation (Preferred)
+
+### Idea
+
+Python strings are immutable, meaning every modification creates a new string. Using a list allows:
+
+* `append()` → O(1)
+* `pop()` → O(1)
+* `extend()` → O(M)
+* `reverse()` → O(M)
+
+This avoids repeated string allocations and is generally more efficient in practice.
+
+### Python Code
+
+```python
+class Solution:
+    def processStr(self, s: str) -> str:
+        res = []
+
+        for ch in s:
+
+            if 'a' <= ch <= 'z':
+                res.append(ch)
+
+            elif ch == '*':
+                if res:
+                    res.pop()
+
+            elif ch == '#':
+                res.extend(res)
+
+            elif ch == '%':
+                res.reverse()
+
+        return ''.join(res)
+```
+
+### Time Complexity
+
+Let `M` be the maximum size of the result.
+
+* Append: O(1)
+* Pop: O(1)
+* Duplicate: O(M)
+* Reverse: O(M)
+
+**Overall Time Complexity:** `O(n × M)`
+
+### Space Complexity
+
+**O(M)**
+
+---
+
+## Why Prefer the List Approach?
+
+Python strings are immutable.
+
+For example:
+
+```python
+res += 'a'
+```
+
+creates a new string every time.
+
+Similarly,
+
+```python
+res = res[:-1]
+```
+
+and
+
+```python
+res = res[::-1]
+```
+
+also create new strings.
+
+Using a list:
+
+```python
+res.append(ch)
+res.pop()
+res.reverse()
+```
+
+modifies the data structure in place whenever possible, reducing unnecessary copying and improving practical performance.
+
+---
+
+## Best-Case Difference
+
+### String Version
+
+```python
+res += 'a'
+res = res[:-1]
+```
+
+Both operations create new strings.
+
+### List Version
+
+```python
+res.append('a')
+res.pop()
+```
+
+Both operations are O(1) and performed in-place.
+
+Thus, while both approaches have the same asymptotic complexity,
+
+* **String approach:** simpler and shorter.
+* **List approach:** more memory-efficient in practice and preferred for larger inputs.
+
+---
+
+## Complexity Summary
+
+| Approach          | Time Complexity | Space Complexity |
+| ----------------- | --------------- | ---------------- |
+| String Simulation | O(n × M)        | O(M)             |
+| List Simulation   | O(n × M)        | O(M)             |
+
+where:
+
+* `n = len(s)`
+* `M = maximum length of the intermediate/final result`
+
+---
+
+## Key Observation
+
+No algorithm can asymptotically beat `O(n × M)` because the operations `#` (duplicate) and `%` (reverse) inherently require processing the entire current string. Therefore, `O(n × M)` time and `O(M)` space are optimal.
