@@ -1,0 +1,172 @@
+# 📅 LeetCode Daily Challenge — Day 4
+
+**Date:** 2026-06-18
+**Difficulty:** 🟡 Medium
+**Topics:** `Math`
+**Link:** [1344. Angle Between Hands of a Clock](https://leetcode.com/problems/angle-between-hands-of-a-clock/)
+
+---
+
+## 📝 Problem Statement
+
+Given two numbers, `hour` and `minutes`, return the smaller angle (in degrees) formed between the hour and the minute hand.
+
+Answers within `10^-5` of the actual value will be accepted as correct.
+
+---
+
+## 📌 Examples
+
+```
+Input: hour = 12, minutes = 30
+Output: 165
+```
+
+```
+Input: hour = 3, minutes = 30
+Output: 75
+```
+
+```
+Input: hour = 3, minutes = 15
+Output: 7.5
+```
+
+---
+
+## 🔒 Constraints
+
+- `1 <= hour <= 12`
+- `0 <= minutes <= 59`
+
+---
+
+## 💡 Optimal Solution
+
+```python
+class Solution:
+    def angleClock(self, hour: int, minutes: int) -> float:
+        hour %= 12
+        hour_angle = hour * 30 + minutes * 0.5
+        minute_angle = minutes * 6
+        diff = abs(hour_angle - minute_angle)
+        return min(diff, 360 - diff)
+```
+
+---
+
+## 🧠 Line-by-Line: Why We Write It This Way
+
+### Line 1
+```python
+hour %= 12
+```
+**Why?** A clock has only 12 positions — 12 and 0 represent the same location.
+
+For example, at `12:30`, directly using `hour_angle = 12 × 30 = 360°` would be wrong, because 12 o'clock is actually at `0°`. So `12 % 12 = 0` fixes this.
+
+| hour | hour % 12 |
+|------|-----------|
+| 1    | 1         |
+| 5    | 5         |
+| 11   | 11        |
+| 12   | 0         |
+
+---
+
+### Line 2
+```python
+hour_angle = hour * 30 + minutes * 0.5
+```
+The hour hand has **two** movements.
+
+**First movement — per hour:**
+Every hour corresponds to `360° / 12 = 30°`, so `hour * 30`.
+Example: at 3 o'clock → `3 × 30 = 90°`.
+
+**Second movement — continuous drift:**
+The hour hand moves continuously, not in jumps. In 1 hour it moves `30°`. Since 1 hour = 60 minutes, the movement per minute is `30 / 60 = 0.5°`. So `minutes * 0.5`.
+
+**Example — 3:15:**
+- Hour part: `3 × 30 = 90°`
+- Extra movement: `15 × 0.5 = 7.5°`
+- Total: `97.5°`
+
+---
+
+### Line 3
+```python
+minute_angle = minutes * 6
+```
+The minute hand completes `360°` in `60 minutes`, so `360 / 60 = 6°` per minute.
+
+Examples:
+- 15 minutes → `15 × 6 = 90°`
+- 30 minutes → `30 × 6 = 180°`
+
+---
+
+### Line 4
+```python
+diff = abs(hour_angle - minute_angle)
+```
+This is the **distance between the two hands**.
+
+If `hour_angle = 97.5°` and `minute_angle = 90°` → `97.5 - 90 = 7.5°`.
+
+If `hour_angle = 75°` and `minute_angle = 180°` → `75 - 180 = -105`, which can't be negative as an angle, so we take `abs(-105) = 105`.
+
+**Why not `abs(minute_angle - hour_angle)` instead?**
+You absolutely can — `abs(a - b) = abs(b - a)` always. For example, `abs(90 - 97.5) = 7.5` and `abs(97.5 - 90) = 7.5`. Both orderings are completely equivalent.
+
+---
+
+### Line 5
+```python
+return min(diff, 360 - diff)
+```
+This is the most important step. Between any two clock hands there are always **two** possible angles — one going clockwise, one going counterclockwise — and together they add up to `360°`.
+
+Example: if `hour_angle = 30°` and `minute_angle = 300°`, then `diff = abs(30 - 300) = 270°`. The other way around is `360 - 270 = 90°`. So the two angles are `270°` and `90°`. The problem asks for the **smaller** one, hence `min(270, 90) = 90`.
+
+---
+
+## 🔍 Full Walkthrough: 3:15
+
+| Step | Code | Calculation | Result |
+|------|------|-------------|--------|
+| 1 | `hour %= 12` | `3 % 12` | `3` |
+| 2 | `hour_angle = hour*30 + minutes*0.5` | `3×30 + 15×0.5 = 90 + 7.5` | `97.5°` |
+| 3 | `minute_angle = minutes*6` | `15×6` | `90°` |
+| 4 | `diff = abs(97.5 - 90)` | — | `7.5°` |
+| 5 | `min(7.5, 360-7.5)` | `min(7.5, 352.5)` | `7.5°` |
+
+**Answer: `7.5°`**
+
+---
+
+## ⏱️ Complexity Analysis
+
+| Metric | Complexity | Explanation |
+|--------|-----------|--------------|
+| **Time** | `O(1)` | A fixed number of arithmetic operations regardless of input |
+| **Space** | `O(1)` | No data structures, only scalar variables |
+
+---
+
+## 🔑 One Thing to Remember Forever
+
+```
+Minute hand speed = 6°  per minute
+Hour hand speed   = 30° per hour  = 0.5° per minute
+
+Angle between two positions:  abs(angle1 - angle2)
+Smaller of the two angles:    min(diff, 360 - diff)
+```
+
+The identity `|a - b| = |b - a|` is exactly why the order of operands inside `abs()` never matters.
+
+---
+
+## 🏷️ Tags
+`#LeetCodeDaily` `#Math` `#Clock` `#Geometry` `#InterviewPrep`
