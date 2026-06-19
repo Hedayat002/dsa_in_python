@@ -1,0 +1,153 @@
+# 📅 LeetCode Daily Challenge — Day 05
+
+**Date:** 2026-06-19
+**Difficulty:** 🟢 Easy
+**Topics:** `Array` `Prefix Sum`
+**Link:** [1732. Find the Highest Altitude](https://leetcode.com/problems/find-the-highest-altitude/)
+
+---
+
+## 📝 Problem Statement
+
+There is a biker going on a road trip. The road trip consists of `n + 1` points at different altitudes. The biker starts the trip on point `0` with altitude equal `0`.
+
+You are given an integer array `gain` of length `n` where `gain[i]` is the net gain in altitude between points `i` and `i + 1` for all `0 <= i < n`.
+
+Return the **highest altitude** of a point.
+
+---
+
+## 📌 Examples
+
+```
+Input: gain = [-5,1,5,0,-7]
+Output: 1
+Explanation: The altitudes are [0,-5,-4,1,1,-6]. The highest is 1.
+```
+
+```
+Input: gain = [-4,-3,-2,-1,4,3,2]
+Output: 0
+Explanation: The altitudes are [0,-4,-7,-9,-10,-6,-3,-1]. The highest is 0.
+```
+
+---
+
+## 🔒 Constraints
+
+- `n == gain.length`
+- `1 <= n <= 100`
+- `-100 <= gain[i] <= 100`
+
+---
+
+## 💡 Optimal Solution
+
+```python
+class Solution:
+    def largestAltitude(self, gain: List[int]) -> int:
+        highest = 0
+        num = 0
+        for i in range(len(gain)):
+            num += gain[i]
+            if highest < num:
+                highest = num
+        return highest
+```
+
+This is the **optimal solution**. There's nothing smaller than O(n) possible here — every element of `gain` must be looked at at least once to know the full altitude profile, so this is already the best achievable complexity.
+
+> Note: the original version used `max` as the variable name. It works fine, but `max` is also a built-in Python function — renaming it to `highest` avoids shadowing the built-in, which is good practice if you ever need `max()` elsewhere in the same function.
+
+---
+
+## 🧠 Line-by-Line Explanation
+
+```python
+highest = 0
+```
+The biker starts at altitude `0` (point 0). Since point 0 always exists and has altitude `0`, this is a safe and correct initial "best so far" value — the highest altitude reached on the trip is always **at least** `0`, the starting altitude. This is exactly why Example 2 outputs `0`: every other altitude is negative, so the starting altitude remains the highest.
+
+```python
+num = 0
+```
+`num` tracks the **current altitude** (running total / prefix sum) as we move from point to point. It also starts at `0`, matching the biker's starting altitude.
+
+```python
+for i in range(len(gain)):
+```
+We iterate once over every gain value — one pass, O(n).
+
+```python
+num += gain[i]
+```
+This is the **prefix sum** step. Moving from point `i` to point `i+1` changes the altitude by `gain[i]`, so we add it to the running total `num`, which now represents the altitude at point `i+1`.
+
+```python
+if highest < num:
+    highest = num
+```
+After updating the current altitude, we check if it's a new record. If `num` (current altitude) exceeds `highest` (best altitude seen so far), we update `highest`. This is the classic "running maximum" pattern.
+
+```python
+return highest
+```
+After processing all gains, `highest` holds the maximum altitude reached at any point along the trip — return it.
+
+---
+
+## 🔍 Dry Run: `gain = [-5, 1, 5, 0, -7]`
+
+| i | gain[i] | num (altitude)   | highest < num? | highest |
+|---|---------|-------------------|-------------------|---------|
+| — | —       | 0 (start)          | —                  | 0       |
+| 0 | -5      | 0 + (-5) = -5      | -5 < 0? No         | 0       |
+| 1 | 1       | -5 + 1 = -4        | -4 < 0? No         | 0       |
+| 2 | 5       | -4 + 5 = 1         | 1 > 0? Yes         | **1**   |
+| 3 | 0       | 1 + 0 = 1          | 1 > 1? No          | 1       |
+| 4 | -7      | 1 + (-7) = -6      | -6 > 1? No         | 1       |
+
+**Altitudes generated:** `[0, -5, -4, 1, 1, -6]`
+**Final answer: `1`** ✅ matches expected output.
+
+---
+
+## 🔍 Dry Run: `gain = [-4, -3, -2, -1, 4, 3, 2]`
+
+| i | gain[i] | num (altitude)     | highest < num? | highest |
+|---|---------|----------------------|-------------------|---------|
+| — | —       | 0 (start)            | —                  | 0       |
+| 0 | -4      | 0 + (-4) = -4        | No                 | 0       |
+| 1 | -3      | -4 + (-3) = -7       | No                 | 0       |
+| 2 | -2      | -7 + (-2) = -9       | No                 | 0       |
+| 3 | -1      | -9 + (-1) = -10      | No                 | 0       |
+| 4 | 4       | -10 + 4 = -6         | No                 | 0       |
+| 5 | 3       | -6 + 3 = -3          | No                 | 0       |
+| 6 | 2       | -3 + 2 = -1          | No                 | 0       |
+
+**Altitudes generated:** `[0, -4, -7, -9, -10, -6, -3, -1]`
+**Final answer: `0`** ✅ matches expected output — the starting altitude never gets beaten since the trip is net negative throughout.
+
+---
+
+## ⏱️ Complexity Analysis
+
+| Metric | Complexity | Explanation |
+|--------|-----------|--------------|
+| **Time** | `O(n)` | Single pass through `gain`, O(1) work per element |
+| **Space** | `O(1)` | Only two scalar variables (`highest`, `num`) regardless of input size |
+
+This is **optimal** — you cannot solve this problem in better than O(n), since the answer depends on every value in `gain`, and O(1) extra space is the minimum needed to track a running sum and a running max.
+
+---
+
+## 🔑 Key Takeaways
+
+- This is the classic **prefix sum + running maximum** pattern: maintain a running total as you scan, and track the best value seen so far in the same pass.
+- Always remember the **implicit starting point** — here, altitude `0` at point 0 — when initializing your "best so far" variable. It's a common source of off-by-one or wrong-initial-value bugs.
+- Avoid naming variables after Python built-ins (`max`, `min`, `sum`, `list`, etc.) even when it technically works — it's a small habit that prevents confusing bugs later when you do need the built-in.
+
+---
+
+## 🏷️ Tags
+`#LeetCodeDaily` `#PrefixSum` `#Array` `#Easy` `#InterviewPrep`
