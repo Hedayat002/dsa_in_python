@@ -1,0 +1,311 @@
+Below is a clean **GitHub repository template** that you can use for your DSA solutions.
+
+---
+
+# 1840. Maximum Building Height
+
+**LeetCode:** 1840
+**Difficulty:** Hard
+**Topic:** Greedy, Sorting
+
+---
+
+## Approach
+
+1. Add two mandatory restrictions:
+
+   * Building `1` with height `0`.
+   * Building `n` with height `n-1`.
+
+2. Sort restrictions according to building index.
+
+3. Perform a **left-to-right pass**:
+
+   * Ensure every building can be reached from its left neighbor while satisfying the adjacent difference ≤ 1 condition.
+
+4. Perform a **right-to-left pass**:
+
+   * Ensure every building can be reached from its right neighbor while satisfying the adjacent difference ≤ 1 condition.
+
+5. For every consecutive pair of restrictions, compute the highest possible peak between them.
+
+---
+
+## Python Solution
+
+```python
+class Solution:
+    def maxBuilding(self, n: int, restrictions: list[list[int]]) -> int:
+
+        # Add mandatory restrictions
+        restrictions.append([1, 0])
+        restrictions.append([n, n - 1])
+
+        # Sort by building number
+        restrictions.sort()
+
+        m = len(restrictions)
+
+        # Left → Right pass
+        for i in range(1, m):
+            restrictions[i][1] = min(
+                restrictions[i][1],
+                restrictions[i - 1][1] +
+                (restrictions[i][0] - restrictions[i - 1][0])
+            )
+
+        # Right → Left pass
+        for i in range(m - 2, -1, -1):
+            restrictions[i][1] = min(
+                restrictions[i][1],
+                restrictions[i + 1][1] +
+                (restrictions[i + 1][0] - restrictions[i][0])
+            )
+
+        ans = 0
+
+        # Find maximum possible peak
+        for i in range(1, m):
+
+            id1, h1 = restrictions[i - 1]
+            id2, h2 = restrictions[i]
+
+            distance = id2 - id1
+
+            peak = (h1 + h2 + distance) // 2
+
+            ans = max(ans, peak)
+
+        return ans
+```
+
+---
+
+# Dry Run
+
+### Input
+
+```python
+n = 10
+restrictions = [[5,3],[2,5],[7,4],[10,3]]
+```
+
+---
+
+### Step 1: Add Mandatory Restrictions
+
+```python
+[
+    [1,0],
+    [2,5],
+    [5,3],
+    [7,4],
+    [10,3]
+]
+```
+
+---
+
+### Step 2: Left-to-Right Pass
+
+#### i = 1
+
+```python
+min(5, 0 + (2-1))
+= min(5,1)
+= 1
+```
+
+Array becomes:
+
+```python
+[
+    [1,0],
+    [2,1],
+    [5,3],
+    [7,4],
+    [10,3]
+]
+```
+
+---
+
+#### i = 2
+
+```python
+min(3,1+(5-2))
+= min(3,4)
+= 3
+```
+
+No change.
+
+---
+
+#### i = 3
+
+```python
+min(4,3+(7-5))
+= min(4,5)
+= 4
+```
+
+No change.
+
+---
+
+#### i = 4
+
+```python
+min(3,4+(10-7))
+= min(3,7)
+= 3
+```
+
+No change.
+
+Final after left pass:
+
+```python
+[
+    [1,0],
+    [2,1],
+    [5,3],
+    [7,4],
+    [10,3]
+]
+```
+
+---
+
+### Step 3: Right-to-Left Pass
+
+No values change.
+
+```python
+[
+    [1,0],
+    [2,1],
+    [5,3],
+    [7,4],
+    [10,3]
+]
+```
+
+---
+
+### Step 4: Compute Maximum Peak
+
+#### Segment [1,0] → [2,1]
+
+Distance = 1
+
+```python
+peak = (0+1+1)//2 = 1
+```
+
+---
+
+#### Segment [2,1] → [5,3]
+
+Distance = 3
+
+```python
+peak = (1+3+3)//2 = 3
+```
+
+---
+
+#### Segment [5,3] → [7,4]
+
+Distance = 2
+
+```python
+peak = (3+4+2)//2 = 4
+```
+
+---
+
+#### Segment [7,4] → [10,3]
+
+Distance = 3
+
+```python
+peak = (4+3+3)//2 = 5
+```
+
+---
+
+### Maximum Height
+
+```python
+Answer = 5
+```
+
+---
+
+# Time Complexity
+
+| Operation            | Complexity |
+| -------------------- | ---------- |
+| Sorting restrictions | O(m log m) |
+| Left pass            | O(m)       |
+| Right pass           | O(m)       |
+| Peak calculation     | O(m)       |
+
+Overall:
+
+```text
+Time Complexity: O(m log m)
+```
+
+where
+
+```text
+m = len(restrictions) + 2
+```
+
+---
+
+# Space Complexity
+
+```text
+Space Complexity: O(m)
+```
+
+for storing the restrictions array.
+
+---
+
+# Key Formula
+
+For two adjacent restrictions
+
+```text
+(id1, h1) -------- (id2, h2)
+```
+
+with
+
+```text
+distance = id2 - id1
+```
+
+the highest achievable peak between them is
+
+```python
+peak = (h1 + h2 + distance) // 2
+```
+
+because we can increase by 1 from the left side and decrease by 1 from the right side until both slopes meet.
+
+---
+
+### Tags
+
+```text
+Greedy
+Sorting
+Two Pass
+Math
+```
