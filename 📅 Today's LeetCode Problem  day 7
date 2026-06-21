@@ -1,0 +1,355 @@
+# 🍦 LeetCode 1833 - Maximum Ice Cream Bars
+
+## 📅 Today's LeetCode Problem | Interview Prep & Revision
+
+---
+
+## 📋 Problem Statement
+
+```
+Given an array costs[] where costs[i] = price of ith ice cream bar
+Boy has 'coins' to spend
+Return MAXIMUM number of ice cream bars he can buy
+
+Rules:
+✅ Can buy in any order
+✅ Want to MAXIMIZE count
+✅ Must solve using counting sort
+```
+
+---
+
+## 🧠 Intuition & Approach
+
+```
+KEY INSIGHT: To maximize COUNT → Always buy CHEAPEST first!
+
+Strategy:
+1. Sort prices (cheap → expensive)
+2. Keep buying until coins run out
+
+Two Ways to Sort:
+┌─────────────────────┬──────────────────────────┐
+│   Comparison Sort   │     Counting Sort        │
+│   (Your Solution)   │   (Optimal Solution)     │
+├─────────────────────┼──────────────────────────┤
+│ costs.sort()        │ freq array + iterate     │
+│ O(n log n)          │ O(n + M)                 │
+│ Simple & Clean      │ Faster for large input   │
+└─────────────────────┴──────────────────────────┘
+```
+
+---
+
+## 💡 Solution 1: Your Solution (Comparison Sort)
+
+```python
+class Solution:
+    def maxIceCream(self, costs: List[int], coins: int) -> int:
+        """
+        Approach: Sort + Greedy
+        - Sort costs in ascending order
+        - Buy cheapest ice creams first
+        - Stop when we can't afford next one
+        """
+        # ✅ Edge case: if can't even afford cheapest
+        if coins < min(costs):
+            return 0
+        
+        # Step 1: Sort costs ascending (cheap → expensive)
+        costs.sort()
+        
+        # Step 2: Initialize counter
+        cnt = 0
+        
+        # Step 3: Greedily buy cheapest first
+        for cost in costs:
+            if coins >= cost:   # Can we afford this bar?
+                coins -= cost   # Deduct cost
+                cnt += 1        # Buy it!
+            else:
+                break           # Can't afford → stop
+                
+        return cnt
+```
+
+---
+
+## 💡 Solution 2: Optimal Solution (Counting Sort)
+
+```python
+class Solution:
+    def maxIceCream(self, costs: List[int], coins: int) -> int:
+        """
+        Approach: Counting Sort + Greedy
+        - Count frequency of each price
+        - Iterate prices from low to high
+        - Buy as many as possible at each price point
+        
+        Why Counting Sort?
+        - Avoids O(n log n) comparison sort
+        - Achieves O(n + M) where M = max(costs)
+        - Handles duplicates efficiently in batches
+        """
+        # Step 1: Find max cost for freq array size
+        max_cost = max(costs)
+        
+        # Step 2: Build frequency array
+        # freq[i] = number of ice creams costing 'i' coins
+        freq = [0] * (max_cost + 1)
+        
+        # Step 3: Fill frequency array
+        for cost in costs:
+            freq[cost] += 1
+        
+        # Step 4: Initialize counter
+        count = 0
+        
+        # Step 5: Iterate each price from cheapest to expensive
+        for price in range(1, max_cost + 1):
+            
+            # Skip if no ice cream at this price
+            if freq[price] == 0:
+                continue
+            
+            # Can't afford even one → stop
+            if coins < price:
+                break
+            
+            # Buy as many as possible at this price
+            # Limited by: available bars AND coins we have
+            can_buy = min(freq[price], coins // price)
+            
+            # Update count and remaining coins
+            count += can_buy
+            coins -= can_buy * price
+        
+        return count
+```
+
+---
+
+## 🔍 Dry Run - Both Solutions
+
+### Example 1: `costs = [1,3,2,4,1], coins = 7`
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+YOUR SOLUTION (Comparison Sort)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Original: costs = [1,3,2,4,1], coins = 7
+
+min(costs)=1, coins=7 ≥ 1 → Continue
+
+After Sort: costs = [1,1,2,3,4]
+
+┌──────┬──────┬────────────┬───────┬───────┐
+│ Step │ cost │coins≥cost? │ coins │  cnt  │
+├──────┼──────┼────────────┼───────┼───────┤
+│  1   │  1   │  7 ≥ 1 ✅  │  7-1=6│   1   │
+│  2   │  1   │  6 ≥ 1 ✅  │  6-1=5│   2   │
+│  3   │  2   │  5 ≥ 2 ✅  │  5-2=3│   3   │
+│  4   │  3   │  3 ≥ 3 ✅  │  3-3=0│   4   │
+│  5   │  4   │  0 ≥ 4 ❌  │   0   │   4   │ ← BREAK
+└──────┴──────┴────────────┴───────┴───────┘
+
+Answer: 4 ✅
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OPTIMAL SOLUTION (Counting Sort)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+costs = [1,3,2,4,1], coins = 7
+max_cost = 4
+
+Build freq array:
+Index: [0, 1, 2, 3, 4]
+freq:  [0, 2, 1, 1, 1]
+        ↑  ↑  ↑  ↑  ↑
+        0  two 1s, one 2, one 3, one 4
+
+Iterate prices:
+┌───────┬────────┬────────┬──────────────────┬───────┬────────┐
+│ price │freq[p] │ coins  │    can_buy        │ count │ coins  │
+│       │        │(before)│  min(freq,c//p)  │(after)│(after) │
+├───────┼────────┼────────┼──────────────────┼───────┼────────┤
+│   1   │   2    │   7    │ min(2, 7//1)=2   │   2   │  7-2=5 │
+│   2   │   1    │   5    │ min(1, 5//2)=1   │   3   │  5-2=3 │
+│   3   │   1    │   3    │ min(1, 3//3)=1   │   4   │  3-3=0 │
+│   4   │   1    │   0    │ 0 < 4 → BREAK    │   4   │   0    │
+└───────┴────────┴────────┴──────────────────┴───────┴────────┘
+
+Answer: 4 ✅
+```
+
+### Example 2: `costs = [10,6,8,7,7,8], coins = 5`
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+YOUR SOLUTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+min(costs) = 6
+coins = 5
+5 < 6 → return 0 immediately ✅ (Edge case caught!)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OPTIMAL SOLUTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+max_cost = 10
+freq = [0,0,0,0,0,0,1,2,2,0,1]
+         0 1 2 3 4 5 6 7 8 9 10
+
+price=1→5: freq=0, skip
+price=6: freq=1, coins(5) < price(6) → BREAK
+
+Answer: 0 ✅
+```
+
+### Example 3: `costs = [1,6,3,1,2,5], coins = 20`
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OPTIMAL SOLUTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+freq = [0,2,1,1,0,1,1]
+         0 1 2 3 4 5 6
+
+┌───────┬────────┬────────┬──────────────────┬───────┬────────┐
+│ price │freq[p] │ coins  │    can_buy        │ count │ coins  │
+├───────┼────────┼────────┼──────────────────┼───────┼────────┤
+│   1   │   2    │   20   │ min(2,20//1)=2   │   2   │   18   │
+│   2   │   1    │   18   │ min(1,18//2)=1   │   3   │   16   │
+│   3   │   1    │   16   │ min(1,16//3)=1   │   4   │   13   │
+│   4   │   0    │   13   │ freq=0, skip     │   4   │   13   │
+│   5   │   1    │   13   │ min(1,13//5)=1   │   5   │    8   │
+│   6   │   1    │    8   │ min(1, 8//6)=1   │   6   │    2   │
+└───────┴────────┴────────┴──────────────────┴───────┴────────┘
+
+Answer: 6 ✅ (Bought ALL ice creams!)
+```
+
+---
+
+## ⏱️ Complexity Analysis
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+YOUR SOLUTION (Comparison Sort)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Time Complexity:  O(n log n)
+                  └── dominated by costs.sort()
+
+Space Complexity: O(1) or O(log n)
+                  └── Python's Timsort uses O(log n) stack space
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OPTIMAL SOLUTION (Counting Sort)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Time Complexity:  O(n + M)
+                  ├── O(n) to fill freq array
+                  ├── O(M) to iterate through prices
+                  └── M = max(costs) ≤ 10^5
+
+Space Complexity: O(M)
+                  └── freq array of size max_cost+1
+```
+
+---
+
+## ⚖️ Comparison Table
+
+```
+┌──────────────────────┬─────────────────────┬─────────────────────┐
+│       Aspect         │   Your Solution     │  Optimal Solution   │
+├──────────────────────┼─────────────────────┼─────────────────────┤
+│ Algorithm            │ Comparison Sort     │ Counting Sort       │
+│ Time Complexity      │ O(n log n)          │ O(n + M)            │
+│ Space Complexity     │ O(log n)            │ O(M)                │
+│ Modifies Input       │ YES (sorts costs[]) │ NO                  │
+│ Handles Duplicates   │ One by one          │ Batch processing    │
+│ Edge Case Handling   │ ✅ Explicit check   │ ✅ Natural break     │
+│ Code Simplicity      │ ⭐⭐⭐⭐⭐ Simpler    │ ⭐⭐⭐⭐ Slightly more │
+│ Performance (large n)│ Slower              │ Faster              │
+│ Interview Preference │ Good                │ Optimal (as asked)  │
+└──────────────────────┴─────────────────────┴─────────────────────┘
+
+KEY ADVANTAGE of Counting Sort:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+If 1000 bars all cost $1:
+
+Your Solution:  loops 1000 times individually
+                for cost in [1,1,1,...1000 times]:
+
+Counting Sort:  ONE calculation!
+                can_buy = min(1000, coins // 1)
+```
+
+---
+
+## 🎯 Key Takeaways for Interview
+
+```
+1. GREEDY INSIGHT:
+   → Buy cheapest first to MAXIMIZE count
+
+2. COUNTING SORT USE CASE:
+   → Use when values are in LIMITED RANGE (here 1 to 10^5)
+   → Avoids O(n log n) comparison sort → O(n + M)
+
+3. BATCH DUPLICATE HANDLING:
+   → can_buy = min(freq[price], coins // price)
+   → This single line handles ALL bars of same price!
+
+4. WHEN TO USE WHICH:
+   → Comparison Sort: Simple, works always, O(n log n)
+   → Counting Sort:   When range is small, O(n + M)
+```
+
+---
+
+## ✅ Test Cases
+
+```python
+# Test 1: Normal case
+assert Solution().maxIceCream([1,3,2,4,1], 7) == 4
+
+# Test 2: Can't afford any
+assert Solution().maxIceCream([10,6,8,7,7,8], 5) == 0
+
+# Test 3: Can buy all
+assert Solution().maxIceCream([1,6,3,1,2,5], 20) == 6
+
+# Test 4: Single item - can afford
+assert Solution().maxIceCream([5], 5) == 1
+
+# Test 5: Single item - cannot afford  
+assert Solution().maxIceCream([5], 4) == 0
+
+print("All test cases passed! ✅")
+```
+
+---
+
+## 📊 Visual Summary
+
+```
+coins = 7, costs = [1,1,2,3,4] (sorted)
+
+Coins:  [███████] = 7
+         ↓
+Buy $1: [██████ ] coins=6, count=1
+         ↓
+Buy $1: [█████  ] coins=5, count=2
+         ↓
+Buy $2: [███    ] coins=3, count=3
+         ↓
+Buy $3: [       ] coins=0, count=4
+         ↓
+$4 bar? ❌ Can't afford! STOP
+
+Maximum ice creams = 4 🍦🍦🍦🍦
+```
+
+---
+*📅 LeetCode Daily Challenge | 🏷️ Greedy + Counting Sort | ⚡ Medium*
