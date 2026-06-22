@@ -1,0 +1,291 @@
+# 🎈 LeetCode 1189 - Maximum Number of Balloons
+
+---
+
+## 📌 Problem Statement
+
+Given a string `text`, return the **maximum number of instances**
+of the word `"balloon"` that can be formed using characters from `text`.
+
+Each character in `text` can only be used **once**.
+
+---
+
+## 📥 Examples
+
+```
+Input  : "nlaebolko"
+Output : 1
+
+Input  : "loonbalxballpoon"
+Output : 2
+
+Input  : "leetcode"
+Output : 0
+```
+
+---
+
+## 🔍 Word Analysis
+
+The word we are forming is:
+
+```
+b  a  l  l  o  o  n
+```
+
+| Character | Times Needed Per Balloon |
+|-----------|--------------------------|
+| b         | 1                        |
+| a         | 1                        |
+| l         | 2  ← needs pair          |
+| o         | 2  ← needs pair          |
+| n         | 1                        |
+
+Only these 5 characters matter.
+All other characters in `text` are ignored.
+
+---
+
+## 💡 Approach
+
+```
+Step 1 → Count frequency of every character in text
+Step 2 → For each required letter calculate how many balloons it supports
+Step 3 → Return the minimum value (bottleneck principle)
+```
+
+### Why minimum?
+
+To build ONE balloon we need ALL five characters.
+If any one character runs out → we cannot build more balloons.
+The character with the smallest count limits the answer.
+
+---
+
+## 💻 Solution Code
+
+```python
+class Solution:
+    def maxNumberOfBalloons(self, text: str) -> int:
+
+        # -------------------------------------------------------
+        # STEP 1: Build Frequency Map
+        # -------------------------------------------------------
+        # We count how many times each character appears in text
+
+        freq = {}
+
+        for char in text:
+            freq[char] = freq.get(char, 0) + 1
+
+        # -------------------------------------------------------
+        # STEP 2: Calculate Maximum Balloons
+        # -------------------------------------------------------
+        # freq.get(key, 0) → returns 0 if key is missing
+        # l and o are divided by 2 because balloon needs 2 of each
+
+        return min(
+            freq.get('b', 0),        # b appears 1 time in balloon
+            freq.get('a', 0),        # a appears 1 time in balloon
+            freq.get('l', 0) // 2,   # l appears 2 times in balloon
+            freq.get('o', 0) // 2,   # o appears 2 times in balloon
+            freq.get('n', 0)         # n appears 1 time in balloon
+        )
+```
+
+---
+
+## 📊 Dry Run 1 — Normal Case
+
+```
+Input : "loonbalxballpoon"
+```
+
+### Step 1: Build Frequency Map
+
+```
+text = l o o n b a l x b a l l p o o n
+
+Go through each character one by one:
+
+l → freq = { l:1 }
+o → freq = { l:1, o:1 }
+o → freq = { l:1, o:2 }
+n → freq = { l:1, o:2, n:1 }
+b → freq = { l:1, o:2, n:1, b:1 }
+a → freq = { l:1, o:2, n:1, b:1, a:1 }
+l → freq = { l:2, o:2, n:1, b:1, a:1 }
+x → freq = { l:2, o:2, n:1, b:1, a:1, x:1 }
+b → freq = { l:2, o:2, n:1, b:2, a:1, x:1 }
+a → freq = { l:2, o:2, n:1, b:2, a:2, x:1 }
+l → freq = { l:3, o:2, n:1, b:2, a:2, x:1 }
+l → freq = { l:4, o:2, n:1, b:2, a:2, x:1 }
+p → freq = { l:4, o:2, n:1, b:2, a:2, x:1, p:1 }
+o → freq = { l:4, o:3, n:1, b:2, a:2, x:1, p:1 }
+o → freq = { l:4, o:4, n:1, b:2, a:2, x:1, p:1 }
+n → freq = { l:4, o:4, n:2, b:2, a:2, x:1, p:1 }
+
+Final freq map:
+{
+  l:4,
+  o:4,
+  n:2,
+  b:2,
+  a:2,
+  x:1,
+  p:1
+}
+```
+
+### Step 2: Calculate Per Letter
+
+```
+b → freq.get('b', 0)      = 2       → can support 2 balloons
+a → freq.get('a', 0)      = 2       → can support 2 balloons
+l → freq.get('l', 0) // 2 = 4 // 2  = 2 → can support 2 balloons
+o → freq.get('o', 0) // 2 = 4 // 2  = 2 → can support 2 balloons
+n → freq.get('n', 0)      = 2       → can support 2 balloons
+```
+
+### Step 3: Take Minimum
+
+```
+min(2, 2, 2, 2, 2) = 2
+```
+
+### ✅ Answer: 2
+
+---
+
+## 📊 Dry Run 2 — Missing Letter Case
+
+```
+Input : "leetcode"
+```
+
+### Step 1: Build Frequency Map
+
+```
+l:1, e:3, t:1, c:1, o:1, d:1
+```
+
+### Step 2: Calculate Per Letter
+
+```
+b → freq.get('b', 0)      = 0       → 'b' missing → default 0
+a → freq.get('a', 0)      = 0       → 'a' missing → default 0
+l → freq.get('l', 0) // 2 = 1 // 2  = 0 → only 1 'l', no pair
+o → freq.get('o', 0) // 2 = 1 // 2  = 0 → only 1 'o', no pair
+n → freq.get('n', 0)      = 0       → 'n' missing → default 0
+```
+
+### Step 3: Take Minimum
+
+```
+min(0, 0, 0, 0, 0) = 0
+```
+
+### ✅ Answer: 0
+
+---
+
+## 📊 Dry Run 3 — Exact One Balloon
+
+```
+Input : "balloon"
+```
+
+### Step 1: Build Frequency Map
+
+```
+b:1, a:1, l:2, o:2, n:1
+```
+
+### Step 2: Calculate Per Letter
+
+```
+b → 1
+a → 1
+l → 2 // 2 = 1
+o → 2 // 2 = 1
+n → 1
+```
+
+### Step 3: Take Minimum
+
+```
+min(1, 1, 1, 1, 1) = 1
+```
+
+### ✅ Answer: 1
+
+---
+
+## ⏰ Time Complexity
+
+```
+O(n)
+
+Where n = length of input string text
+
+Reason:
+→ We loop through text once to build freq map  → O(n)
+→ We call min() on exactly 5 fixed values       → O(1)
+→ Total = O(n) + O(1) = O(n)
+
+Even if text has 1,000,000 characters
+we still only loop once.
+```
+
+---
+
+## 💾 Space Complexity
+
+```
+O(1)
+
+Reason:
+→ freq map stores at most 26 keys (a to z only)
+→ 26 is a constant number
+→ It does NOT grow as input grows
+→ No extra arrays or lists used
+→ Total = O(26) = O(1)
+```
+
+---
+
+## 📋 Complexity Summary Table
+
+| Type             | Value | Reason                                  |
+|------------------|-------|-----------------------------------------|
+| Time Complexity  | O(n)  | Single loop through text                |
+| Space Complexity | O(1)  | freq map max size is 26 (fixed)         |
+
+---
+
+## 🧪 Test Cases
+
+| Input                | Expected Output | Reason                          |
+|----------------------|-----------------|---------------------------------|
+| "nlaebolko"          | 1               | Exactly one balloon             |
+| "loonbalxballpoon"   | 2               | Two complete balloons           |
+| "leetcode"           | 0               | Missing b, a, n                 |
+| "balloon"            | 1               | Exact letters for one balloon   |
+| "balon"              | 0               | l and o pairs missing           |
+| ""                   | 0               | Empty string                    |
+| "balloon" * 1000     | 1000            | Repeated 1000 times             |
+
+---
+
+## 🔗 Problem Link
+
+https://leetcode.com/problems/maximum-number-of-balloons/
+
+---
+
+## 📅 Solved On
+
+Daily LeetCode Challenge
+
+---
