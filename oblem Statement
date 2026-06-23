@@ -1,0 +1,540 @@
+# ZigZag Arrays - Complete Study Guide
+
+## Problem Statement
+
+```
+Given n (length), l (lower bound), r (upper bound)
+Count arrays of length n where each adjacent pair alternates
+between strictly increasing and strictly decreasing
+```
+
+---
+
+## Example Used Throughout
+
+```
+n = 3, l = 1, r = 3
+Available values: {1, 2, 3}
+m = r - l + 1 = 3
+Expected Answer: 10
+```
+
+---
+
+## Brute Force Solution
+
+### Code
+
+```python
+def zigzag_brute(n, l, r):
+    """
+    Generate all possible arrays and check zigzag condition
+    Time:  O(m^n * n)  where m = r - l + 1
+    Space: O(m^n)      for storing all combinations
+    """
+    from itertools import product
+    
+    values = list(range(l, r + 1))
+    count  = 0
+    valid  = []
+    
+    # ─── Generate all arrays ───────────────────────────────────────────────
+    for arr in product(values, repeat=n):
+        
+        # ─── Check zigzag property ────────────────────────────────────────
+        is_zigzag = True
+        
+        for i in range(1, n - 1):
+            up_down = arr[i] > arr[i-1] and arr[i] > arr[i+1]   # peak
+            dn_up   = arr[i] < arr[i-1] and arr[i] < arr[i+1]   # valley
+            
+            if not (up_down or dn_up):
+                is_zigzag = False
+                break
+        
+        if is_zigzag and n >= 2:
+            # For n=2, any two different adjacent values qualify
+            if n == 2:
+                if arr[0] != arr[1]:
+                    count += 1
+                    valid.append(arr)
+            else:
+                count += 1
+                valid.append(arr)
+    
+    return count, valid
+
+
+# ─── Run ──────────────────────────────────────────────────────────────────
+count, valid = zigzag_brute(3, 1, 3)
+print(f"Count : {count}")
+print(f"Arrays: ")
+for arr in valid:
+    print(f"  {list(arr)}")
+```
+
+### Brute Force Output
+
+```
+Count : 10
+Arrays:
+  [1, 2, 1]
+  [1, 3, 1]
+  [1, 3, 2]
+  [2, 1, 2]
+  [2, 1, 3]
+  [2, 3, 1]
+  [2, 3, 2]
+  [3, 1, 2]
+  [3, 1, 3]
+  [3, 2, 3]
+```
+
+### Complexity Analysis
+
+```
+┌─────────────┬────────────────────────┐
+│ Complexity  │ Value                  │
+├─────────────┼────────────────────────┤
+│ Time        │ O(m^n × n)             │
+│ Space       │ O(m^n)                 │
+│ m = r-l+1   │ number of choices      │
+│ n           │ array length           │
+└─────────────┴────────────────────────┘
+
+Why it is slow:
+  m=100, n=10 → 100^10 = 10^20 operations
+  Completely infeasible for large inputs
+```
+
+---
+
+## Optimal Solution (DP)
+
+### Core Idea
+
+```
+State:
+  up[v]   = number of valid zigzag sequences
+            ending at value v
+            where LAST move was UP (v > prev)
+
+  down[v] = number of valid zigzag sequences
+            ending at value v
+            where LAST move was DOWN (v < prev)
+
+Transition:
+  new_up[v]   = sum of down[0..v-1]   ← previous was DOWN, now go UP
+  new_down[v] = sum of up[v+1..m-1]   ← previous was UP,  now go DOWN
+
+Optimization:
+  Use prefix sums to make each transition O(m) instead of O(m²)
+```
+
+### Code
+
+```python
+def zigzag_optimal(n, l, r):
+    """
+    Dynamic Programming with Prefix Sums
+    Time:  O(n × m)   where m = r - l + 1
+    Space: O(m)
+    """
+    m = r - l + 1   # number of available values
+
+    # ─── Base Case: length = 1 ────────────────────────────────────────────
+    # Single element: no moves yet
+    # Treat as both up=0 and down=0 to bootstrap length-2
+    
+    # ─── Base Case: length = 2 ────────────────────────────────────────────
+    # up[i]   = i         (i values smaller than value[i] exist)
+    # down[i] = m-1-i     (m-1-i values larger than value[i] exist)
+    
+    up   = [i       for i in range(m)]   # [0, 1, 2, ..., m-1]
+    down = [m-1-i   for i in range(m)]   # [m-1, m-2, ..., 0]
+
+    if n == 1:
+        return m   # each single value is trivially zigzag
+
+    if n == 2:
+        return sum(up) + sum(down)
+
+    # ─── Fill DP for length 3 → n ─────────────────────────────────────────
+    for length in range(3, n + 1):
+
+        # ── Build prefix arrays ───────────────────────────────────────────
+        pref_up   = [0] * m
+        pref_down = [0] * m
+
+        pref_up[0]   = up[0]
+        pref_down[0] = down[0]
+
+        for i in range(1, m):
+            pref_up[i]   = pref_up[i-1]   + up[i]
+            pref_down[i] = pref_down[i-1] + down[i]
+
+        total_up   = pref_up[-1]    # sum of all up   values
+        total_down = pref_down[-1]  # sum of all down values
+
+        # ── Compute new states ────────────────────────────────────────────
+        new_up   = [0] * m
+        new_down = [0] * m
+
+        for v in range(m):
+            # new_up[v]: last move UP to v
+            #   need DOWN sequence ending at value < v
+            #   = pref_down[v-1]
+            new_up[v] = pref_down[v-1] if v > 0 else 0
+
+            # new_down[v]: last move DOWN to v
+            #   need UP sequence ending at value > v
+            #   = total_up - pref_up[v]
+            new_down[v] = total_up - pref_up[v]
+
+        up   = new_up
+        down = new_down
+
+    return sum(up) + sum(down)
+
+
+# ─── Run ──────────────────────────────────────────────────────────────────
+print(zigzag_optimal(3, 1, 3))   # → 10
+```
+
+### Complexity Analysis
+
+```
+┌─────────────┬──────────────────────────────────┐
+│ Complexity  │ Value                            │
+├─────────────┼──────────────────────────────────┤
+│ Time        │ O(n × m)                         │
+│ Space       │ O(m)                             │
+│ vs Brute    │ O(m^n × n) → O(n × m)            │
+│ Example     │ m=100,n=10: 10^20 → 1000 ops     │
+└─────────────┴──────────────────────────────────┘
+```
+
+---
+
+## Complete Dry Run (n=3, l=1, r=3)
+
+### Setup
+
+```
+m = 3
+Values mapped to indices:
+  index 0 → value 1
+  index 1 → value 2
+  index 2 → value 3
+```
+
+---
+
+### Step 1 — Length = 2 Initialization
+
+#### Build up[]
+
+```python
+up = [i for i in range(m)]
+   = [0, 1, 2]
+```
+
+```
+┌───────┬───────┬─────────────────────────────┬───────┐
+│ Index │ Value │ UP Sequences                │ Count │
+├───────┼───────┼─────────────────────────────┼───────┤
+│   0   │   1   │ (none, no smaller value)    │   0   │
+│   1   │   2   │ 1→2                         │   1   │
+│   2   │   3   │ 1→3, 2→3                   │   2   │
+└───────┴───────┴─────────────────────────────┴───────┘
+```
+
+#### Build down[]
+
+```python
+down = [m-1-i for i in range(m)]
+     = [2, 1, 0]
+```
+
+```
+┌───────┬───────┬─────────────────────────────┬───────┐
+│ Index │ Value │ DOWN Sequences              │ Count │
+├───────┼───────┼─────────────────────────────┼───────┤
+│   0   │   1   │ 2→1, 3→1                   │   2   │
+│   1   │   2   │ 3→2                         │   1   │
+│   2   │   3   │ (none, no larger value)     │   0   │
+└───────┴───────┴─────────────────────────────┴───────┘
+```
+
+#### Current State After Length=2
+
+```
+up   = [0, 1, 2]
+down = [2, 1, 0]
+```
+
+---
+
+### Step 2 — Process Length = 3
+
+#### Build Prefix Arrays
+
+```
+Initial:
+  pref_up   = [0, 0, 0]
+  pref_down = [0, 0, 0]
+```
+
+```
+i=0:
+  pref_up[0]   = up[0]            = 0
+  pref_down[0] = down[0]          = 2
+
+i=1:
+  pref_up[1]   = pref_up[0]   + up[1]   = 0 + 1 = 1
+  pref_down[1] = pref_down[0] + down[1] = 2 + 1 = 3
+
+i=2:
+  pref_up[2]   = pref_up[1]   + up[2]   = 1 + 2 = 3
+  pref_down[2] = pref_down[1] + down[2] = 3 + 0 = 3
+```
+
+```
+Final prefix arrays:
+  pref_up   = [0, 1, 3]
+  pref_down = [2, 3, 3]
+
+  total_up   = pref_up[-1]   = 3
+  total_down = pref_down[-1] = 3
+```
+
+#### Prefix Array Meaning
+
+```
+pref_up[i]   = total UP sequences ending at values 0..i
+pref_down[i] = total DOWN sequences ending at values 0..i
+
+pref_up[2]   = up[0]+up[1]+up[2]     = 0+1+2 = 3
+pref_down[1] = down[0]+down[1]       = 2+1   = 3
+```
+
+---
+
+#### Compute new_up[]
+
+```
+Formula: new_up[v] = pref_down[v-1]
+Reason:  append value v going UP
+         previous step must be DOWN
+         previous value must be < v
+         → sum of down[0..v-1] = pref_down[v-1]
+```
+
+```
+┌───────┬───────┬────────────────────────────┬──────────────────────┬─────────────┐
+│ Index │ Value │ Smaller indices            │ Formula              │ new_up[v]   │
+├───────┼───────┼────────────────────────────┼──────────────────────┼─────────────┤
+│   0   │   1   │ none                       │ 0 (v=0 edge case)    │      0      │
+│   1   │   2   │ {1} → pref_down[0]         │ pref_down[0] = 2     │      2      │
+│   2   │   3   │ {1,2} → pref_down[1]       │ pref_down[1] = 3     │      3      │
+└───────┴───────┴────────────────────────────┴──────────────────────┴─────────────┘
+
+new_up = [0, 2, 3]
+```
+
+##### Verify new_up[2] = 3
+
+```
+DOWN sequences (length 2) ending at value < 3:
+  2→1  (ends at 1, index 0)
+  3→1  (ends at 1, index 0)
+  3→2  (ends at 2, index 1)
+
+Append 3 (going UP):
+  2→1→3  ✓
+  3→1→3  ✓
+  3→2→3  ✓
+
+Count = 3  ✓
+```
+
+---
+
+#### Compute new_down[]
+
+```
+Formula: new_down[v] = total_up - pref_up[v]
+Reason:  append value v going DOWN
+         previous step must be UP
+         previous value must be > v
+         → sum of up[v+1..m-1]
+         = total_up - pref_up[v]
+```
+
+```
+┌───────┬───────┬────────────────────────────┬──────────────────────┬─────────────┐
+│ Index │ Value │ Larger indices             │ Formula              │ new_down[v] │
+├───────┼───────┼────────────────────────────┼──────────────────────┼─────────────┤
+│   0   │   1   │ {2,3} → up[1]+up[2]        │ 3 - pref_up[0] = 3   │      3      │
+│   1   │   2   │ {3}   → up[2]              │ 3 - pref_up[1] = 2   │      2      │
+│   2   │   3   │ none                       │ 3 - pref_up[2] = 0   │      0      │
+└───────┴───────┴────────────────────────────┴──────────────────────┴─────────────┘
+
+new_down = [3, 2, 0]
+```
+
+##### Verify new_down[0] = 3
+
+```
+UP sequences (length 2) ending at value > 1:
+  1→2  (ends at 2, index 1)
+  1→3  (ends at 3, index 2)
+  2→3  (ends at 3, index 2)
+
+Append 1 (going DOWN):
+  1→2→1  ✓
+  1→3→1  ✓
+  2→3→1  ✓
+
+Count = 3  ✓
+```
+
+---
+
+### Step 3 — Update & Answer
+
+#### Update State
+
+```
+up   = new_up   = [0, 2, 3]
+down = new_down = [3, 2, 0]
+```
+
+#### All Length-3 Sequences in DP
+
+```
+up   (ending with UP move):
+  index 0, value 1: 0 sequences
+  index 1, value 2: 2 sequences
+  index 2, value 3: 3 sequences
+
+down (ending with DOWN move):
+  index 0, value 1: 3 sequences
+  index 1, value 2: 2 sequences
+  index 2, value 3: 0 sequences
+```
+
+#### Final Count
+
+```
+sum(up)   = 0 + 2 + 3 = 5
+sum(down) = 3 + 2 + 0 = 5
+
+Answer    = 5 + 5 = 10  ✓
+```
+
+---
+
+### All 10 Valid Arrays
+
+#### Ending with UP (sum=5)
+
+```
+new_up[1]=2  →  value 2 at end, went UP
+  2→1→2
+  3→1→2
+
+new_up[2]=3  →  value 3 at end, went UP
+  2→1→3
+  3→1→3
+  3→2→3
+```
+
+#### Ending with DOWN (sum=5)
+
+```
+new_down[0]=3  →  value 1 at end, went DOWN
+  1→2→1
+  1→3→1
+  2→3→1
+
+new_down[1]=2  →  value 2 at end, went DOWN
+  1→3→2
+  2→3→2
+```
+
+#### Complete List
+
+```
+┌────┬─────────────┬───────────────┐
+│ #  │ Array       │ Pattern       │
+├────┼─────────────┼───────────────┤
+│  1 │ [1, 2, 1]   │ up → down     │
+│  2 │ [1, 3, 1]   │ up → down     │
+│  3 │ [1, 3, 2]   │ up → down     │
+│  4 │ [2, 1, 2]   │ down → up     │
+│  5 │ [2, 1, 3]   │ down → up     │
+│  6 │ [2, 3, 1]   │ up → down     │
+│  7 │ [2, 3, 2]   │ up → down     │
+│  8 │ [3, 1, 2]   │ down → up     │
+│  9 │ [3, 1, 3]   │ down → up     │
+│ 10 │ [3, 2, 3]   │ down → up     │
+└────┴─────────────┴───────────────┘
+Total = 10  ✓
+```
+
+---
+
+## Key Formulas Summary
+
+```
+┌──────────────────┬────────────────────────────────────────────────────┐
+│ Formula          │ Meaning                                            │
+├──────────────────┼────────────────────────────────────────────────────┤
+│ up[v] = i        │ base: i values smaller than v exist                │
+│ down[v] = m-1-i  │ base: m-1-i values larger than v exist             │
+│ pref_up[i]       │ sum of up[0..i]                                    │
+│ pref_down[i]     │ sum of down[0..i]                                  │
+│ new_up[v]        │ = pref_down[v-1]  (previous DOWN, now go UP)       │
+│ new_down[v]      │ = total_up - pref_up[v]  (prev UP, now go DOWN)    │
+│ answer           │ = sum(up) + sum(down)  after n-1 transitions       │
+└──────────────────┴────────────────────────────────────────────────────┘
+```
+
+---
+
+## Complexity Comparison
+
+```
+┌───────────────┬──────────────┬──────────┬─────────────────────────────┐
+│ Approach      │ Time         │ Space    │ m=100, n=10                 │
+├───────────────┼──────────────┼──────────┼─────────────────────────────┤
+│ Brute Force   │ O(m^n × n)   │ O(m^n)   │ ~10^21 ops  ✗ infeasible   │
+│ Optimal DP    │ O(n × m)     │ O(m)     │ ~1000  ops  ✓ instant      │
+└───────────────┴──────────────┴──────────┴─────────────────────────────┘
+```
+
+---
+
+## Interview Cheatsheet
+
+```
+Q: What is the state?
+A: up[v] and down[v] = count of valid sequences of
+   current length ending at value v
+
+Q: Why prefix sums?
+A: To compute sum over a range in O(1) instead of O(m)
+   Reduces each length step from O(m²) to O(m)
+
+Q: Why up[v] = pref_down[v-1]?
+A: To extend UP to v, previous move must be DOWN
+   at some value strictly less than v
+   That is sum of down[0..v-1] = pref_down[v-1]
+
+Q: Why down[v] = total_up - pref_up[v]?
+A: To extend DOWN to v, previous move must be UP
+   at some value strictly greater than v
+   That is sum of up[v+1..m-1]
+         = total_up - pref_up[v]
+```
