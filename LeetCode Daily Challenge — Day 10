@@ -1,0 +1,494 @@
+# 📋 LeetCode Daily Challenge - GitHub Template
+
+---
+
+```markdown
+# 🧩 LeetCode Daily Challenge
+
+---
+
+## 📅 Problem Information
+
+| Field         | Details                          |
+|---------------|----------------------------------|
+| 📆 Date       | YYYY-MM-DD                       |
+| 🔢 Problem #  | 3700                             |
+| 📝 Title      | Number of ZigZag Arrays II       |
+| 🎯 Difficulty | Hard                             |
+| 🏷️ Topics     | DP, Matrix Exponentiation        |
+| 🔗 Link       | https://leetcode.com/problems/   |
+
+---
+
+## 📖 Problem Statement
+
+```
+You are given three integers n, l, and r.
+
+A ZigZag array of length n is defined as follows:
+  - Each element lies in the range [l, r]
+  - No two adjacent elements are equal
+  - No three consecutive elements form a strictly 
+    increasing or strictly decreasing sequence
+
+Return the total number of valid ZigZag arrays.
+Since the answer may be large, return it modulo 10^9 + 7.
+```
+
+---
+
+## 📌 Examples
+
+### Example 1
+```
+Input:  n = 3, l = 4, r = 5
+Output: 2
+
+Valid Arrays:
+[4, 5, 4]
+[5, 4, 5]
+```
+
+### Example 2
+```
+Input:  n = 3, l = 1, r = 3
+Output: 10
+
+Valid Arrays:
+[1,2,1], [1,3,1], [1,3,2]
+[2,1,2], [2,1,3], [2,3,1], [2,3,2]
+[3,1,2], [3,1,3], [3,2,3]
+```
+
+---
+
+## 🔒 Constraints
+
+```
+3   <= n <= 10^9
+1   <= l < r <= 75
+```
+
+---
+
+## 💡 Intuition & Thought Process
+
+```
+Step 1: UNDERSTAND
+━━━━━━━━━━━━━━━━━
+- ZigZag means: values must alternate UP-DOWN or DOWN-UP
+- Valid:   a < b > c  OR  a > b < c
+- Invalid: a < b < c  OR  a > b > c  OR  a == b
+
+Step 2: IDENTIFY PATTERN
+━━━━━━━━━━━━━━━━━━━━━━━
+- n can be up to 10^9 → Cannot iterate step by step
+- Range is small (m ≤ 75) → Matrix size is manageable
+- Repeated structure → Matrix Exponentiation!
+
+Step 3: STATE DESIGN
+━━━━━━━━━━━━━━━━━━━
+- State U(v): value v placed going UP, next must go DOWN
+- State D(v): value v placed going DOWN, next must go UP
+- Total states = 2m (m UP states + m DOWN states)
+
+Step 4: APPROACH
+━━━━━━━━━━━━━━━
+- Build transition matrix T
+- Use matrix exponentiation to compute T^(n-2)
+- Multiply with base case dp2 (arrays of length 2)
+```
+
+---
+
+## 🛠️ Approach Comparison
+
+```
+┌──────────────────┬──────────────┬───────────┬─────────┐
+│ Approach         │ Time         │ Space     │ Works?  │
+├──────────────────┼──────────────┼───────────┼─────────┤
+│ Brute Force      │ O(m^n)       │ O(n)      │   ✗     │
+│ Simple DP        │ O(m² × n)    │ O(m)      │   ✗     │
+│ Matrix Exp (OPT) │ O(m³ log n)  │ O(m²)     │   ✓     │
+└──────────────────┴──────────────┴───────────┴─────────┘
+m = r - l + 1 (max 75)
+```
+
+---
+
+## 🐌 Solution 1: Brute Force
+
+### Code
+```python
+class Solution:
+    def zigZagArrays(self, n: int, l: int, r: int) -> int:
+        MOD = 1000000007
+        count = 0
+        
+        def generate(arr):
+            nonlocal count
+            
+            # ✅ Base case: array complete
+            if len(arr) == n:
+                count += 1
+                return
+            
+            for val in range(l, r + 1):
+                
+                # First element: no restrictions
+                if len(arr) == 0:
+                    generate(arr + [val])
+                
+                # Second element: cant equal first
+                elif len(arr) == 1:
+                    if val != arr[-1]:
+                        generate(arr + [val])
+                
+                # Third+ element: full zigzag check
+                else:
+                    prev2 = arr[-2]
+                    prev1 = arr[-1]
+                    
+                    if val == prev1:       continue  # Equal adjacent
+                    if prev2 < prev1 < val: continue  # Strictly increasing
+                    if prev2 > prev1 > val: continue  # Strictly decreasing
+                    
+                    generate(arr + [val])
+        
+        generate([])
+        return count % MOD
+```
+
+### Complexity
+```
+⏰ Time:  O(m^n) → Exponential → UNUSABLE for large n
+💾 Space: O(n)   → Recursion stack depth
+```
+
+### Dry Run (n=3, l=4, r=5)
+```
+generate([])
+├── generate([4])
+│   ├── generate([4,5])
+│   │   ├── val=4: 4≠5✓, NOT(4<5<4)✓, NOT(4>5>4)✓ → [4,5,4] COUNT=1✓
+│   │   └── val=5: 5==5 SKIP✗
+│   └── generate([4,4]) → 4==4 SKIP✗
+└── generate([5])
+    ├── generate([5,4])
+    │   ├── val=4: 4==4 SKIP✗
+    │   └── val=5: 5≠4✓, NOT(5<4<5)✓, NOT(5>4>5)✓ → [5,4,5] COUNT=2✓
+    └── generate([5,5]) → 5==5 SKIP✗
+
+Final Answer: 2 ✓
+```
+
+---
+
+## ⚡ Solution 2: Optimal (Matrix Exponentiation)
+
+### Code
+```python
+class Solution:
+    MOD = 1000000007
+
+    def multiply(self, A, B):
+        """
+        Matrix Multiplication: C = A × B
+        C[i][j] = Σ A[i][k] × B[k][j]
+        """
+        n = len(A)
+        C = [[0] * n for _ in range(n)]  # Result matrix
+
+        for i in range(n):
+            for k in range(n):
+                if A[i][k] == 0: continue  # Skip zero rows (optimization)
+                for j in range(n):
+                    if B[k][j] == 0: continue  # Skip zero cols (optimization)
+                    C[i][j] = (C[i][j] + A[i][k] * B[k][j]) % self.MOD
+
+        return C
+
+    def power(self, base, exp):
+        """
+        Matrix Exponentiation: base^exp using binary exponentiation
+        O(n³ log exp) instead of O(n³ × exp)
+        """
+        n = len(base)
+
+        # Identity matrix (like number 1 in scalar exponentiation)
+        result = [[1 if i == j else 0 for j in range(n)] for i in range(n)]
+
+        while exp:
+            if exp & 1:                          # Current bit is 1
+                result = self.multiply(result, base)
+            base = self.multiply(base, base)     # Square the base
+            exp >>= 1                            # Process next bit
+
+        return result
+
+    def zigZagArrays(self, n: int, l: int, r: int) -> int:
+        m = r - l + 1    # Total distinct values
+        S = 2 * m        # Total states
+
+        # ─── State Encoding ───────────────────────────────────
+        def U(v): return v - 1        # UP state   → index [0, m-1]
+        def D(v): return m + (v - 1)  # DOWN state → index [m, 2m-1]
+        # ──────────────────────────────────────────────────────
+
+        # ─── Build Transition Matrix ──────────────────────────
+        T = [[0] * S for _ in range(S)]
+
+        for v in range(1, m + 1):
+            # U(v): v came after going UP (v > prev)
+            # → next u must be LESS than v (go DOWN)
+            for u in range(1, v):
+                T[U(v)][D(u)] = 1   # From D(u), reach U(v)
+
+            # D(v): v came after going DOWN (v < prev)
+            # → next u must be GREATER than v (go UP)
+            for u in range(v + 1, m + 1):
+                T[D(v)][U(u)] = 1   # From U(u), reach D(v)
+        # ──────────────────────────────────────────────────────
+
+        # ─── Base Case: Length 2 Arrays ───────────────────────
+        dp2 = [0] * S
+        for v in range(1, m + 1):
+            dp2[U(v)] = v - 1   # Choices < v (first element)
+            dp2[D(v)] = m - v   # Choices > v (first element)
+        # ──────────────────────────────────────────────────────
+
+        if n == 2:
+            return sum(dp2) % self.MOD
+
+        # ─── Apply Matrix Exponentiation ──────────────────────
+        P = self.power(T, n - 2)   # T^(n-2)
+
+        # Multiply P × dp2
+        dpn = [0] * S
+        for i in range(S):
+            for j in range(S):
+                dpn[i] = (dpn[i] + P[i][j] * dp2[j]) % self.MOD
+        # ──────────────────────────────────────────────────────
+
+        return sum(dpn) % self.MOD
+```
+
+---
+
+## 🔍 State Design Explained
+
+```
+For m=3 (values 1,2,3), S=6:
+
+INDEX:   0     1     2     3     4     5
+STATE:  U(1)  U(2)  U(3)  D(1)  D(2)  D(3)
+
+U(v) = "value v was placed, came from BELOW v"
+       → next value MUST be less than v
+
+D(v) = "value v was placed, came from ABOVE v"  
+       → next value MUST be greater than v
+
+Visual Pattern:
+       prev    curr    next
+         1  →   3   →  1 or 2    [U(3) state: came up to 3]
+         3  →   1   →  2 or 3    [D(1) state: came down to 1]
+```
+
+---
+
+## 🔁 Transition Matrix Visual (m=3)
+
+```
+     U(1) U(2) U(3) D(1) D(2) D(3)
+U(1) [ 0    0    0    0    0    0 ]  ← No value can go UP to 1
+U(2) [ 0    0    0    1    0    0 ]  ← D(1)→U(2): 1↓ then 2↑
+U(3) [ 0    0    0    1    1    0 ]  ← D(1),D(2)→U(3)
+D(1) [ 0    1    1    0    0    0 ]  ← U(2),U(3)→D(1)
+D(2) [ 0    0    1    0    0    0 ]  ← U(3)→D(2): 3↑ then 2↓
+D(3) [ 0    0    0    0    0    0 ]  ← No value can go DOWN to 3
+```
+
+---
+
+## 🧪 Full Dry Run (n=3, l=1, r=3)
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SETUP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+m = 3, S = 6
+Values available: {1, 2, 3}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 1: Build dp2 (base case: length 2 arrays)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+v=1: dp2[U(1)] = 1-1 = 0   (no values < 1)
+     dp2[D(1)] = 3-1 = 2   (values {2,3} > 1)
+     
+v=2: dp2[U(2)] = 2-1 = 1   (value {1} < 2)
+     dp2[D(2)] = 3-2 = 1   (value {3} > 2)
+     
+v=3: dp2[U(3)] = 3-1 = 2   (values {1,2} < 3)
+     dp2[D(3)] = 3-3 = 0   (no values > 3)
+
+dp2 = [0, 1, 2, 2, 1, 0]
+       U1 U2 U3 D1 D2 D3
+
+Meaning:
+  U(2)=1 → array [1,2]         (1 way)
+  U(3)=2 → arrays [1,3],[2,3]  (2 ways)
+  D(1)=2 → arrays [2,1],[3,1]  (2 ways)
+  D(2)=1 → array [3,2]         (1 way)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 2: Matrix Power T^(3-2) = T^1 = T
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+(No multiplication needed, just use T directly)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 3: dpn = T × dp2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+dpn[U(1)] = Σ T[U(1)][j] × dp2[j] = 0
+            (Nothing transitions to U(1))
+
+dpn[U(2)] = T[U(2)][D(1)] × dp2[D(1)]
+           = 1 × 2 = 2
+           Arrays: [2,1,2], [3,1,2]
+
+dpn[U(3)] = T[U(3)][D(1)] × dp2[D(1)]
+           + T[U(3)][D(2)] × dp2[D(2)]
+           = 1×2 + 1×1 = 3
+           Arrays: [2,1,3], [3,1,3], [3,2,3]
+
+dpn[D(1)] = T[D(1)][U(2)] × dp2[U(2)]
+           + T[D(1)][U(3)] × dp2[U(3)]
+           = 1×1 + 1×2 = 3
+           Arrays: [1,2,1], [1,3,1], [2,3,1]
+
+dpn[D(2)] = T[D(2)][U(3)] × dp2[U(3)]
+           = 1×2 = 2
+           Arrays: [1,3,2], [2,3,2]
+
+dpn[D(3)] = 0
+            (Nothing transitions to D(3))
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 4: Sum all states
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+dpn = [0, 2, 3, 3, 2, 0]
+       U1 U2 U3 D1 D2 D3
+
+ans = 0+2+3+3+2+0 = 10 ✓
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+VERIFICATION: All 10 Arrays
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[1,2,1] 1<2>1 ✓    [2,1,2] 2>1<2 ✓
+[1,3,1] 1<3>1 ✓    [2,1,3] 2>1<3 ✓
+[1,3,2] 1<3>2 ✓    [2,3,1] 2<3>1 ✓
+[3,1,2] 3>1<2 ✓    [2,3,2] 2<3>2 ✓
+[3,1,3] 3>1<3 ✓    [3,2,3] 3>2<3 ✓
+COUNT = 10 ✓ CORRECT!
+```
+
+---
+
+## 📊 Complexity Analysis
+
+```
+┌─────────────────────────────────────────────────────────┐
+│              BRUTE FORCE                                │
+├─────────────────────────────────────────────────────────┤
+│ Time:  O(m^n)                                          │
+│        m=2,n=3  → 8 operations                         │
+│        m=75,n=9 → 75^9 ≈ 7.5 × 10^16 (IMPOSSIBLE)    │
+│                                                         │
+│ Space: O(n) → recursion stack depth                    │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│              OPTIMAL SOLUTION                           │
+├─────────────────────────────────────────────────────────┤
+│ Variables:                                             │
+│   m = r - l + 1 ≤ 75                                  │
+│   S = 2m ≤ 150  (matrix dimension)                    │
+│                                                         │
+│ Matrix Multiply:   O(S³) = O(8m³)                     │
+│ Matrix Power:      O(S³ × log n)                       │
+│ Final DP Mult:     O(S²)                               │
+│                                                         │
+│ Total Time:  O(m³ × log n)                            │
+│              = 75³ × log(10⁹)                          │
+│              = 421,875 × 30                            │
+│              ≈ 12.6 Million ops ✓ FAST!               │
+│                                                         │
+│ Total Space: O(m²) for matrix storage                  │
+│              = 150 × 150 = 22,500 cells               │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🧠 Key Concepts Used
+
+```
+1. DYNAMIC PROGRAMMING
+   ─────────────────────
+   dp[state] = number of valid arrays ending in that state
+   State transitions capture zigzag constraint
+
+2. MATRIX EXPONENTIATION
+   ──────────────────────
+   When DP has fixed transitions and n is huge:
+   dp[n] = T^(n-2) × dp[2]
+   Compute T^k in O(log k) instead of O(k)
+
+3. BINARY EXPONENTIATION
+   ──────────────────────
+   n = 13 = 1101 in binary
+   T^13 = T^8 × T^4 × T^1
+   Only log(n) matrix multiplications needed
+
+4. STATE ENCODING
+   ──────────────
+   Encode (value, direction) as single index
+   U(v) = v-1      [0 to m-1]
+   D(v) = m+(v-1)  [m to 2m-1]
+```
+
+---
+
+## ⚠️ Edge Cases
+
+```
+┌──────────────────────────────────────────────────────┐
+│ Case          │ Input          │ Handling            │
+├──────────────────────────────────────────────────────┤
+│ n == 2        │ n=2, l=1, r=3 │ Return sum(dp2)     │
+│ Only 2 values │ l=4, r=5      │ m=2, limited states │
+│ Large n       │ n=10^9        │ Matrix exp handles  │
+│ Small range   │ l=r-1         │ m=2 works fine      │
+└──────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🏆 Final Results
+
+```
+Test 1: n=3, l=4, r=5
+━━━━━━━━━━━━━━━━━━━━━
+Expected: 2
+Got:      2  ✅
+
+Test 2: n=3, l=1, r=3  
+━━━━━━━━━━━━━━━━━━━━━
+Expected: 10
+Got:      10 ✅
+```
+
+---
