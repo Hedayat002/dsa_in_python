@@ -1,0 +1,274 @@
+That's a great idea. If you're building a GitHub repository for LeetCode solutions, using a **consistent template** makes revision much easier.
+
+Here's a professional template you can reuse for every problem.
+
+---
+
+# LeetCode Solution Template
+
+## Problem
+
+**Problem Name:** Count Subarrays With Majority Element I
+
+**Difficulty:** Medium
+
+---
+
+# 1. Intuition
+
+Before writing any code, think about the most straightforward solution.
+
+The simplest idea is to generate **every possible subarray** and check whether the `target` element appears **more than half** of the subarray length.
+
+Since every subarray must be checked independently, we can use two nested loops.
+
+---
+
+# 2. Approach
+
+1. Iterate through every possible starting index `i`.
+2. Initialize `target_count = 0`.
+3. Extend the subarray one element at a time using index `j`.
+4. Whenever `nums[j] == target`, increment `target_count`.
+5. Compute the current subarray length.
+
+```text
+length = j - i + 1
+```
+
+6. Check whether
+
+```text
+target_count > length // 2
+```
+
+7. If true, increment the answer.
+
+8. Continue until every subarray has been processed.
+
+---
+
+# 3. Algorithm
+
+```
+answer = 0
+
+for every starting index i
+
+      target_count = 0
+
+      for every ending index j
+
+            if nums[j] == target
+                  target_count++
+
+            length = j - i + 1
+
+            if target_count > length // 2
+                  answer++
+
+return answer
+```
+
+---
+
+# 4. Python Code
+
+```python
+class Solution:
+    def countSubarrays(self, nums: list[int], target: int) -> int:
+        n = len(nums)
+        ans = 0
+
+        # Try every starting index
+        for i in range(n):
+
+            target_count = 0
+
+            # Extend the subarray
+            for j in range(i, n):
+
+                if nums[j] == target:
+                    target_count += 1
+
+                length = j - i + 1
+
+                # Check if target is majority
+                if target_count > length // 2:
+                    ans += 1
+
+        return ans
+```
+
+---
+
+# 5. Dry Run
+
+### Input
+
+```text
+nums = [1,2,2,3]
+target = 2
+```
+
+---
+
+### Start i = 0
+
+| j | Subarray  | target_count | Length | Majority? | Answer |
+| - | --------- | ------------ | ------ | --------- | ------ |
+| 0 | [1]       | 0            | 1      | ❌         | 0      |
+| 1 | [1,2]     | 1            | 2      | ❌         | 0      |
+| 2 | [1,2,2]   | 2            | 3      | ✅         | 1      |
+| 3 | [1,2,2,3] | 2            | 4      | ❌         | 1      |
+
+---
+
+### Start i = 1
+
+| j | Subarray | target_count | Length | Majority? | Answer |
+| - | -------- | ------------ | ------ | --------- | ------ |
+| 1 | [2]      | 1            | 1      | ✅         | 2      |
+| 2 | [2,2]    | 2            | 2      | ✅         | 3      |
+| 3 | [2,2,3]  | 2            | 3      | ✅         | 4      |
+
+---
+
+### Start i = 2
+
+| j | Subarray | target_count | Length | Majority? | Answer |
+| - | -------- | ------------ | ------ | --------- | ------ |
+| 2 | [2]      | 1            | 1      | ✅         | 5      |
+| 3 | [2,3]    | 1            | 2      | ❌         | 5      |
+
+---
+
+### Start i = 3
+
+| j | Subarray | target_count | Length | Majority? | Answer |
+| - | -------- | ------------ | ------ | --------- | ------ |
+| 3 | [3]      | 0            | 1      | ❌         | 5      |
+
+---
+
+## Final Answer
+
+```text
+5
+```
+
+---
+
+# 6. Why Does This Work?
+
+* Every possible subarray is considered exactly once.
+* `target_count` always stores the number of occurrences of `target` in the current subarray.
+* The condition
+
+```text
+target_count > length // 2
+```
+
+is exactly the definition of a majority element.
+
+Therefore, every valid subarray is counted.
+
+---
+
+# 7. Complexity Analysis
+
+### Time Complexity
+
+```
+O(N²)
+```
+
+* Outer loop runs **N** times.
+* Inner loop runs up to **N** times.
+
+Total:
+
+```
+O(N × N) = O(N²)
+```
+
+---
+
+### Space Complexity
+
+```
+O(1)
+```
+
+Only a few integer variables are used.
+
+---
+
+# 8. Key Takeaways
+
+* Generate all possible subarrays using two loops.
+* Maintain the frequency of the target while expanding the subarray.
+* Check the majority condition in constant time.
+* This brute-force approach is easy to understand but is not optimal for large inputs.
+
+---
+
+## 📌 Reusable GitHub Template for Future Problems
+
+````markdown
+# Intuition
+
+Explain the core idea behind the solution.
+
+---
+
+# Approach
+
+Step-by-step explanation of how the algorithm works.
+
+---
+
+# Algorithm
+
+Pseudo code.
+
+---
+
+# Code (Python)
+
+```python
+# Solution
+````
+
+---
+
+# Dry Run
+
+Example walkthrough with tables or diagrams.
+
+---
+
+# Why This Works
+
+Explain the correctness of the algorithm.
+
+---
+
+# Complexity Analysis
+
+**Time Complexity:** O(...)
+
+**Space Complexity:** O(...)
+
+---
+
+# Key Takeaways
+
+* Point 1
+* Point 2
+* Point 3
+
+```
+
+This template is concise, reviewer-friendly, and works well for documenting LeetCode solutions in a GitHub repository or for quick revision before interviews.
+```
