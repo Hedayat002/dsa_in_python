@@ -1,0 +1,230 @@
+Here is a comprehensive, production-grade guide for LeetCode 3020: **Find the Maximum Number of Elements in Subset**. This guide is formatted perfectly for your GitHub repository, structured to serve as an excellent resource for your future interview prep and quick revisions.
+
+---
+
+# LeetCode 3020: Find the Maximum Number of Elements in Subset
+
+## Problem Statement
+
+You are given an array of positive integers `nums`. You need to select a subset of `nums` that can be arranged into a mountain-like sequence following a perfect squaring pattern:
+
+$$[x, x^2, x^4, \dots, x^{k/2}, x^k, x^{k/2}, \dots, x^4, x^2, x]$$
+
+Where $k$ is a non-negative power of 2.
+
+* **Valid Examples:** `[2, 4, 16, 4, 2]` ($2 \rightarrow 4 \rightarrow 16 \rightarrow 4 \rightarrow 2$) and `[3, 9, 3]`.
+* **Invalid Examples:** `[2, 4, 8, 4, 2]` (8 is not $4^2$).
+* **Special Case:** `1` raised to any power is `1`. A sequence of ones like `[1, 1, 1, 1, 1]` is valid as long as it has an odd length.
+
+**Goal:** Return the **maximum number of elements** in such a subset.
+
+---
+
+## Key Insights & Strategy
+
+1. **The Core Pattern:** Every element in the chain except the peak element ($x^k$) must appear **at least twice** (once for the left ascending side, once for the right descending side). The peak element needs to appear **at least once**.
+2. **The Base Case ($x = 1$):** Since $1^2 = 1$, the number `1` can chain indefinitely with itself. The maximum elements we can take from our available `1`s is the largest odd number less than or equal to `count[1]`. If `count[1]` is even, we must take `count[1] - 1` elements to keep the sequence symmetric.
+3. **Sequence Bounds:** Because numbers grow exponentially via squaring ($x \rightarrow x^2 \rightarrow x^4 \dots$), sequences for $x \ge 2$ get large incredibly fast. Since $nums[i] \le 10^9$, a chain can have at most ~5-6 unique levels before exceeding the limit.
+
+---
+
+## Approach 1: Brute Force (Simulated Chain Search)
+
+### Idea
+
+For every unique number in the array, treat it as a potential starting base $x$. Try to build the chain step-by-step ($x \rightarrow x^2 \rightarrow x^4 \dots$) by checking if we have enough frequencies in a hash map.
+
+### Algorithm
+
+1. Count the frequencies of all numbers using a Hash Map.
+2. Handle the edge case for `1` separately.
+3. Iterate through each unique number `x` (where `x > 1`).
+4. While `count[x] >= 2` and $x^2$ exists in our map, increment our current chain length by 2 and move to the next power: $x = x^2$.
+5. When the loop terminates (either because we don't have $\ge 2$ copies of $x$, or $x^2$ is missing), check if we have at least **one** copy of the current $x$ to act as the peak. If so, add 1 to the chain length.
+6. Track the global maximum length found.
+
+### Code Implementation (Python)
+
+```python
+from collections import Counter
+
+class SolutionBruteForce:
+    def maximumLength(self, nums: list[int]) -> int:
+        freq = Counter(nums)
+        max_len = 0
+        
+        # 1. Handle special base case for 1
+        if 1 in freq:
+            ones_count = freq[1]
+            # Must be an odd length
+            max_len = ones_count if ones_count % 2 != 0 else ones_count - 1
+            
+        # 2. Check chains for numbers > 1
+        for num in list(freq.keys()):
+            if num == 1:
+                continue
+                
+            current_len = 0
+            current_base = num
+            
+            # Keep climbing while we have elements to support both sides
+            while freq[current_base] >= 2 and (current_base * current_base) in freq:
+                current_len += 2
+                current_base = current_base * current_base
+                
+            # The current_base is now the peak. We need at least 1 copy of it.
+            if freq[current_base] >= 1:
+                current_len += 1
+            else:
+                # If we don't even have 1 copy of the peak, the last valid step was illegal
+                # Backtrack by 1 element to make the previous element the peak
+                current_len -= 1 
+                
+            max_len = max(max_len, current_len)
+            
+        return max_len
+
+```
+
+### Complexity Analysis
+
+* **Time Complexity:** $O(N \log(\log M))$ where $N$ is the number of elements and $M$ is the maximum value in `nums` ($10^9$). Squaring a number repeatedly means it reaches $10^9$ in at most 5 steps. Thus, the inner loop runs a maximum of 5 times.
+* **Space Complexity:** $O(N)$ to store frequencies in the hash map.
+
+---
+
+## Approach 2: Optimal Approach (Memoized DFS / DP)
+
+### Idea
+
+The brute force approach already runs incredibly fast due to the mathematical limits of squaring. However, we can optimize it to avoid redundant chain calculations by caching the maximum sequence length achievable starting from any number $x$. This transforms it into a clean Dynamic Programming / Memoization approach.
+
+### Algorithm
+
+1. Build a frequency Map.
+2. Initialize a `memo` map where `memo[x]` stores the max chain length starting at $x$.
+3. For a number $x$:
+* If `count[x] < 2`: the chain ends immediately. If `count[x] == 1`, length is 1. If `count[x] == 0`, length is 0.
+* If `count[x] >= 2`: `memo[x] = 2 + memo[x * x]`.
+
+
+4. Maximize over all values.
+
+### Code Implementation (Python)
+
+```python
+from collections import Counter
+
+class SolutionOptimal:
+    def maximumLength(self, nums: list[int]) -> int:
+        freq = Counter(nums)
+        memo = {}
+        
+        # Handle special base case for 1
+        max_len = 0
+        if 1 in freq:
+            max_len = freq[1] if freq[1] % 2 != 0 else freq[1] - 1
+
+        def get_max_chain(x):
+            # Base condition: If x exceeds max constraint or not in array
+            if x not in freq:
+                return 0
+            
+            # Return cached result if already calculated
+            if x in memo:
+                return memo[x]
+            
+            # If we only have 1 copy, it must be the peak element
+            if freq[x] == 1:
+                memo[x] = 1
+                return 1
+            
+            # If we have 2 or more copies, it can either be a peak or part of the slopes
+            # We check if its square can continue the chain
+            next_square = x * x
+            chain_from_next = get_max_chain(next_square)
+            
+            if chain_from_next > 0:
+                memo[x] = 2 + chain_from_next
+            else:
+                # If the square doesn't exist, this number itself must act as the peak
+                memo[x] = 1
+                
+            return memo[x]
+
+        # Calculate for all unique numbers > 1
+        for num in freq:
+            if num > 1:
+                max_len = max(max_len, get_max_chain(num))
+                
+        return max_len
+
+```
+
+### Complexity Analysis
+
+* **Time Complexity:** $O(N)$. Each unique number is processed exactly once due to memoization. The maximum depth of recursion is bounded by $\log(\log(10^9)) \approx 5$, making it effectively linear.
+* **Space Complexity:** $O(N)$ for the frequency map and the memoization dictionary.
+
+---
+
+## Full Dry Run
+
+Let's dry run the optimal approach using **Example 1**: `nums = [5, 4, 1, 2, 2]`
+
+### 1. Frequency Map Construction
+
+```text
+freq = { 5: 1, 4: 1, 1: 1, 2: 2 }
+
+```
+
+### 2. Processing Base Case (`1`)
+
+* `1` is present. `freq[1] = 1`.
+* `1 % 2 != 0`, so `max_len = 1`.
+
+### 3. Iterating Over Unique Elements (`> 1`)
+
+#### **Case A: `num = 5**`
+
+* Call `get_max_chain(5)`
+* `freq[5] == 1`. It can only be a peak.
+* `memo[5] = 1`.
+* Update `max_len = max(1, 1) -> 1`.
+
+#### **Case B: `num = 4**`
+
+* Call `get_max_chain(4)`
+* `freq[4] == 1`. It can only be a peak.
+* `memo[4] = 1`.
+* Update `max_len = max(1, 1) -> 1`.
+
+#### **Case C: `num = 2**`
+
+* Call `get_max_chain(2)`
+* `freq[2] == 2` ($\ge 2$). It can form the slopes of a sequence.
+* Calculate `next_square = 2 * 2 = 4`.
+* Make recursive call: `get_max_chain(4)`.
+* `4` is already in `memo` with value `1`. Returns `1`.
+
+
+* Since `chain_from_next = 1` (which is $> 0$), we update:
+
+$$\text{memo}[2] = 2 + \text{get\_max\_chain}(4) = 2 + 1 = 3$$
+
+
+* Update `max_len = max(1, 3) -> 3`.
+
+### Final Output
+
+Returns `3` (corresponding to the subset sequence `[2, 4, 2]`).
+
+---
+
+## Comparison Table
+
+| Strategy | Time Complexity | Space Complexity | Pros | Cons |
+| --- | --- | --- | --- | --- |
+| **Brute Force** | $O(N \log(\log M))$ | $O(N)$ | Easy to implement, intuitive logic. | Might recalculate sub-chains overlappingly. |
+| **Optimal (DP)** | $O(N)$ | $O(N)$ | Guarantees single-pass processing via caching. | Marginal code overhead due to recursion setup. |
