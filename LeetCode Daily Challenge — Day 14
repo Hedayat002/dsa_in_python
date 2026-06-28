@@ -1,0 +1,716 @@
+# 1846. Maximum Element After Decreasing and Rearranging
+
+---
+
+# 1. Problem Statement
+
+You are given an integer array `arr`.
+
+You may perform the following operations any number of times:
+
+1. Rearrange the elements in any order.
+2. Decrease any element to any positive integer.
+
+After all operations, the array must satisfy:
+
+* The first element is `1`.
+* The absolute difference between adjacent elements is at most `1`.
+
+Return the **maximum possible value** of the last (largest) element.
+
+---
+
+# 2. Examples
+
+### Example 1
+
+```text
+Input:
+arr = [2,2,1,2,1]
+
+Output:
+2
+
+Explanation:
+
+Possible array
+
+[1,1,2,2,2]
+
+Maximum element = 2
+```
+
+---
+
+### Example 2
+
+```text
+Input:
+arr = [100,1,1000]
+
+Output:
+3
+
+Explanation
+
+Rearrange
+
+[1,100,1000]
+
+Decrease
+
+[1,2,3]
+
+Maximum = 3
+```
+
+---
+
+### Example 3
+
+```text
+Input:
+arr = [1,2,3]
+
+Output:
+3
+```
+
+---
+
+# 3. Constraints
+
+```text
+1 <= arr.length <= 10^5
+1 <= arr[i] <= 10^9
+```
+
+---
+
+# 4. Intuition
+
+We can:
+
+* Rearrange numbers.
+* Decrease numbers.
+* Never increase numbers.
+
+The best strategy is:
+
+* Start with `1`.
+* Build the sequence as large as possible.
+* Every next element should be **previous + 1** if possible.
+
+Think like building stairs.
+
+```text
+1
+2
+3
+4
+5
+```
+
+Never skip a stair because skipping can never increase the final answer.
+
+---
+
+# 5. Brute Force Approach
+
+## Idea
+
+Generate every permutation.
+
+For every permutation,
+
+try every possible decrement.
+
+Check whether it satisfies the conditions.
+
+Return maximum answer.
+
+---
+
+## Algorithm
+
+1. Generate all permutations.
+2. Generate all decrement possibilities.
+3. Check validity.
+4. Store answer.
+
+---
+
+## Code
+
+Not practical.
+
+Brute force is impossible because there are infinitely many decrement choices.
+
+---
+
+## Dry Run
+
+Skipped because approach is infeasible.
+
+---
+
+## Time Complexity
+
+```text
+O(n! × huge)
+```
+
+---
+
+## Space Complexity
+
+```text
+O(n!)
+```
+
+---
+
+# 6. Better Approach (Sorting + Greedy)
+
+## Idea
+
+Sort the array.
+
+Process numbers from left to right.
+
+Always make current number as large as possible.
+
+Formula
+
+```python
+current = min(previous + 1, current)
+```
+
+---
+
+## Algorithm
+
+1. Sort.
+2. prev=0
+3. Traverse.
+4. Update
+
+```python
+prev=min(prev+1,num)
+```
+
+5. Return prev.
+
+---
+
+## Code
+
+```python
+class Solution:
+    def maximumElementAfterDecrementingAndRearranging(self, arr):
+        arr.sort()
+
+        prev = 0
+
+        for num in arr:
+            prev = min(prev + 1, num)
+
+        return prev
+```
+
+---
+
+## Time Complexity
+
+```text
+Sorting : O(n log n)
+
+Traversal : O(n)
+
+Overall : O(n log n)
+```
+
+---
+
+## Space Complexity
+
+```text
+O(1)
+```
+
+(Ignoring sorting space.)
+
+---
+
+# 7. Optimal Approach (Counting + Greedy)
+
+## Intuition
+
+Observation:
+
+The maximum possible answer can never exceed `n`.
+
+Example
+
+```text
+arr=[1000,1000,1000]
+
+Answer =3
+```
+
+Not 1000.
+
+So every value larger than `n` behaves exactly like `n`.
+
+Instead of sorting,
+
+store frequency.
+
+Then greedily extend the sequence.
+
+---
+
+## Algorithm
+
+### Step 1
+
+Create frequency array.
+
+```python
+count=[0]*(n+1)
+```
+
+---
+
+### Step 2
+
+Store frequency.
+
+```python
+count[min(num,n)] +=1
+```
+
+---
+
+### Step 3
+
+Start
+
+```python
+prev=1
+```
+
+---
+
+### Step 4
+
+Process every value.
+
+```python
+for num in range(2,n+1):
+```
+
+Update
+
+```python
+prev=min(prev+count[num],num)
+```
+
+---
+
+### Step 5
+
+Return
+
+```python
+prev
+```
+
+---
+
+## Code
+
+```python
+class Solution:
+    def maximumElementAfterDecrementingAndRearranging(self, arr):
+        n = len(arr)
+
+        count = [0] * (n + 1)
+
+        for num in arr:
+            count[min(num, n)] += 1
+
+        prev = 1
+
+        for num in range(2, n + 1):
+            prev = min(prev + count[num], num)
+
+        return prev
+```
+
+---
+
+## Dry Run
+
+Example
+
+```text
+arr=[100,1,1000]
+```
+
+Length
+
+```text
+n=3
+```
+
+Frequency
+
+| Value | Count |
+| ----- | ----- |
+| 1     | 1     |
+| 2     | 0     |
+| 3     | 2     |
+
+---
+
+Start
+
+```text
+prev=1
+
+Sequence
+
+1
+```
+
+---
+
+### num=2
+
+```text
+count[2]=0
+```
+
+Compute
+
+```text
+prev=min(1+0,2)
+
+=1
+```
+
+Sequence
+
+```text
+1
+```
+
+---
+
+### num=3
+
+```text
+count[3]=2
+```
+
+We have two large numbers.
+
+They can become
+
+```text
+2
+
+3
+```
+
+Compute
+
+```text
+prev=min(1+2,3)
+
+=min(3,3)
+
+=3
+```
+
+Sequence
+
+```text
+1 2 3
+```
+
+Answer
+
+```text
+3
+```
+
+---
+
+## Time Complexity
+
+Building frequency
+
+```text
+O(n)
+```
+
+Traversal
+
+```text
+O(n)
+```
+
+Overall
+
+```text
+O(n)
+```
+
+---
+
+## Space Complexity
+
+```text
+O(n)
+```
+
+---
+
+# 8. Recursion Tree / DP Table / Diagram
+
+No recursion.
+
+No DP.
+
+Greedy Diagram
+
+```text
+Original
+
+100
+1
+1000
+
+↓
+
+Rearrange
+
+1
+100
+1000
+
+↓
+
+Decrease
+
+1
+2
+3
+
+↓
+
+Maximum =3
+```
+
+---
+
+# 9. Why This Works
+
+The greedy choice is:
+
+> Always make the current element as large as possible while maintaining validity.
+
+Suppose current sequence is
+
+```text
+1 2 3
+```
+
+Next value is
+
+```text
+100
+```
+
+Largest valid value is
+
+```text
+4
+```
+
+Choosing
+
+```text
+2
+```
+
+instead of
+
+```text
+4
+```
+
+can never help future elements.
+
+Making an element smaller only reduces future possibilities.
+
+Therefore greedy is always optimal.
+
+---
+
+# 10. Edge Cases
+
+### Single element
+
+```text
+[7]
+
+Answer
+
+1
+```
+
+---
+
+### Already valid
+
+```text
+[1,2,3,4]
+
+Answer
+
+4
+```
+
+---
+
+### All same
+
+```text
+[5,5,5,5]
+
+Answer
+
+4
+```
+
+---
+
+### Very large values
+
+```text
+[1000000000,1000000000]
+
+Answer
+
+2
+```
+
+---
+
+### Duplicates
+
+```text
+[2,2,2]
+
+Answer
+
+2
+```
+
+---
+
+# 11. Interview Explanation (30–60 sec)
+
+> We first observe that the answer cannot exceed the array length `n`, so any value greater than `n` can be treated as `n`. Instead of sorting, we count the frequency of each value from `1` to `n`. Then we greedily build the longest valid sequence starting from `1`. The variable `prev` stores the largest value built so far. At each value `num`, the `count[num]` copies can extend the sequence, but they can never create values larger than `num`. Therefore we update `prev = min(prev + count[num], num)`. This gives an `O(n)` time and `O(n)` space solution.
+
+---
+
+# 12. Key Takeaways
+
+* Rearrangement removes order constraints.
+* Only decreasing is allowed.
+* Maximum answer is never greater than `n`.
+* Counting sort avoids `O(n log n)` sorting.
+* Greedy always builds the largest possible next value.
+* `prev` stores the largest value constructed so far.
+
+---
+
+# 13. Common Mistakes
+
+❌ Forgetting to cap values:
+
+```python
+count[num]+=1
+```
+
+Should be
+
+```python
+count[min(num,n)] +=1
+```
+
+---
+
+❌ Initializing
+
+```python
+prev=0
+```
+
+In the counting approach.
+
+Correct
+
+```python
+prev=1
+```
+
+---
+
+❌ Thinking
+
+```python
+prev
+```
+
+stores the previous array element.
+
+Actually,
+
+```text
+prev
+
+=
+
+Largest valid value built so far
+```
+
+---
+
+❌ Using
+
+```python
+max()
+```
+
+instead of
+
+```python
+min()
+```
+
+---
+
+# 14. Related Problems
+
+* **** (Sorting + Greedy)
+* **** (Greedy)
+* **** (Greedy)
+* **** (Greedy)
+* **** (Sorting + Greedy)
+
+This problem is an excellent example of recognizing a hidden bound (`answer ≤ n`) and then replacing sorting with counting to improve the complexity from **O(n log n)** to **O(n)**.
