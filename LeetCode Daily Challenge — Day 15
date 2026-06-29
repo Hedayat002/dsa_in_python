@@ -1,0 +1,670 @@
+# 1967. Number of Strings That Appear as Substrings in Word
+
+---
+
+# 1. Problem Statement
+
+You are given:
+
+* An array of strings `patterns`
+* A string `word`
+
+Return the number of strings in `patterns` that appear as a **substring** of `word`.
+
+A **substring** is a continuous sequence of characters inside another string.
+
+---
+
+# 2. Examples
+
+### Example 1
+
+```text
+Input:
+patterns = ["a","abc","bc","d"]
+word = "abc"
+
+Output:
+3
+```
+
+Explanation
+
+```
+"a"   -> Present
+"abc" -> Present
+"bc"  -> Present
+"d"   -> Not Present
+```
+
+Answer = **3**
+
+---
+
+### Example 2
+
+```text
+Input:
+patterns = ["a","b","c"]
+word = "aaaaabbbbb"
+
+Output:
+2
+```
+
+Explanation
+
+```
+"a" -> Present
+"b" -> Present
+"c" -> Not Present
+```
+
+Answer = **2**
+
+---
+
+### Example 3
+
+```text
+Input:
+patterns = ["a","a","a"]
+word = "ab"
+
+Output:
+3
+```
+
+Even though `"a"` is repeated, **each occurrence in the array is counted separately.**
+
+---
+
+# 3. Constraints
+
+```
+1 <= patterns.length <= 100
+
+1 <= patterns[i].length <= 100
+
+1 <= word.length <= 100
+```
+
+Since the input size is small, even a brute-force solution is acceptable.
+
+---
+
+# 4. Intuition
+
+For every pattern, simply ask:
+
+> **"Does this pattern exist anywhere inside the word?"**
+
+If yes,
+
+```
+count++
+```
+
+Otherwise ignore it.
+
+---
+
+# 5. Brute Force Approach
+
+## Idea
+
+Check every possible starting position of every pattern inside `word`.
+
+Compare characters one by one.
+
+---
+
+## Algorithm
+
+For every pattern:
+
+1. Take its length.
+2. Move a window over `word`.
+3. Compare characters one by one.
+4. If all match
+
+```
+count++
+```
+
+---
+
+## Code
+
+```python
+class Solution:
+    def numOfStrings(self, patterns, word):
+        ans = 0
+
+        for pattern in patterns:
+
+            found = False
+            m = len(pattern)
+
+            for i in range(len(word) - m + 1):
+
+                j = 0
+
+                while j < m and word[i + j] == pattern[j]:
+                    j += 1
+
+                if j == m:
+                    found = True
+                    break
+
+            if found:
+                ans += 1
+
+        return ans
+```
+
+---
+
+## Dry Run
+
+```
+patterns = ["a","abc","bc","d"]
+
+word = "abc"
+```
+
+### Pattern = "a"
+
+```
+abc
+^
+
+Match
+count = 1
+```
+
+---
+
+### Pattern = "abc"
+
+```
+abc
+^^^
+
+Match
+
+count = 2
+```
+
+---
+
+### Pattern = "bc"
+
+```
+abc
+ ^^
+
+Match
+
+count = 3
+```
+
+---
+
+### Pattern = "d"
+
+```
+abc
+
+No Match
+```
+
+Answer
+
+```
+3
+```
+
+---
+
+## Time Complexity
+
+Let
+
+```
+P = number of patterns
+
+N = length of word
+
+M = average pattern length
+```
+
+```
+Time = O(P × N × M)
+```
+
+---
+
+## Space Complexity
+
+```
+O(1)
+```
+
+---
+
+# 6. Better Approach
+
+Python already provides optimized substring searching using
+
+```python
+pattern in word
+```
+
+Internally it is much faster than manually comparing characters.
+
+---
+
+## Idea
+
+For every pattern,
+
+```
+if pattern in word:
+    count += 1
+```
+
+---
+
+## Algorithm
+
+```
+count = 0
+
+For every pattern
+
+    if pattern exists in word
+
+        count++
+
+Return count
+```
+
+---
+
+## Code
+
+```python
+class Solution:
+    def numOfStrings(self, patterns, word):
+
+        ans = 0
+
+        for pattern in patterns:
+
+            if pattern in word:
+                ans += 1
+
+        return ans
+```
+
+---
+
+## Time Complexity
+
+Worst case
+
+```
+O(P × N × M)
+```
+
+Although internally Python is highly optimized.
+
+---
+
+## Space Complexity
+
+```
+O(1)
+```
+
+---
+
+# 7. Optimal Approach
+
+Since
+
+```
+word.length ≤ 100
+```
+
+we can generate **all substrings of `word` once**, store them in a hash set, and then answer each pattern lookup in constant average time.
+
+---
+
+## Intuition
+
+Generate every substring.
+
+```
+word = "abc"
+
+Substrings
+
+a
+ab
+abc
+b
+bc
+c
+```
+
+Store them inside a hash set.
+
+Then every lookup becomes
+
+```
+pattern in set
+```
+
+which is O(1) average.
+
+---
+
+## Algorithm
+
+```
+Create empty set
+
+Generate every substring
+
+Insert into set
+
+For every pattern
+
+    if pattern exists in set
+
+        count++
+
+Return count
+```
+
+---
+
+## Code
+
+```python
+class Solution:
+    def numOfStrings(self, patterns, word):
+
+        substrings = set()
+
+        n = len(word)
+
+        for i in range(n):
+
+            for j in range(i + 1, n + 1):
+
+                substrings.add(word[i:j])
+
+        ans = 0
+
+        for pattern in patterns:
+
+            if pattern in substrings:
+                ans += 1
+
+        return ans
+```
+
+---
+
+## Dry Run
+
+```
+word = "abc"
+```
+
+Generated set
+
+```
+{
+"a",
+"ab",
+"abc",
+"b",
+"bc",
+"c"
+}
+```
+
+Check
+
+```
+"a"   ✓
+
+"abc" ✓
+
+"bc"  ✓
+
+"d"   ✗
+```
+
+Answer
+
+```
+3
+```
+
+---
+
+## Time Complexity
+
+There are
+
+```
+N(N+1)/2
+```
+
+substrings.
+
+Creating them with Python slicing gives a worst-case time of:
+
+```
+O(N³ + P)
+```
+
+For this problem (`N ≤ 100`), this is still acceptable.
+
+---
+
+## Space Complexity
+
+```
+O(N²)
+```
+
+---
+
+# 8. Recursion Tree / DP Table / Diagram
+
+Not applicable.
+
+This is a **String Searching** problem.
+
+Diagram:
+
+```
+Word
+
+abc
+
+Generate
+
+a
+ab
+abc
+b
+bc
+c
+
+↓
+
+Store inside Hash Set
+
+↓
+
+Check every pattern
+```
+
+---
+
+# 9. Why This Works
+
+Every substring of `word` is generated exactly once.
+
+If a pattern exists,
+
+```
+pattern ∈ substrings
+```
+
+Otherwise,
+
+```
+pattern ∉ substrings
+```
+
+Hash set lookup is O(1) average.
+
+Therefore every pattern is checked efficiently.
+
+---
+
+# 10. Edge Cases
+
+### Single character
+
+```
+patterns = ["a"]
+
+word = "a"
+
+Answer = 1
+```
+
+---
+
+### Duplicate patterns
+
+```
+patterns = ["a","a","a"]
+
+word = "ab"
+
+Answer = 3
+```
+
+Each array element is counted separately.
+
+---
+
+### Pattern longer than word
+
+```
+patterns = ["abcd"]
+
+word = "abc"
+
+Answer = 0
+```
+
+---
+
+### Empty answer
+
+```
+patterns = ["x","y"]
+
+word = "abc"
+
+Answer = 0
+```
+
+---
+
+### Whole word matches
+
+```
+patterns = ["abc"]
+
+word = "abc"
+
+Answer = 1
+```
+
+---
+
+# 11. Interview Explanation (30–60 sec)
+
+> "The straightforward solution is to iterate through every pattern and check whether it appears inside the word. Manually comparing characters gives a time complexity of **O(P × N × M)**, where `P` is the number of patterns, `N` is the length of the word, and `M` is the average pattern length. In Python, we can simplify this using `pattern in word`, which uses an optimized substring-search algorithm internally. Another alternative is to generate all substrings of the word once, store them in a hash set, and then perform O(1) average lookups for each pattern. However, because generating all substrings requires extra memory and Python slicing copies strings, the built-in `in` approach is generally the best choice for this problem."
+
+---
+
+# 12. Key Takeaways
+
+* Understand what a **substring** is.
+* Brute force compares every possible position.
+* Python's `in` operator is optimized internally.
+* Hash sets provide O(1) average lookups.
+* For these small constraints, the built-in approach is both simple and efficient.
+
+---
+
+# 13. Common Mistakes
+
+❌ Confusing **substring** with **subsequence**.
+
+---
+
+❌ Counting only unique patterns.
+
+```python
+patterns = ["a","a","a"]
+```
+
+Answer is **3**, not **1**.
+
+---
+
+❌ Forgetting to stop searching after finding one match for a pattern.
+
+---
+
+❌ Writing the loop as:
+
+```python
+range(len(word))
+```
+
+Instead of:
+
+```python
+range(len(word) - len(pattern) + 1)
+```
+
+---
+
+❌ Assuming the hash-set approach is always faster. For this problem's small constraints, generating all substrings adds overhead and is not necessarily better than using Python's optimized substring search.
+
+---
+
+# 14. Related Problems
+
+* **28.** Implement `strStr()` (Find the Index of the First Occurrence in a String)
+* **459.** Repeated Substring Pattern
+* **1408.** String Matching in an Array
+* **392.** Is Subsequence
+* **686.** Repeated String Match
+* **214.** Shortest Palindrome
+* **KMP (Knuth–Morris–Pratt)** String Matching Algorithm
