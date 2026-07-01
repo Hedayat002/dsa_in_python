@@ -1,0 +1,814 @@
+Problem Name: 2812. Find the Safest Path in a Grid
+
+
+---
+
+1. Problem Statement
+
+You are given an n × n grid.
+
+1 → Cell contains a thief.
+
+0 → Empty cell.
+
+
+You start from (0,0) and want to reach (n−1,n−1).
+
+You may move only in 4 directions:
+
+Up
+
+Down
+
+Left
+
+Right
+
+
+The safeness factor of a path is
+
+> Minimum Manhattan distance between any cell on the path and the nearest thief.
+
+
+
+Your task is to return the maximum possible safeness factor among all possible paths.
+
+
+---
+
+2. Examples
+
+Example 1
+
+grid =
+[
+ [1,0,0],
+ [0,0,0],
+ [0,0,1]
+]
+
+Output
+
+0
+
+Explanation
+
+Both start and destination contain thieves.
+
+Safeness = 0.
+
+
+---
+
+Example 2
+
+grid =
+[
+ [0,0,1],
+ [0,0,0],
+ [0,0,0]
+]
+
+Output
+
+2
+
+Explanation
+
+The safest path never comes closer than distance 2 to the thief.
+
+
+---
+
+Example 3
+
+grid =
+[
+ [0,0,0,1],
+ [0,0,0,0],
+ [0,0,0,0],
+ [1,0,0,0]
+]
+
+Output
+
+2
+
+
+---
+
+3. Constraints
+
+1 ≤ n ≤ 400
+
+grid[i][j] ∈ {0,1}
+
+At least one thief exists.
+
+
+---
+
+4. Intuition
+
+At first glance we may think
+
+> Find every path.
+
+
+
+Impossible.
+
+Instead ask
+
+How safe is every cell?
+
+For each cell,
+
+distance[cell]
+
+=
+
+distance to nearest thief
+
+Once we know this,
+
+Example
+
+2 1 0
+3 2 1
+4 3 2
+
+Now every cell already knows its safety.
+
+Now the problem becomes
+
+> Find a path whose minimum value is maximum.
+
+
+
+This is a Maximum Bottleneck Path problem.
+
+
+---
+
+5. Brute Force Approach
+
+Idea
+
+Generate every possible path.
+
+For every path
+
+Compute distance from every cell to every thief.
+
+Find minimum distance on path.
+
+Keep maximum answer.
+
+
+
+---
+
+Algorithm
+
+Generate all paths
+
+For each path
+
+    minimum = INF
+
+    For every cell
+
+        Find nearest thief
+
+        minimum=min(minimum,distance)
+
+Answer=max(answer,minimum)
+
+
+---
+
+Code
+
+# Brute Force (Concept Only)
+
+Generate all possible paths
+
+For every path
+
+    Find nearest thief for every cell
+
+    Compute path safeness
+
+Return maximum
+
+
+---
+
+Dry Run
+
+Grid
+
+0 0 1
+0 0 0
+0 0 0
+
+Possible paths
+
+RRDD
+RDRD
+RDDR
+DRRD
+...
+
+Need to check all.
+
+Huge number of paths.
+
+
+---
+
+Time Complexity
+
+If total paths are
+
+≈2^(2n)
+
+For every path
+
+O(n² × thieves)
+
+Overall
+
+Exponential
+
+
+---
+
+Space Complexity
+
+O(path length)
+
+Impossible for n=400.
+
+
+---
+
+6. Better Approach
+
+Idea
+
+Instead of calculating nearest thief repeatedly,
+
+calculate it once using
+
+Multi-Source BFS
+
+Then Binary Search the answer.
+
+
+---
+
+Algorithm
+
+Step 1
+
+Run Multi Source BFS.
+
+Store
+
+dist[i][j]
+
+Distance of every cell from nearest thief.
+
+
+---
+
+Step 2
+
+Binary Search
+
+Safeness
+
+0
+
+...
+
+Maximum Distance
+
+For every candidate
+
+mid
+
+Run BFS.
+
+Only visit cells
+
+dist>=mid
+
+If destination reachable
+
+Increase answer.
+
+Else
+
+Decrease answer.
+
+
+---
+
+Code
+
+from collections import deque
+
+class Solution:
+    def __init__(self):
+        self.directions = [(1,0),(-1,0),(0,1),(0,-1)]
+
+    def check(self, dist, sf):
+        n = self.n
+
+        if dist[0][0] < sf:
+            return False
+
+        q = deque([(0,0)])
+        vis = [[False]*n for _ in range(n)]
+        vis[0][0] = True
+
+        while q:
+            x,y = q.popleft()
+
+            if x==n-1 and y==n-1:
+                return True
+
+            for dx,dy in self.directions:
+                nx=x+dx
+                ny=y+dy
+
+                if (0<=nx<n and
+                    0<=ny<n and
+                    not vis[nx][ny] and
+                    dist[nx][ny]>=sf):
+
+                    vis[nx][ny]=True
+                    q.append((nx,ny))
+
+        return False
+
+    def maximumSafenessFactor(self, grid):
+
+        self.n=len(grid)
+        n=self.n
+
+        dist=[[-1]*n for _ in range(n)]
+        vis=[[False]*n for _ in range(n)]
+
+        q=deque()
+
+        for i in range(n):
+            for j in range(n):
+                if grid[i][j]:
+                    q.append((i,j))
+                    vis[i][j]=True
+
+        level=0
+
+        while q:
+
+            for _ in range(len(q)):
+                x,y=q.popleft()
+
+                dist[x][y]=level
+
+                for dx,dy in self.directions:
+
+                    nx=x+dx
+                    ny=y+dy
+
+                    if (0<=nx<n and
+                        0<=ny<n and
+                        not vis[nx][ny]):
+
+                        vis[nx][ny]=True
+                        q.append((nx,ny))
+
+            level+=1
+
+        left=0
+        right=400
+        ans=0
+
+        while left<=right:
+
+            mid=(left+right)//2
+
+            if self.check(dist,mid):
+                ans=mid
+                left=mid+1
+            else:
+                right=mid-1
+
+        return ans
+
+
+---
+
+Time Complexity
+
+Multi Source BFS
+
+O(n²)
+
+Binary Search
+
+log400≈9
+
+Every BFS
+
+O(n²)
+
+Overall
+
+O(n² log n)
+
+(More precisely, , where  is the maximum distance to a thief.)
+
+
+---
+
+Space Complexity
+
+O(n²)
+
+
+---
+
+7. Optimal Approach
+
+Intuition
+
+Binary Search performs BFS multiple times.
+
+Can we avoid repeated BFS?
+
+Yes.
+
+Use
+
+Priority Queue (Max Heap)
+
+Always expand the safest path first.
+
+Exactly like Dijkstra.
+
+Difference
+
+Normal Dijkstra
+
+distance=edge sum
+
+Here
+
+path safety
+
+=
+
+minimum distance seen till now
+
+
+---
+
+Algorithm
+
+Step 1
+
+Run Multi Source BFS.
+
+Get
+
+dist[][]
+
+
+---
+
+Step 2
+
+Push
+
+(dist[0][0],0,0)
+
+into Max Heap.
+
+
+---
+
+Step 3
+
+Pop maximum safety cell.
+
+Visit neighbors.
+
+newSafety
+
+=
+
+min(currentSafety,
+
+dist[next])
+
+Update if larger.
+
+Stop when destination is popped.
+
+
+---
+
+Code
+
+from collections import deque
+import heapq
+
+class Solution:
+    def maximumSafenessFactor(self, grid):
+        n = len(grid)
+
+        dist = [[-1] * n for _ in range(n)]
+        q = deque()
+
+        for i in range(n):
+            for j in range(n):
+                if grid[i][j]:
+                    q.append((i, j))
+                    dist[i][j] = 0
+
+        directions = [(1,0),(-1,0),(0,1),(0,-1)]
+
+        while q:
+            x, y = q.popleft()
+
+            for dx, dy in directions:
+                nx = x + dx
+                ny = y + dy
+
+                if 0 <= nx < n and 0 <= ny < n and dist[nx][ny] == -1:
+                    dist[nx][ny] = dist[x][y] + 1
+                    q.append((nx, ny))
+
+        heap = [(-dist[0][0], 0, 0)]
+        best = [[-1] * n for _ in range(n)]
+        best[0][0] = dist[0][0]
+
+        while heap:
+            safe, x, y = heapq.heappop(heap)
+            safe = -safe
+
+            if x == n - 1 and y == n - 1:
+                return safe
+
+            if safe < best[x][y]:
+                continue
+
+            for dx, dy in directions:
+                nx = x + dx
+                ny = y + dy
+
+                if 0 <= nx < n and 0 <= ny < n:
+                    new_safe = min(safe, dist[nx][ny])
+
+                    if new_safe > best[nx][ny]:
+                        best[nx][ny] = new_safe
+                        heapq.heappush(heap, (-new_safe, nx, ny))
+
+        return 0
+
+
+---
+
+Dry Run
+
+Distance matrix
+
+2 1 0
+
+3 2 1
+
+4 3 2
+
+Heap
+
+(2,0,0)
+
+Expand
+
+2
+
+Neighbors
+
+min(2,3)=2
+
+min(2,1)=1
+
+Heap
+
+2
+
+1
+
+Always pop
+
+2
+
+Continue until destination.
+
+Answer
+
+2
+
+
+---
+
+Time Complexity
+
+Multi Source BFS
+
+O(n²)
+
+Priority Queue
+
+Each cell
+
+push
+
+pop
+
+O(log n²)
+
+=
+
+O(log n)
+
+Overall
+
+O(n² log n)
+
+
+---
+
+Space Complexity
+
+O(n²)
+
+
+---
+
+8. Recursion Tree / DP Table / Diagram
+
+No recursion.
+
+No DP.
+
+Instead
+
+Step 1
+
+Thieves
+
+↓
+
+Multi Source BFS
+
+↓
+
+Distance Matrix
+
+↓
+
+2 1 0
+
+3 2 1
+
+4 3 2
+
+↓
+
+Binary Search
+
+OR
+
+Max Heap
+
+↓
+
+Safest Path
+
+
+---
+
+9. Why This Works
+
+Multi-Source BFS guarantees each cell gets the shortest distance to its nearest thief because BFS explores the grid level by level from all thieves simultaneously.
+
+Binary Search works because the feasibility is monotonic:
+
+If a path exists with safeness k, then a path also exists for every value < k.
+
+
+The Max Heap solution works because it is a maximum bottleneck path problem. Like Dijkstra maximizes/minimizes a path metric, here we maximize the minimum safeness seen along the path.
+
+
+
+---
+
+10. Edge Cases
+
+Start cell contains a thief.
+
+Destination contains a thief.
+
+Only one cell (n = 1).
+
+All cells are thieves.
+
+One thief in a corner.
+
+Path completely blocked for higher safeness.
+
+Multiple thieves close together.
+
+Maximum grid size (400 × 400).
+
+
+
+---
+
+11. Interview Explanation (30–60 sec)
+
+> "First, I compute the distance from every cell to its nearest thief using Multi-Source BFS by pushing all thief cells into the queue at once. This gives each cell a safety value. Then the problem becomes finding a path that maximizes the minimum safety along the path. One solution is Binary Search on the answer and use BFS to check if a path exists using only cells whose safety is at least the candidate value. An even cleaner solution uses a Max Heap, similar to Dijkstra, where each state stores the minimum safety seen so far and always expands the currently safest path first."
+
+
+
+
+---
+
+12. Key Takeaways
+
+Multi-Source BFS computes nearest distances efficiently.
+
+Binary Search is applicable because the feasibility is monotonic.
+
+The problem is a Maximum Bottleneck Path problem.
+
+A Max Heap (Dijkstra variant) solves it in a single traversal after BFS.
+
+Overall complexity is efficient enough for n = 400.
+
+
+
+---
+
+13. Common Mistakes
+
+Running BFS separately from every thief (O(T × n²)), which is unnecessary.
+
+Forgetting to initialize all thieves in the BFS queue.
+
+Not checking if the start cell satisfies the current safeness threshold in the binary search solution.
+
+Marking cells as visited too late, causing duplicate queue entries.
+
+Using a min-heap instead of a max-heap in the optimal solution.
+
+Updating the path safety with max() instead of min().
+
+Using Euclidean distance instead of Manhattan distance.
+
+
+
+---
+
+14. Related Problems
+
+1. LeetCode 1631 – Path With Minimum Effort
+
+
+2. LeetCode 778 – Swim in Rising Water
+
+
+3. LeetCode 1091 – Shortest Path in Binary Matrix
+
+
+4. LeetCode 542 – 01 Matrix
+
+
+5. LeetCode 994 – Rotting Oranges
+
+
+6. LeetCode 1162 – As Far from Land as Possible
+
+
+7. LeetCode 505 – The Maze II
+
+
+8. LeetCode 499 – The Maze III
+
+
