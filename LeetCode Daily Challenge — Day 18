@@ -1,0 +1,639 @@
+3286. Find a Safe Walk Through a Grid
+
+
+---
+
+1. Problem Statement
+
+You are given an m × n binary grid and an integer health.
+
+You start from the top-left cell (0,0).
+
+Your goal is to reach the bottom-right cell (m−1,n−1).
+
+You can move in 4 directions:
+
+Up
+
+Down
+
+Left
+
+Right
+
+
+Every time you enter a cell:
+
+If grid[i][j] == 0, health remains the same.
+
+If grid[i][j] == 1, health decreases by 1.
+
+
+Your health must always remain greater than 0.
+
+
+Return True if it is possible to reach the destination with health ≥ 1, otherwise return False.
+
+
+---
+
+2. Examples
+
+Example 1
+
+Input:
+grid =
+[[0,1,0,0,0],
+ [0,1,0,1,0],
+ [0,0,0,1,0]]
+
+health = 1
+
+Output:
+True
+
+Explanation
+
+A path exists that only travels through safe cells.
+
+
+---
+
+Example 2
+
+Input:
+
+grid =
+[[0,1,1,0,0,0],
+ [1,0,1,0,0,0],
+ [0,1,1,1,0,1],
+ [0,0,1,0,1,0]]
+
+health = 3
+
+Output:
+False
+
+Minimum health required is 4.
+
+
+---
+
+Example 3
+
+Input
+
+grid =
+[[1,1,1],
+ [1,0,1],
+ [1,1,1]]
+
+health = 5
+
+Output
+True
+
+
+---
+
+3. Constraints
+
+1 ≤ m, n ≤ 50
+
+2 ≤ m × n
+
+1 ≤ health ≤ m+n
+
+grid[i][j] ∈ {0,1}
+
+
+---
+
+4. Intuition
+
+Each unsafe cell costs 1 health.
+
+Instead of minimizing distance, we want to maximize the remaining health after reaching every cell.
+
+If we have already reached a cell with more remaining health, reaching it again with less health is never useful.
+
+This observation leads to a graph shortest-path style solution using Dijkstra's Algorithm (Max Heap).
+
+
+---
+
+5. Brute Force Approach
+
+Idea
+
+Try every possible path using DFS.
+
+Visit every possible direction.
+
+Keep track of current health.
+
+Stop exploring if health becomes 0.
+
+If destination is reached, return True.
+
+
+Since every path is explored, complexity becomes exponential.
+
+
+---
+
+Algorithm
+
+1. Start DFS from (0,0).
+
+
+2. Reduce health if current cell is unsafe.
+
+
+3. If health ≤ 0 return False.
+
+
+4. If destination reached return True.
+
+
+5. Mark current cell visited.
+
+
+6. Explore all four directions.
+
+
+7. Backtrack.
+
+
+8. If no path works return False.
+
+
+
+
+---
+
+Code
+
+class Solution:
+    def findSafeWalk(self, grid, health):
+        m, n = len(grid), len(grid[0])
+        visited = [[False] * n for _ in range(n)]
+
+        def dfs(i, j, hp):
+            hp -= grid[i][j]
+
+            if hp <= 0:
+                return False
+
+            if i == m - 1 and j == n - 1:
+                return True
+
+            visited[i][j] = True
+
+            for dx, dy in [(1,0),(-1,0),(0,1),(0,-1)]:
+                ni = i + dx
+                nj = j + dy
+
+                if 0 <= ni < m and 0 <= nj < n and not visited[ni][nj]:
+                    if dfs(ni, nj, hp):
+                        return True
+
+            visited[i][j] = False
+            return False
+
+        return dfs(0, 0, health)
+
+
+---
+
+Dry Run
+
+grid
+
+0 1
+0 0
+
+health = 1
+
+DFS(0,0)
+
+↓
+
+(1,0)
+
+↓
+
+(1,1)
+
+Destination reached
+
+Answer = True
+
+
+---
+
+Time Complexity
+
+O(4^(m×n))
+
+
+---
+
+Space Complexity
+
+O(m×n)
+
+
+---
+
+6. Better Approach (BFS + State)
+
+Idea
+
+Instead of exploring recursively, use BFS.
+
+Store:
+
+(row, col, remaining_health)
+
+If a state reaches the destination, return True.
+
+This avoids recursion but may still visit the same cell many times with different health values.
+
+
+---
+
+Algorithm
+
+1. Start BFS.
+
+
+2. Store remaining health.
+
+
+3. Visit neighbors.
+
+
+4. Push valid states.
+
+
+5. Stop when destination reached.
+
+
+
+
+---
+
+Code
+
+from collections import deque
+
+class Solution:
+    def findSafeWalk(self, grid, health):
+        m, n = len(grid), len(grid[0])
+
+        start = health - grid[0][0]
+
+        if start <= 0:
+            return False
+
+        q = deque([(0, 0, start)])
+        visited = {(0, 0, start)}
+
+        directions = [(1,0),(-1,0),(0,1),(0,-1)]
+
+        while q:
+            x, y, hp = q.popleft()
+
+            if x == m - 1 and y == n - 1:
+                return True
+
+            for dx, dy in directions:
+                nx, ny = x + dx, y + dy
+
+                if 0 <= nx < m and 0 <= ny < n:
+                    new_hp = hp - grid[nx][ny]
+
+                    state = (nx, ny, new_hp)
+
+                    if new_hp > 0 and state not in visited:
+                        visited.add(state)
+                        q.append(state)
+
+        return False
+
+
+---
+
+Time Complexity
+
+O(m × n × health)
+
+
+---
+
+Space Complexity
+
+O(m × n × health)
+
+
+---
+
+7. Optimal Approach
+
+Intuition
+
+For every cell, only the maximum remaining health matters.
+
+Suppose
+
+Cell (2,3)
+
+Reached with health = 5
+
+Later,
+
+Reached with health = 3
+
+The second state is useless because having 5 health is always better than having 3.
+
+So we only keep the best remaining health for every cell.
+
+
+---
+
+Algorithm
+
+1. Initial remaining health
+
+
+
+health - grid[0][0]
+
+2. Store maximum remaining health for each cell.
+
+
+3. Use Max Heap.
+
+
+4. Pop cell with highest health.
+
+
+5. Visit neighbors.
+
+
+6. Update only if new health is better.
+
+
+7. Destination reached → True.
+
+
+
+
+---
+
+Code
+
+import heapq
+
+class Solution:
+    def findSafeWalk(self, grid, health):
+        m, n = len(grid), len(grid[0])
+
+        start = health - grid[0][0]
+
+        if start <= 0:
+            return False
+
+        best = [[-1] * n for _ in range(m)]
+        best[0][0] = start
+
+        heap = [(-start, 0, 0)]
+
+        directions = [(1,0),(-1,0),(0,1),(0,-1)]
+
+        while heap:
+            neg_hp, x, y = heapq.heappop(heap)
+            hp = -neg_hp
+
+            if x == m - 1 and y == n - 1:
+                return True
+
+            if hp < best[x][y]:
+                continue
+
+            for dx, dy in directions:
+                nx = x + dx
+                ny = y + dy
+
+                if 0 <= nx < m and 0 <= ny < n:
+                    new_hp = hp - grid[nx][ny]
+
+                    if new_hp > 0 and new_hp > best[nx][ny]:
+                        best[nx][ny] = new_hp
+                        heapq.heappush(heap, (-new_hp, nx, ny))
+
+        return False
+
+
+---
+
+Dry Run
+
+grid
+
+0 1 0
+
+0 1 0
+
+0 0 0
+
+health = 2
+
+Start
+
+Remaining = 2
+
+Heap
+
+[(2,(0,0))]
+
+Visit
+
+↓
+
+(1,0)
+
+↓
+
+(2,0)
+
+↓
+
+(2,1)
+
+↓
+
+(2,2)
+
+Destination reached.
+
+Return
+
+True
+
+
+---
+
+Time Complexity
+
+O(mn log(mn))
+
+
+---
+
+Space Complexity
+
+O(mn)
+
+
+---
+
+8. Recursion Tree / DP Table / Diagram
+
+Brute Force DFS
+
+(0,0)
+        /  |  |  \
+       ↓   ↑  ←  →
+    (1,0) (0,1)
+
+      /      \
+   (2,0)   (1,1)
+
+     ...
+
+Every possible path explored.
+
+
+---
+
+Optimal DP (Best Remaining Health)
+
+best[][]
+
+-1  -1  -1
+
+-1  -1  -1
+
+-1  -1  -1
+
+After updates
+
+2   1   1
+
+2   1   1
+
+2   2   2
+
+Each cell stores the highest remaining health seen so far.
+
+
+---
+
+9. Why This Works
+
+Every unsafe cell decreases health by exactly 1.
+
+From the same cell, having more remaining health is always better than having less.
+
+Therefore, any state with smaller remaining health is dominated and can be discarded.
+
+Using a max heap ensures we expand the most promising states first, while best[][] prevents unnecessary revisits.
+
+
+
+---
+
+10. Edge Cases
+
+Start cell is unsafe.
+
+Destination cell is unsafe.
+
+Health becomes exactly 0 (invalid).
+
+Grid contains all safe cells.
+
+Grid contains all unsafe cells.
+
+Single row grid.
+
+Single column grid.
+
+No valid path exists.
+
+Multiple paths exist; choose the one with fewer unsafe cells.
+
+
+
+---
+
+11. Interview Explanation (30–60 sec)
+
+> "The grid can be viewed as a graph where entering an unsafe cell costs one unit of health. A brute-force DFS explores every possible path, which is exponential. A better BFS treats each state as (row, col, remainingHealth), but it may revisit cells with different health values. The optimal solution uses Dijkstra's idea with a max heap. For each cell, we store the maximum remaining health seen so far. If we reach the same cell with less health, that state is discarded because it can never lead to a better solution. This gives a time complexity of O(mn log(mn)) and O(mn) space."
+
+
+
+
+---
+
+12. Key Takeaways
+
+Treat the grid as a graph.
+
+Health is the state, not path length.
+
+More remaining health always dominates less remaining health.
+
+Dijkstra with a max heap efficiently explores the best states first.
+
+best[][] eliminates redundant work.
+
+
+
+---
+
+13. Common Mistakes
+
+Forgetting to subtract the starting cell's cost.
+
+Allowing health to become 0 (it must stay strictly positive).
+
+Using normal BFS without tracking remaining health.
+
+Revisiting a cell even when the new health is not better.
+
+Forgetting the stale-state check (if hp < best[x][y]: continue).
+
+Marking cells as permanently visited in the optimal solution.
+
+
+
+---
+
+14. Related Problems
+
+LeetCode 778 — Swim in Rising Water
+
+LeetCode 1631 — Path With Minimum Effort
+
+LeetCode 1091 — Shortest Path in Binary Matrix
+
+LeetCode 1293 — Shortest Path in a Grid with Obstacles Elimination
+
+LeetCode 1368 — Minimum Cost to Make at Least One Valid Path in a Grid
+
+LeetCode 2812 — Find the Safest Path in a Grid
+
+LeetCode 2290 — Minimum Obstacle Removal to Reach Corner
