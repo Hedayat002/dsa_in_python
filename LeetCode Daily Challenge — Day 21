@@ -1,0 +1,626 @@
+# **1301. Number of Paths with Max Score**
+
+---
+
+# 1. Problem Statement
+
+You are given an `n × n` board where each cell contains:
+
+* `'E'` → Starting cell (top-left)
+* `'S'` → Ending cell (bottom-right)
+* `'X'` → Obstacle (cannot pass)
+* `'1'` to `'9'` → Score collected when visiting that cell
+
+You start from **S** (bottom-right) and want to reach **E** (top-left).
+
+Allowed moves:
+
+* Up `(i-1, j)`
+* Left `(i, j-1)`
+* Up-Left Diagonal `(i-1, j-1)`
+
+Your task is to return:
+
+1. Maximum score obtainable.
+2. Number of different paths that achieve this maximum score.
+
+Return the number of paths modulo **10⁹+7**.
+
+If no valid path exists, return `[0,0]`.
+
+---
+
+# 2. Examples
+
+### Example 1
+
+```
+Input:
+["E23",
+ "2X2",
+ "12S"]
+
+Output:
+[7,1]
+```
+
+Explanation
+
+```
+E 2 3
+2 X 2
+1 2 S
+
+Maximum score = 2+3+2 = 7
+
+Only one optimal path.
+```
+
+---
+
+### Example 2
+
+```
+Input:
+["E12",
+ "1X1",
+ "21S"]
+
+Output:
+[4,2]
+```
+
+Two different paths obtain score 4.
+
+---
+
+### Example 3
+
+```
+Input:
+["E11",
+ "XXX",
+ "11S"]
+
+Output:
+[0,0]
+```
+
+No path exists.
+
+---
+
+# 3. Constraints
+
+* 2 ≤ n ≤ 100
+* board[i][j] is
+
+  * 'E'
+  * 'S'
+  * 'X'
+  * digit ('1'...'9')
+
+---
+
+# 4. Intuition
+
+Suppose we stand at some cell.
+
+To reach this cell, we could have come from
+
+* Up
+* Left
+* Diagonal
+
+Among those three possibilities,
+
+we need
+
+* maximum score
+* number of ways to obtain that maximum.
+
+Therefore each DP state should store
+
+```
+(score, paths)
+```
+
+instead of just score.
+
+---
+
+# 5. Brute Force Approach
+
+## Idea
+
+Generate every possible path using DFS.
+
+For every valid path
+
+* compute score
+* compare with current maximum
+* count if equal.
+
+Since each cell has 3 choices,
+
+the recursion grows exponentially.
+
+---
+
+## Algorithm
+
+1. Start DFS from S.
+2. Try all 3 moves.
+3. Ignore obstacles.
+4. When E reached
+
+   * update maximum
+   * update count.
+5. Return answer.
+
+---
+
+## Code (Python)
+
+```python
+class Solution:
+    def pathsWithMaxScore(self, board):
+        n = len(board)
+        best = -1
+        ways = 0
+
+        def dfs(i, j, score):
+            nonlocal best, ways
+
+            if i == 0 and j == 0:
+                if score > best:
+                    best = score
+                    ways = 1
+                elif score == best:
+                    ways += 1
+                return
+
+            for x, y in [(i-1,j),(i,j-1),(i-1,j-1)]:
+                if 0 <= x < n and 0 <= y < n and board[x][y] != 'X':
+                    val = 0
+                    if board[x][y].isdigit():
+                        val = int(board[x][y])
+                    dfs(x,y,score+val)
+
+        dfs(n-1,n-1,0)
+
+        if best == -1:
+            return [0,0]
+
+        return [best,ways%(10**9+7)]
+```
+
+---
+
+## Dry Run
+
+```
+Every possible path explored.
+
+Maximum score updated.
+
+Equal score path count increased.
+```
+
+---
+
+## Time Complexity
+
+```
+O(3^(n²))
+```
+
+---
+
+## Space Complexity
+
+```
+O(n²)
+```
+
+(recursion)
+
+---
+
+# 6. Better Approach (Memoization)
+
+## Idea
+
+Many states repeat.
+
+Store answer of every cell.
+
+```
+memo[i][j]
+
+contains
+
+(best score,
+ number of paths)
+```
+
+Each state computed once.
+
+---
+
+## Algorithm
+
+```
+solve(i,j)
+
+Try
+
+Up
+Left
+Diagonal
+
+Choose best.
+
+Store answer.
+```
+
+---
+
+## Code
+
+```python
+from functools import lru_cache
+
+class Solution:
+    def pathsWithMaxScore(self, board):
+        MOD = 10**9+7
+        n = len(board)
+
+        @lru_cache(None)
+        def dfs(i,j):
+
+            if i<0 or j<0 or board[i][j]=='X':
+                return (-1,0)
+
+            if i==0 and j==0:
+                return (0,1)
+
+            best=-1
+            ways=0
+
+            for x,y in [(i-1,j),(i,j-1),(i-1,j-1)]:
+                score,cnt=dfs(x,y)
+
+                if cnt==0:
+                    continue
+
+                val=0
+                if board[i][j].isdigit():
+                    val=int(board[i][j])
+
+                score+=val
+
+                if score>best:
+                    best=score
+                    ways=cnt
+
+                elif score==best:
+                    ways=(ways+cnt)%MOD
+
+            return (best,ways)
+
+        score,ways=dfs(n-1,n-1)
+
+        if ways==0:
+            return [0,0]
+
+        return [score,ways]
+```
+
+---
+
+## Time Complexity
+
+```
+O(n²)
+```
+
+---
+
+## Space Complexity
+
+```
+O(n²)
+```
+
+---
+
+# 7. Optimal Approach (Bottom-Up DP)
+
+## Intuition
+
+Instead of recursion,
+
+fill DP from top-left (E) to bottom-right (S).
+
+Each cell depends only on
+
+* Up
+* Left
+* Diagonal
+
+which are already computed.
+
+Each DP state stores
+
+```
+(score,
+number of optimal paths)
+```
+
+---
+
+## Algorithm
+
+1. Create DP table.
+
+```
+dp[i][j] = [bestScore, ways]
+```
+
+2. Initialize
+
+```
+dp[0][0]=[0,1]
+```
+
+3. Traverse board row by row.
+
+4. Skip obstacles.
+
+5. Compare
+
+```
+Up
+
+Left
+
+Diagonal
+```
+
+6. Choose maximum score.
+
+7. Sum path counts for all directions achieving the maximum score.
+
+8. Return
+
+```
+dp[n-1][n-1]
+```
+
+---
+
+## Code (Python)
+
+```python
+class Solution:
+    def pathsWithMaxScore(self, board):
+        MOD = 10**9 + 7
+        n = len(board)
+
+        # dp[i][j] = [best_score, number_of_paths]
+        dp = [[[0, 0] for _ in range(n)] for _ in range(n)]
+
+        def get_value(ch):
+            return 0 if ch == 'S' else int(ch)
+
+        def is_valid(i, j):
+            return 0 <= i < n and 0 <= j < n and board[i][j] != 'X'
+
+        # Base case
+        dp[0][0] = [0, 1]
+
+        for i in range(n):
+            for j in range(n):
+
+                if board[i][j] == 'E' or board[i][j] == 'X':
+                    continue
+
+                ch = board[i][j]
+
+                up_score = up_paths = 0
+                left_score = left_paths = 0
+                diag_score = diag_paths = 0
+
+                # Up
+                if is_valid(i - 1, j):
+                    up_score, up_paths = dp[i - 1][j]
+                    if up_paths > 0:
+                        up_score += get_value(ch)
+
+                # Left
+                if is_valid(i, j - 1):
+                    left_score, left_paths = dp[i][j - 1]
+                    if left_paths > 0:
+                        left_score += get_value(ch)
+
+                # Diagonal
+                if is_valid(i - 1, j - 1):
+                    diag_score, diag_paths = dp[i - 1][j - 1]
+                    if diag_paths > 0:
+                        diag_score += get_value(ch)
+
+                best_score = max(up_score, left_score, diag_score)
+
+                best_paths = 0
+
+                if up_paths and up_score == best_score:
+                    best_paths += up_paths
+                if left_paths and left_score == best_score:
+                    best_paths += left_paths
+                if diag_paths and diag_score == best_score:
+                    best_paths += diag_paths
+
+                dp[i][j] = [best_score, best_paths % MOD]
+
+        return dp[n - 1][n - 1]
+```
+
+---
+
+## Dry Run
+
+Example
+
+```
+E23
+2X2
+12S
+```
+
+DP stores
+
+| Cell | Score | Ways |
+| ---- | ----- | ---- |
+| E    | 0     | 1    |
+| 2    | 2     | 1    |
+| 3    | 5     | 1    |
+| 2    | 2     | 1    |
+| X    | -     | -    |
+| 2    | 7     | 1    |
+| 1    | 3     | 1    |
+| 2    | 5     | 1    |
+| S    | 7     | 1    |
+
+Answer
+
+```
+[7,1]
+```
+
+---
+
+## Time Complexity
+
+```
+O(n²)
+```
+
+---
+
+## Space Complexity
+
+```
+O(n²)
+```
+
+---
+
+# 8. DP Table / Diagram
+
+```
+E ----> 2 ----> 3
+|         X      |
+|                |
+2 ----> X ----> 2
+|                |
+|                |
+1 ----> 2 ----> S
+```
+
+Each DP cell stores
+
+```
+(score, paths)
+```
+
+Example
+
+```
+(0,1)
+
+↓
+
+(2,1)
+
+↓
+
+(5,1)
+
+↓
+
+(7,1)
+```
+
+---
+
+# 9. Why This Works
+
+The recurrence is:
+
+```
+dp[i][j].score =
+value(i,j) +
+max(
+    up.score,
+    left.score,
+    diagonal.score
+)
+```
+
+For the number of paths:
+
+* If only one predecessor has the maximum score, inherit its path count.
+* If multiple predecessors tie for the maximum score, sum their path counts (mod (10^9+7)).
+
+Because every state is computed after its predecessors, dynamic programming guarantees the optimal score and correct count without recomputation.
+
+---
+
+# 10. Edge Cases
+
+* No valid path → return `[0, 0]`.
+* Start or end surrounded by obstacles.
+* Board size `2 × 2`.
+* Multiple optimal paths with the same score.
+* Cells containing `S` or `E` contribute `0` to the score.
+* Path counts must be taken modulo `10^9 + 7`.
+
+---
+
+# 11. Interview Explanation (30–60 sec)
+
+"I model each cell with two DP values: the maximum score achievable upon reaching that cell and the number of ways to achieve that maximum score. Since movement is restricted to up, left, and diagonal, each cell depends only on those three predecessor states. For each predecessor, I update the score by adding the current cell's value. I then keep the highest score and sum the path counts from all predecessors that achieve that same score. This bottom-up dynamic programming solution runs in **O(n²)** time with **O(n²)** space."
+
+---
+
+# 12. Key Takeaways
+
+* DP state stores **two values**: `(maximum score, number of optimal paths)`.
+* Consider only **Up**, **Left**, and **Diagonal** predecessors.
+* Add the current cell's value only if the predecessor is reachable.
+* When multiple predecessors have the same best score, **sum their path counts**.
+* Apply modulo `10^9 + 7` to the path count.
+
+---
+
+# 13. Common Mistakes
+
+* Adding the value of `'S'` or `'E'` to the score.
+* Counting paths from unreachable predecessor cells.
+* Forgetting to apply modulo to the number of paths.
+* Choosing the predecessor with the most paths instead of the highest score.
+* Mishandling ties by overwriting counts instead of summing them.
+
+---
+
+# 14. Related Problems
+
+* **64. Minimum Path Sum**
+* **62. Unique Paths**
+* **63. Unique Paths II**
+* **931. Minimum Falling Path Sum**
+* **741. Cherry Pickup**
+* **1463. Cherry Pickup II**
+* **1937. Maximum Number of Points with Cost**
+* **2328. Number of Increasing Paths in a Grid**
