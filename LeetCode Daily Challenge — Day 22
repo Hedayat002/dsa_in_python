@@ -1,0 +1,629 @@
+# Problem Name: 1288. Remove Covered Intervals
+
+---
+
+# 1. Problem Statement
+
+You are given an array of intervals where `intervals[i] = [li, ri]` represents the left and right endpoints of the `iᵗʰ` interval.
+
+An interval `[a, b]` is **covered** by another interval `[c, d]` if:
+
+* `c <= a`
+* `b <= d`
+
+Return the number of intervals remaining after removing all covered intervals.
+
+---
+
+# 2. Examples
+
+### Example 1
+
+```text
+Input:
+intervals = [[1,4],[3,6],[2,8]]
+
+Output:
+2
+```
+
+**Explanation**
+
+```
+[2,8]
+ ├───────────────┤
+
+      [3,6]
+      ├──────┤
+```
+
+`[3,6]` is completely inside `[2,8]`, so remove it.
+
+Remaining:
+
+```
+[1,4]
+[2,8]
+```
+
+Answer = **2**
+
+---
+
+### Example 2
+
+```text
+Input:
+intervals = [[1,4],[2,3]]
+
+Output:
+1
+```
+
+Explanation
+
+```
+[1,4]
+├────────────┤
+
+  [2,3]
+  ├────┤
+```
+
+`[2,3]` is covered by `[1,4]`.
+
+---
+
+# 3. Constraints
+
+* `1 <= intervals.length <= 1000`
+* `intervals[i].length == 2`
+* `0 <= li < ri <= 10^5`
+
+---
+
+# 4. Intuition
+
+If we compare every interval with every other interval, we can easily determine whether it is covered.
+
+However, this requires many unnecessary comparisons.
+
+A better idea is:
+
+* Sort intervals by starting point.
+* If starts are equal, place the larger interval first.
+* Scan once while remembering the largest ending point seen so far.
+
+If the current interval ends before or at the largest end seen so far, then it is covered.
+
+---
+
+# 5. Brute Force Approach
+
+## Idea
+
+For every interval, compare it with every other interval.
+
+If another interval completely covers it, discard it.
+
+---
+
+## Algorithm
+
+1. For every interval `i`
+2. Compare with every interval `j`
+3. If
+
+```
+j.start <= i.start
+and
+i.end <= j.end
+```
+
+then interval `i` is covered.
+
+4. Count intervals that are not covered.
+
+---
+
+## Code (Python)
+
+```python
+class Solution:
+    def removeCoveredIntervals(self, intervals):
+        n = len(intervals)
+        covered = [False] * n
+
+        for i in range(n):
+            for j in range(n):
+                if i == j:
+                    continue
+
+                if (intervals[j][0] <= intervals[i][0] and
+                    intervals[i][1] <= intervals[j][1]):
+                    covered[i] = True
+                    break
+
+        return covered.count(False)
+```
+
+---
+
+## Dry Run
+
+```
+intervals
+
+[1,4]
+[3,6]
+[2,8]
+```
+
+Compare
+
+```
+[1,4]
+with
+
+[2,8]
+
+Not covered
+```
+
+Compare
+
+```
+[3,6]
+
+with
+
+[2,8]
+
+Covered
+```
+
+Compare
+
+```
+[2,8]
+
+with others
+
+Not covered
+```
+
+Remaining
+
+```
+[1,4]
+[2,8]
+```
+
+Answer = 2
+
+---
+
+## Time Complexity
+
+```
+O(n²)
+```
+
+---
+
+## Space Complexity
+
+```
+O(n)
+```
+
+---
+
+# 6. Better Approach
+
+No significantly better intermediate approach exists between brute force and the optimal sorting approach. The sorting-based solution is the standard optimal solution.
+
+---
+
+# 7. Optimal Approach
+
+## Intuition
+
+Sort intervals:
+
+* Ascending by start.
+* Descending by end if starts are equal.
+
+Why?
+
+Example
+
+```
+[1,8]
+[1,6]
+[1,4]
+```
+
+Largest interval comes first.
+
+Now while scanning,
+
+keep
+
+```
+max_end
+```
+
+If
+
+```
+current_end <= max_end
+```
+
+then the current interval must be covered.
+
+---
+
+## Algorithm
+
+1. Sort by
+
+```
+(start ascending,
+ end descending)
+```
+
+2. Initialize
+
+```
+count = 0
+
+max_end = 0
+```
+
+3. Traverse intervals
+
+4. If
+
+```
+current_end > max_end
+```
+
+* Not covered
+* Count++
+* Update max_end
+
+Otherwise
+
+* Covered
+* Ignore
+
+Return count.
+
+---
+
+## Code
+
+```python
+class Solution:
+    def removeCoveredIntervals(self, intervals):
+        intervals.sort(key=lambda x: (x[0], -x[1]))
+
+        count = 0
+        max_end = 0
+
+        for interval in intervals:
+            if interval[1] > max_end:
+                count += 1
+                max_end = interval[1]
+
+        return count
+```
+
+---
+
+## Dry Run
+
+Input
+
+```
+[[1,4],[3,6],[2,8]]
+```
+
+### Step 1
+
+Sorting
+
+```
+[1,4]
+[2,8]
+[3,6]
+```
+
+---
+
+Initially
+
+```
+count = 0
+
+max_end = 0
+```
+
+---
+
+### First interval
+
+```
+[1,4]
+```
+
+```
+4 > 0
+```
+
+Keep it.
+
+```
+count = 1
+
+max_end = 4
+```
+
+---
+
+### Second interval
+
+```
+[2,8]
+```
+
+```
+8 > 4
+```
+
+Keep it.
+
+```
+count = 2
+
+max_end = 8
+```
+
+---
+
+### Third interval
+
+```
+[3,6]
+```
+
+```
+6 > 8
+
+False
+```
+
+Covered.
+
+Ignore.
+
+Answer
+
+```
+2
+```
+
+---
+
+## Time Complexity
+
+Sorting
+
+```
+O(n log n)
+```
+
+Traversal
+
+```
+O(n)
+```
+
+Overall
+
+```
+O(n log n)
+```
+
+---
+
+## Space Complexity
+
+Extra variables
+
+```
+count
+
+max_end
+```
+
+Only constant extra space.
+
+```
+O(1)
+```
+
+> **Note:** Python's built-in `sort()` uses Timsort, which may use additional internal memory (up to `O(n)` in the worst case). Algorithmically, the extra space used by this solution beyond the sorting routine is considered **O(1)**.
+
+---
+
+# 8. Recursion Tree / DP Table / Diagram
+
+There is **no recursion** or **dynamic programming**.
+
+Visualization
+
+```
+Sorted
+
+[1,4]
+[2,8]
+[3,6]
+
+max_end
+
+0
+
+↓
+
+4
+
+↓
+
+8
+
+↓
+
+8
+```
+
+```
+Current end
+
+4
+
+8
+
+6
+```
+
+Since
+
+```
+6 <= 8
+```
+
+Covered.
+
+---
+
+# 9. Why This Works
+
+Sorting guarantees:
+
+* Every previous interval starts before (or at the same point as) the current interval.
+* If a previous interval also has an end greater than or equal to the current end, then it completely covers the current interval.
+
+Therefore, checking only the largest end (`max_end`) seen so far is enough.
+
+---
+
+# 10. Edge Cases
+
+### Single interval
+
+```
+[[1,2]]
+
+Answer
+
+1
+```
+
+---
+
+### Same starting point
+
+```
+[[1,8],[1,6],[1,4]]
+```
+
+Largest interval comes first.
+
+Answer
+
+```
+1
+```
+
+---
+
+### No interval covered
+
+```
+[[1,2],[2,3],[3,4]]
+```
+
+Answer
+
+```
+3
+```
+
+---
+
+### All covered
+
+```
+[[1,10],[2,9],[3,8],[4,7]]
+```
+
+Answer
+
+```
+1
+```
+
+---
+
+### Nested intervals
+
+```
+[[1,100],[20,50],[30,40]]
+```
+
+Answer
+
+```
+1
+```
+
+---
+
+# 11. Interview Explanation (30–60 sec)
+
+"I first sort the intervals by starting point in ascending order. If two intervals have the same start, I place the one with the larger end first. Then I scan the sorted list while keeping track of the maximum end seen so far. If the current interval's end is greater than `max_end`, it cannot be covered, so I count it and update `max_end`. Otherwise, it is covered by a previous interval and I ignore it. Sorting takes `O(n log n)` time, and the scan is `O(n)`, so the overall complexity is `O(n log n)`."
+
+---
+
+# 12. Key Takeaways
+
+* Sort by `(start ascending, end descending)`.
+* Use a single variable `max_end`.
+* If `current_end <= max_end`, the interval is covered.
+* Only one linear scan is needed after sorting.
+* Overall complexity is `O(n log n)`.
+
+---
+
+# 13. Common Mistakes
+
+* ❌ Sorting by `(start, end)` instead of `(start, -end)`.
+* ❌ Updating `max_end` even for covered intervals.
+* ❌ Using `<` instead of `<=` when reasoning about coverage.
+* ❌ Merging intervals (this problem is **not** interval merging).
+* ❌ Forgetting that intervals with the same start must be ordered by decreasing end.
+
+---
+
+# 14. Related Problems
+
+* Merge Intervals (LeetCode 56)
+* Insert Interval (LeetCode 57)
+* Non-overlapping Intervals (LeetCode 435)
+* Meeting Rooms
+* Meeting Rooms II
+* Minimum Number of Arrows to Burst Balloons (LeetCode 452)
+* Interval List Intersections (LeetCode 986)
+* Employee Free Time
