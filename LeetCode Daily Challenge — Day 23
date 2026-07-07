@@ -1,0 +1,562 @@
+# Problem Name: 3754. Concatenate Non-Zero Digits and Multiply by Sum I
+
+---
+
+# 1. Problem Statement
+
+You are given an integer `n`.
+
+* Create a new integer `x` by concatenating all the **non-zero digits** of `n` while preserving their original order.
+* If there are no non-zero digits, then `x = 0`.
+* Compute the sum of the digits of `x`.
+* Return the value of:
+
+[
+x \times (\text{sum of digits of }x)
+]
+
+---
+
+# 2. Examples
+
+### Example 1
+
+**Input**
+
+```text
+n = 10203004
+```
+
+**Output**
+
+```text
+12340
+```
+
+**Explanation**
+
+```
+Non-zero digits = 1,2,3,4
+
+x = 1234
+
+Digit Sum = 1+2+3+4 = 10
+
+Answer = 1234 × 10 = 12340
+```
+
+---
+
+### Example 2
+
+**Input**
+
+```text
+n = 1000
+```
+
+**Output**
+
+```text
+1
+```
+
+**Explanation**
+
+```
+Non-zero digits = 1
+
+x = 1
+
+Digit Sum = 1
+
+Answer = 1 × 1 = 1
+```
+
+---
+
+### Example 3
+
+**Input**
+
+```text
+n = 0
+```
+
+**Output**
+
+```text
+0
+```
+
+---
+
+# 3. Constraints
+
+* `0 ≤ n ≤ 10^9`
+
+---
+
+# 4. Intuition
+
+The problem consists of two simple tasks:
+
+1. Ignore every `0` digit.
+2. Concatenate the remaining digits.
+3. Compute their sum.
+4. Multiply the constructed number by the digit sum.
+
+Since the maximum number has only **10 digits**, every solution runs in constant time in practice.
+
+---
+
+# 5. Brute Force Approach
+
+## Idea
+
+Convert the integer into a string.
+
+Traverse each character:
+
+* Ignore `'0'`
+* Append every non-zero digit to another string.
+
+After traversal:
+
+* Convert the string into an integer.
+* Calculate the digit sum.
+* Return the multiplication.
+
+---
+
+## Algorithm
+
+1. Convert `n` to a string.
+2. Create an empty string `s`.
+3. Traverse every character.
+4. Skip `'0'`.
+5. Append every non-zero digit.
+6. If `s` is empty, return `0`.
+7. Convert `s` into integer `x`.
+8. Compute digit sum.
+9. Return `x × digit_sum`.
+
+---
+
+## Code (Python)
+
+```python
+class Solution:
+    def concatHex36(self, n: int) -> int:
+        s = ""
+
+        for ch in str(n):
+            if ch != '0':
+                s += ch
+
+        if s == "":
+            return 0
+
+        x = int(s)
+
+        digit_sum = 0
+        for ch in s:
+            digit_sum += int(ch)
+
+        return x * digit_sum
+```
+
+---
+
+## Dry Run
+
+Input
+
+```
+10203004
+```
+
+Traversal
+
+| Character | Action | String |
+| --------- | ------ | ------ |
+| 1         | Append | 1      |
+| 0         | Skip   | 1      |
+| 2         | Append | 12     |
+| 0         | Skip   | 12     |
+| 3         | Append | 123    |
+| 0         | Skip   | 123    |
+| 0         | Skip   | 123    |
+| 4         | Append | 1234   |
+
+Now
+
+```
+x = 1234
+
+digit_sum = 1+2+3+4 = 10
+
+Answer = 12340
+```
+
+---
+
+## Time Complexity
+
+```
+O(d)
+```
+
+where `d` is the number of digits.
+
+---
+
+## Space Complexity
+
+```
+O(d)
+```
+
+---
+
+# 6. Better Approach
+
+## Idea
+
+Avoid converting the integer to a string.
+
+Extract digits mathematically using `% 10`.
+
+Since digits are extracted from right to left, store them in a list and later traverse the list in reverse order.
+
+---
+
+## Algorithm
+
+1. Extract digits using `%10`.
+2. Ignore zeros.
+3. Store non-zero digits.
+4. Reverse the list.
+5. Build the final number.
+6. Calculate digit sum simultaneously.
+7. Return the answer.
+
+---
+
+## Code
+
+```python
+class Solution:
+    def concatHex36(self, n: int) -> int:
+
+        if n == 0:
+            return 0
+
+        digits = []
+
+        while n:
+            digit = n % 10
+
+            if digit != 0:
+                digits.append(digit)
+
+            n //= 10
+
+        digits.reverse()
+
+        x = 0
+        digit_sum = 0
+
+        for digit in digits:
+            x = x * 10 + digit
+            digit_sum += digit
+
+        return x * digit_sum
+```
+
+---
+
+## Time Complexity
+
+```
+O(d)
+```
+
+---
+
+## Space Complexity
+
+```
+O(d)
+```
+
+---
+
+# 7. Optimal Approach
+
+## Intuition
+
+Instead of using string manipulation, process the number directly using arithmetic operations.
+
+* `%10` extracts the last digit.
+* `//10` removes the last digit.
+
+Store only non-zero digits.
+
+Finally,
+
+* rebuild the number,
+* calculate the digit sum simultaneously.
+
+This avoids string conversion and is considered the optimal mathematical solution.
+
+---
+
+## Algorithm
+
+1. If `n == 0`, return `0`.
+2. Extract digits using `%10`.
+3. Ignore zeros.
+4. Store non-zero digits.
+5. Traverse the digits in reverse order.
+6. Build `x`.
+7. Compute digit sum.
+8. Return `x × digit_sum`.
+
+---
+
+## Code
+
+```python
+class Solution:
+    def concatHex36(self, n: int) -> int:
+
+        if n == 0:
+            return 0
+
+        digits = []
+
+        while n:
+            d = n % 10
+
+            if d:
+                digits.append(d)
+
+            n //= 10
+
+        x = 0
+        digit_sum = 0
+
+        for d in reversed(digits):
+            x = x * 10 + d
+            digit_sum += d
+
+        return x * digit_sum
+```
+
+---
+
+## Dry Run
+
+Input
+
+```
+n = 10203004
+```
+
+### Extract Digits
+
+| Current n | Digit | digits    |
+| --------- | ----- | --------- |
+| 10203004  | 4     | [4]       |
+| 1020300   | 0     | [4]       |
+| 102030    | 0     | [4]       |
+| 10203     | 3     | [4,3]     |
+| 1020      | 0     | [4,3]     |
+| 102       | 2     | [4,3,2]   |
+| 10        | 0     | [4,3,2]   |
+| 1         | 1     | [4,3,2,1] |
+
+Now
+
+```
+digits = [4,3,2,1]
+```
+
+Reverse Traversal
+
+| Digit | x    | Digit Sum |
+| ----- | ---- | --------- |
+| 1     | 1    | 1         |
+| 2     | 12   | 3         |
+| 3     | 123  | 6         |
+| 4     | 1234 | 10        |
+
+Return
+
+```
+1234 × 10 = 12340
+```
+
+---
+
+## Time Complexity
+
+```
+O(d)
+```
+
+---
+
+## Space Complexity
+
+```
+O(d)
+```
+
+---
+
+# 8. Recursion Tree / DP Table / Diagram
+
+No recursion or dynamic programming is involved.
+
+Flow Diagram
+
+```
+           n = 10203004
+                 │
+        Extract Digits (%10)
+                 │
+      [4,3,2,1] (Reverse Order)
+                 │
+        Reverse Traversal
+                 │
+        1 → 2 → 3 → 4
+                 │
+ Build x = 1234, Sum = 10
+                 │
+      Answer = 1234 × 10
+                 │
+             12340
+```
+
+---
+
+# 9. Why This Works
+
+* Every digit is visited exactly once.
+* Zeros are ignored.
+* The remaining digits are reconstructed in their original order.
+* The digit sum is computed while rebuilding the number.
+* Therefore, the algorithm correctly produces the required value.
+
+---
+
+# 10. Edge Cases
+
+### Case 1
+
+```
+n = 0
+
+Answer = 0
+```
+
+---
+
+### Case 2
+
+```
+n = 1000
+
+x = 1
+
+Answer = 1
+```
+
+---
+
+### Case 3
+
+```
+n = 90909
+
+x = 99
+
+sum = 18
+
+Answer = 99 × 18 = 1782
+```
+
+---
+
+### Case 4
+
+```
+n = 1111
+
+x = 1111
+
+sum = 4
+
+Answer = 4444
+```
+
+---
+
+### Case 5
+
+```
+n = 1000000000
+
+x = 1
+
+Answer = 1
+```
+
+---
+
+# 11. Interview Explanation (30–60 sec)
+
+"The problem asks us to remove all zero digits while preserving the order of the remaining digits. Then we compute the sum of those remaining digits and multiply it by the constructed number. We can solve this using string manipulation or mathematically using `%10` and `//10`. The mathematical approach extracts non-zero digits, stores them temporarily because extraction happens in reverse order, and then rebuilds the number while simultaneously computing the digit sum. Since the input has at most 10 digits, the algorithm runs in O(d) time, where `d` is the number of digits."
+
+---
+
+# 12. Key Takeaways
+
+* `%10` extracts the last digit.
+* `//10` removes the last digit.
+* Digits extracted mathematically are in reverse order.
+* Reverse traversal restores the original order.
+* Build a number using:
+
+  ```
+  x = x * 10 + digit
+  ```
+* Compute the digit sum while constructing the number.
+
+---
+
+# 13. Common Mistakes
+
+❌ Forgetting that `%10` extracts digits in reverse order.
+
+❌ Forgetting to handle `n = 0`.
+
+❌ Including zero digits while rebuilding the number.
+
+❌ Calculating the digit sum before removing zeros.
+
+❌ Forgetting to reverse the extracted digits before reconstruction.
+
+---
+
+# 14. Related Problems
+
+* Cracking the Coding Interview (Number manipulation concepts)
+* Introduction to Algorithms (Digit manipulation techniques)
+* LeetCode 7 – Reverse Integer
+* LeetCode 66 – Plus One
+* LeetCode 989 – Add to Array-Form of Integer
+* LeetCode 258 – Add Digits
+* LeetCode 1281 – Subtract the Product and Sum of Digits of an Integer
