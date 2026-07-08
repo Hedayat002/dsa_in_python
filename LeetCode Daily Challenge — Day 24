@@ -1,0 +1,694 @@
+# Problem Name
+
+**3756. Concatenate Non-Zero Digits and Multiply by Sum II**
+
+---
+
+# Problem Statement
+
+You are given:
+
+* A numeric string `s`
+* Multiple queries `[l, r]`
+
+For every query:
+
+1. Consider the substring `s[l...r]`.
+2. Remove all `'0'` digits.
+3. Concatenate the remaining digits to form an integer `X`.
+4. Compute the sum of **all digits** (including zeros) in the substring, call it `S`.
+5. Return
+
+[
+(X \times S)\bmod (10^9+7)
+]
+
+---
+
+# Example
+
+**Input**
+
+```text
+s = "105203"
+
+queries = [[2,5]]
+```
+
+Substring
+
+```text
+5203
+```
+
+Remove zeros
+
+```text
+523
+```
+
+Digit Sum
+
+```text
+5+2+0+3=10
+```
+
+Answer
+
+```text
+523 × 10 = 5230
+```
+
+Output
+
+```text
+[5230]
+```
+
+---
+
+# Constraints
+
+* String length = `n`
+* Number of queries = `q`
+* Large values of `n` and `q`
+* Brute force will cause TLE.
+
+---
+
+# Intuition
+
+For every query we need two things:
+
+1. Sum of digits in substring.
+2. Number formed after removing zeros.
+
+Computing these by scanning every substring costs
+
+```text
+O(length of substring)
+```
+
+which becomes
+
+```text
+O(n × q)
+```
+
+Instead, preprocess the string once using prefix arrays.
+
+---
+
+# Brute Force Approach
+
+## Idea
+
+For every query
+
+* Traverse substring
+* Add digit sum
+* Ignore zeros while building number
+* Multiply
+
+---
+
+## Algorithm
+
+For every query
+
+* sum = 0
+* number = 0
+
+Traverse from `l` to `r`
+
+If digit ≠ 0
+
+```text
+number = number × 10 + digit
+```
+
+Always
+
+```text
+sum += digit
+```
+
+Return
+
+```text
+(number × sum) % MOD
+```
+
+---
+
+## Code
+
+```python
+ans = []
+
+for l, r in queries:
+
+    num = 0
+    total = 0
+
+    for i in range(l, r + 1):
+
+        digit = int(s[i])
+
+        total += digit
+
+        if digit != 0:
+            num = num * 10 + digit
+
+    ans.append((num * total) % (10**9 + 7))
+```
+
+---
+
+## Dry Run
+
+```text
+s = 105203
+
+query = [2,5]
+
+Substring = 5203
+
+Traverse
+
+5
+
+num=5
+
+sum=5
+
+2
+
+num=52
+
+sum=7
+
+0
+
+num=52
+
+sum=7
+
+3
+
+num=523
+
+sum=10
+
+Answer
+
+523×10=5230
+```
+
+---
+
+## Time Complexity
+
+Each query scans substring.
+
+Worst case
+
+```text
+O(n)
+```
+
+For `q` queries
+
+[
+\boxed{O(nq)}
+]
+
+---
+
+## Space Complexity
+
+Only variables.
+
+[
+\boxed{O(1)}
+]
+
+---
+
+# Better Approach
+
+There is **no practical intermediate approach** that significantly improves over brute force without using preprocessing. The next meaningful improvement is the prefix-based solution below.
+
+---
+
+# Optimal Approach
+
+## Intuition
+
+Precompute four arrays.
+
+### 1. nonZeroCount
+
+Stores number of non-zero digits till index i.
+
+Example
+
+```text
+105203
+
+1 1 2 3 3 4
+```
+
+---
+
+### 2. numberUpTo
+
+Stores the number formed after removing all zeros.
+
+```text
+105203
+
+↓
+
+1523
+```
+
+Array
+
+```text
+1
+1
+15
+152
+152
+1523
+```
+
+---
+
+### 3. digitSumUpTo
+
+Stores prefix digit sum.
+
+```text
+1
+1
+6
+8
+8
+11
+```
+
+---
+
+### 4. pow10
+
+Stores
+
+```text
+10⁰
+10¹
+10²
+...
+```
+
+Used to remove the left prefix while answering queries.
+
+---
+
+## Algorithm
+
+### Preprocessing
+
+Compute
+
+* pow10
+* nonZeroCount
+* numberUpTo
+* digitSumUpTo
+
+Each in O(n).
+
+---
+
+### Query
+
+Suppose
+
+```text
+l=2
+
+r=5
+```
+
+Compute
+
+```text
+startCount
+```
+
+=
+
+non-zero digits before substring.
+
+Compute
+
+```text
+endCount
+```
+
+=
+
+non-zero digits till r.
+
+Difference
+
+```text
+subStrLen
+```
+
+=
+
+number of non-zero digits inside substring.
+
+Extract number
+
+```text
+x = numberUpTo[r]
+    -
+    numberUpTo[l−1] × 10^(subStrLen)
+```
+
+Find digit sum
+
+```text
+total
+
+=
+
+digitSumUpTo[r]
+
+-
+
+digitSumUpTo[l−1]
+```
+
+Return
+
+```text
+x × total
+```
+
+---
+
+## Code
+
+```python
+class Solution:
+    MOD = 10 ** 9 + 7
+
+    def sumAndMultiply(self, s, queries):
+        n = len(s)
+
+        nonZeroCount = [0] * n
+        numberUpTo = [0] * n
+        digitSumUpTo = [0] * n
+        pow10 = [0] * (n + 1)
+
+        pow10[0] = 1
+        for i in range(1, n + 1):
+            pow10[i] = (pow10[i - 1] * 10) % self.MOD
+
+        nonZeroCount[0] = 1 if s[0] != '0' else 0
+        numberUpTo[0] = int(s[0])
+        digitSumUpTo[0] = int(s[0])
+
+        for i in range(1, n):
+            digit = int(s[i])
+            nonZeroCount[i] = nonZeroCount[i - 1] + (digit != 0)
+
+        for i in range(1, n):
+            digit = int(s[i])
+            if digit != 0:
+                numberUpTo[i] = (numberUpTo[i - 1] * 10 + digit) % self.MOD
+            else:
+                numberUpTo[i] = numberUpTo[i - 1]
+
+        for i in range(1, n):
+            digitSumUpTo[i] = digitSumUpTo[i - 1] + int(s[i])
+
+        ans = []
+
+        for l, r in queries:
+
+            startCount = 0 if l == 0 else nonZeroCount[l - 1]
+            numBefore = 0 if l == 0 else numberUpTo[l - 1]
+
+            endCount = nonZeroCount[r]
+            subStrLen = endCount - startCount
+
+            if subStrLen == 0:
+                ans.append(0)
+                continue
+
+            x = (
+                numberUpTo[r]
+                - (numBefore * pow10[subStrLen]) % self.MOD
+                + self.MOD
+            ) % self.MOD
+
+            total = digitSumUpTo[r] - (
+                0 if l == 0 else digitSumUpTo[l - 1]
+            )
+
+            ans.append((x * total) % self.MOD)
+
+        return ans
+```
+
+---
+
+## Dry Run
+
+```text
+s = 105203
+
+Query
+
+[2,5]
+```
+
+Preprocessing
+
+```text
+nonZeroCount
+
+1 1 2 3 3 4
+
+numberUpTo
+
+1
+1
+15
+152
+152
+1523
+
+digitSumUpTo
+
+1
+1
+6
+8
+8
+11
+```
+
+Query
+
+```text
+startCount =1
+
+endCount=4
+
+subStrLen=3
+
+numBefore=1
+
+numberUpTo[r]=1523
+```
+
+Extract number
+
+```text
+1523
+
+-
+
+1×1000
+
+=
+
+523
+```
+
+Digit Sum
+
+```text
+11-1=10
+```
+
+Final
+
+```text
+523×10
+
+=
+
+5230
+```
+
+---
+
+## Time Complexity
+
+Preprocessing
+
+```text
+O(n)
+```
+
+Each Query
+
+```text
+O(1)
+```
+
+Total
+
+[
+\boxed{O(n+q)}
+]
+
+---
+
+## Space Complexity
+
+Auxiliary arrays
+
+* nonZeroCount
+* numberUpTo
+* digitSumUpTo
+* pow10
+
+Total
+
+[
+\boxed{O(n)}
+]
+
+(Output array is `O(q)`.)
+
+---
+
+# Recursion Tree / DP Table / Diagram
+
+Not applicable.
+
+This problem uses **prefix preprocessing**, not recursion or dynamic programming.
+
+---
+
+# Why This Works
+
+The preprocessing stores enough prefix information to answer each query without scanning the substring again.
+
+* Prefix sums compute digit sums in O(1).
+* Prefix non-zero counts determine the length of the concatenated number.
+* Prefix concatenated numbers combined with powers of 10 allow removal of the left prefix in O(1).
+
+Thus every query is answered in constant time after linear preprocessing.
+
+---
+
+# Edge Cases
+
+1. Entire substring is zeros
+
+```text
+0000
+```
+
+Answer
+
+```text
+0
+```
+
+---
+
+2. Single digit
+
+```text
+7
+```
+
+Answer
+
+```text
+7×7=49
+```
+
+---
+
+3. Single zero
+
+```text
+0
+```
+
+Answer
+
+```text
+0
+```
+
+---
+
+4. Query starts at index 0
+
+Need special handling since there is no prefix before index 0.
+
+---
+
+5. Large input
+
+Handled efficiently using prefix arrays.
+
+---
+
+# Interview Explanation (30–60 sec)
+
+> "A brute-force solution scans every substring for every query, resulting in O(nq) time. To optimize, I preprocess four prefix arrays: the count of non-zero digits, the number formed by non-zero digits, the prefix digit sums, and powers of 10. For each query, I compute the digit sum using prefix sums and recover the concatenated non-zero number by subtracting the appropriately shifted prefix using the powers of 10 array. This allows each query to be answered in O(1) time after O(n) preprocessing, giving an overall complexity of O(n + q)."
+
+---
+
+# Key Takeaways
+
+* Prefix sums answer range-sum queries in O(1).
+* Prefix counts determine the number of non-zero digits in a range.
+* Powers of 10 help remove the left prefix from a concatenated number.
+* Preprocessing converts expensive repeated work into constant-time queries.
+* Overall complexity is **O(n + q)**.
+
+---
+
+# Common Mistakes
+
+* Forgetting to handle `l == 0`.
+* Not taking modulo after subtraction (leading to negative values).
+* Including zeros while building `numberUpTo`.
+* Using the substring length instead of the count of **non-zero** digits when shifting with powers of 10.
+* Forgetting the special case where the substring contains only zeros.
+
+---
