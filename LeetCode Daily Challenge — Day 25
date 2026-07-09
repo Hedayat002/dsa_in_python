@@ -1,0 +1,734 @@
+# Problem Name
+
+**3532. Path Existence Queries in a Graph I**
+
+---
+
+# Problem Statement
+
+You are given:
+
+* An integer `n` representing the number of nodes (`0` to `n-1`).
+* A **sorted** array `nums` of length `n`.
+* An integer `maxDiff`.
+* A list of queries `queries`, where each query is `[u, v]`.
+
+An **undirected edge** exists between two nodes `i` and `j` if:
+
+```text
+|nums[i] - nums[j]| <= maxDiff
+```
+
+For every query `[u, v]`, determine whether there exists **any path** between node `u` and node `v`.
+
+Return a boolean array containing the answer for every query.
+
+---
+
+# Examples
+
+## Example 1
+
+**Input**
+
+```python
+n = 2
+nums = [1,3]
+maxDiff = 1
+queries = [[0,0],[0,1]]
+```
+
+**Output**
+
+```python
+[True, False]
+```
+
+**Explanation**
+
+```
+Node 0 → Node 0
+
+Same node
+
+Answer = True
+```
+
+```
+1 ----- 3
+
+Difference = 2
+
+2 > 1
+
+No edge
+```
+
+Hence
+
+```
+0 cannot reach 1
+```
+
+---
+
+## Example 2
+
+**Input**
+
+```python
+n = 4
+
+nums = [2,5,6,8]
+
+maxDiff = 2
+
+queries =
+
+[[0,1],
+ [0,2],
+ [1,3],
+ [2,3]]
+```
+
+Graph
+
+```
+0
+
+1 ----- 2 ----- 3
+```
+
+Output
+
+```python
+[False, False, True, True]
+```
+
+---
+
+# Constraints
+
+```text
+1 <= n <= 100000
+
+0 <= nums[i] <= 100000
+
+nums is sorted
+
+0 <= maxDiff <= 100000
+
+1 <= queries.length <= 100000
+```
+
+---
+
+# Intuition
+
+The graph can contain **millions of possible edges**, so constructing every edge is impossible.
+
+The important observation is:
+
+> Since `nums` is sorted, we only need to check **adjacent elements**.
+
+If
+
+```
+nums[i]-nums[i-1] > maxDiff
+```
+
+then there is a **gap**.
+
+No element exists between them.
+
+Therefore these two groups can **never** be connected.
+
+So each large gap creates a **new connected component**.
+
+Finally,
+
+Two nodes have a path
+
+**iff**
+
+they belong to the same connected component.
+
+---
+
+# Brute Force Approach
+
+## Idea
+
+Construct the graph.
+
+For every query,
+
+Run BFS or DFS.
+
+If destination is reached,
+
+return True.
+
+Otherwise False.
+
+---
+
+## Algorithm
+
+1. Create graph.
+2. Add every valid edge.
+3. For every query
+
+   * Run BFS/DFS.
+   * Check reachability.
+4. Store answer.
+
+---
+
+## Code (Python)
+
+```python
+from collections import deque
+
+class Solution:
+    def pathExistenceQueries(self, n, nums, maxDiff, queries):
+
+        graph = [[] for _ in range(n)]
+
+        for i in range(n):
+            for j in range(i + 1, n):
+                if abs(nums[i] - nums[j]) <= maxDiff:
+                    graph[i].append(j)
+                    graph[j].append(i)
+
+        ans = []
+
+        for src, dest in queries:
+
+            q = deque([src])
+            visited = [False] * n
+            visited[src] = True
+
+            found = False
+
+            while q:
+
+                node = q.popleft()
+
+                if node == dest:
+                    found = True
+                    break
+
+                for nei in graph[node]:
+                    if not visited[nei]:
+                        visited[nei] = True
+                        q.append(nei)
+
+            ans.append(found)
+
+        return ans
+```
+
+---
+
+## Dry Run
+
+```
+nums
+
+2 5 6 8
+
+maxDiff=2
+```
+
+Graph
+
+```
+0
+
+1-----2-----3
+```
+
+Query
+
+```
+1 →3
+```
+
+BFS
+
+```
+1
+
+↓
+
+2
+
+↓
+
+3
+
+Found
+```
+
+Answer
+
+```
+True
+```
+
+---
+
+## Time Complexity
+
+Creating graph
+
+```
+O(n²)
+```
+
+Each BFS
+
+```
+O(n+e)
+```
+
+Overall
+
+```
+O(n² + q(n+e))
+```
+
+Very slow.
+
+---
+
+## Space Complexity
+
+```
+O(n²)
+```
+
+---
+
+# Better Approach (Union-Find)
+
+## Idea
+
+Instead of storing graph,
+
+connect adjacent nodes using DSU.
+
+If adjacent difference ≤ maxDiff,
+
+merge them.
+
+Finally,
+
+two nodes are connected if they have the same parent.
+
+---
+
+## Algorithm
+
+1. Initialize DSU.
+2. Traverse adjacent elements.
+3. Union adjacent nodes.
+4. For each query
+
+   * Compare parents.
+
+---
+
+## Code (Python)
+
+```python
+class Solution:
+
+    def pathExistenceQueries(self, n, nums, maxDiff, queries):
+
+        parent = list(range(n))
+
+        def find(x):
+            if parent[x] != x:
+                parent[x] = find(parent[x])
+            return parent[x]
+
+        def union(x, y):
+            px = find(x)
+            py = find(y)
+
+            if px != py:
+                parent[py] = px
+
+        for i in range(1, n):
+            if nums[i] - nums[i - 1] <= maxDiff:
+                union(i, i - 1)
+
+        ans = []
+
+        for u, v in queries:
+            ans.append(find(u) == find(v))
+
+        return ans
+```
+
+---
+
+## Time Complexity
+
+```
+O((n+q) α(n))
+```
+
+Practically
+
+```
+≈ O(n+q)
+```
+
+---
+
+## Space Complexity
+
+```
+O(n)
+```
+
+---
+
+# Optimal Approach
+
+## Intuition
+
+Since the array is sorted,
+
+adjacent gaps determine connected components.
+
+Whenever
+
+```
+nums[i]-nums[i-1] > maxDiff
+```
+
+a **new component** starts.
+
+Assign every node a component ID.
+
+Then every query becomes
+
+```
+component[u]==component[v]
+```
+
+---
+
+## Algorithm
+
+1. Create component array.
+2. Start first node in component 0.
+3. Traverse array.
+4. If adjacent difference exceeds maxDiff
+
+   * Increase component ID.
+5. Store current component.
+6. For every query
+
+   * Return whether both nodes belong to the same component.
+
+---
+
+## Code
+
+```python
+from typing import List
+
+class Solution:
+    def pathExistenceQueries(self, n: int, nums: List[int], maxDiff: int, queries: List[List[int]]) -> List[bool]:
+
+        component = [0] * n
+        component[0] = 0
+
+        component_id = 0
+
+        for i in range(1, n):
+
+            if nums[i] - nums[i - 1] > maxDiff:
+                component_id += 1
+
+            component[i] = component_id
+
+        ans = [False] * len(queries)
+
+        for i in range(len(queries)):
+            u, v = queries[i]
+            ans[i] = component[u] == component[v]
+
+        return ans
+```
+
+---
+
+## Dry Run
+
+Input
+
+```
+nums
+
+2 5 6 8
+
+maxDiff=2
+```
+
+Initially
+
+```
+component
+
+[0,0,0,0]
+```
+
+### i=1
+
+```
+5-2=3
+
+>2
+
+New component
+
+component
+
+[0,1,0,0]
+```
+
+### i=2
+
+```
+6-5=1
+
+Same component
+
+[0,1,1,0]
+```
+
+### i=3
+
+```
+8-6=2
+
+Same component
+
+[0,1,1,1]
+```
+
+Now process queries
+
+```
+Query
+
+0 1
+
+component
+
+0
+
+1
+
+Different
+
+False
+```
+
+```
+Query
+
+1 3
+
+component
+
+1
+
+1
+
+Same
+
+True
+```
+
+Final answer
+
+```
+[False, False, True, True]
+```
+
+---
+
+## Time Complexity
+
+Building components
+
+```
+O(n)
+```
+
+Answering queries
+
+```
+O(q)
+```
+
+Total
+
+```
+O(n+q)
+```
+
+---
+
+## Space Complexity
+
+Working space
+
+```
+O(n)
+```
+
+Output array
+
+```
+O(q)
+```
+
+---
+
+# Diagram
+
+```
+nums
+
+2    5    6    8    15    16
+
+Difference
+
+3    1    2    7    1
+     ✓    ✓         ✓
+
+Components
+
+0    1    1    1    2    2
+```
+
+Large gaps split the graph into separate connected components.
+
+---
+
+# Why This Works
+
+Because `nums` is sorted:
+
+* If two adjacent numbers differ by more than `maxDiff`, no intermediate value can bridge that gap.
+* Therefore, all nodes before the gap and after the gap belong to different connected components.
+* If adjacent differences stay within `maxDiff`, every node can reach the next one, forming one connected component.
+
+Thus,
+
+```
+Path exists
+
+⇔
+
+Both nodes belong to the same component.
+```
+
+---
+
+# Edge Cases
+
+### 1. Single node
+
+```
+n=1
+```
+
+Always
+
+```
+True
+```
+
+---
+
+### 2. maxDiff=0
+
+Only equal adjacent values remain connected.
+
+---
+
+### 3. All numbers equal
+
+```
+5 5 5 5
+```
+
+One component.
+
+Every query
+
+```
+True
+```
+
+---
+
+### 4. Every adjacent gap too large
+
+```
+1 5 10 20
+```
+
+Each node forms its own component.
+
+---
+
+### 5. Query on same node
+
+```
+3 →3
+```
+
+Always
+
+```
+True
+```
+
+---
+
+# Interview Explanation (30–60 sec)
+
+> Since the array is already sorted, I don't need to build the graph explicitly. I only compare adjacent elements. Whenever the difference between consecutive elements exceeds `maxDiff`, that gap disconnects the graph and starts a new connected component. I assign a component ID to each node in one linear pass. Then each query is answered in O(1) by checking whether both nodes have the same component ID. Overall complexity is **O(n + q)** with **O(n)** extra space, which is optimal because every element and every query must be processed at least once.
+
+---
+
+# Key Takeaways
+
+* Sorted array is the key observation.
+* No need to construct the graph.
+* Large adjacent gaps split connected components.
+* Component labeling is simpler than Union-Find for this problem.
+* Each query is answered in O(1).
+* Overall complexity is optimal: **O(n + q)**.
+
+---
+
+# Common Mistakes
+
+* Building all edges (`O(n²)`).
+* Running BFS/DFS for every query.
+* Comparing all pairs instead of only adjacent elements.
+* Forgetting that the array is sorted.
+* Starting a new component when `difference == maxDiff` (it should only start when `difference > maxDiff`).
+
+---
