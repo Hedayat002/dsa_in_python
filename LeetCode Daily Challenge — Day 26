@@ -1,0 +1,839 @@
+# 3534. Path Existence Queries in a Graph II
+
+---
+
+# Problem Statement
+
+You are given:
+
+* `n` nodes numbered from `0` to `n-1`
+* `nums[i]` = value of node `i`
+* `maxDiff`
+* Multiple queries `[u, v]`
+
+An edge exists between two nodes if
+
+[
+|nums[u]-nums[v]| \le maxDiff
+]
+
+For every query, return
+
+* Minimum number of edges needed to reach `v` from `u`
+* `-1` if no path exists.
+
+---
+
+# Example
+
+```
+nums = [2,5,7,10]
+maxDiff = 3
+
+Edges
+
+2 -- 5
+5 -- 7
+7 -- 10
+
+Query:
+0 → 3
+
+Answer = 3
+```
+
+Path
+
+```
+2 → 5 → 7 → 10
+```
+
+---
+
+# Constraints
+
+* Large `n`
+* Large number of queries
+* O(n²) graph construction is impossible.
+* Need very fast query answering.
+
+---
+
+# Intuition
+
+The graph is **not built explicitly**.
+
+Instead notice something important.
+
+After sorting values,
+
+```
+2   5   7   10
+```
+
+Edges only connect nearby values.
+
+If
+
+```
+5 can't reach 8
+```
+
+then it can never jump farther.
+
+So every node has a **farthest node it can directly jump to**.
+
+Once these jumps are known, Binary Lifting can answer every query quickly.
+
+---
+
+# Brute Force Approach
+
+## Idea
+
+For every query
+
+* Build graph
+* Run BFS
+
+---
+
+## Algorithm
+
+For each query
+
+```
+Construct graph
+Run BFS
+Return shortest distance
+```
+
+---
+
+## Code
+
+```python
+# Build graph
+graph = [[] for _ in range(n)]
+
+for i in range(n):
+    for j in range(i+1,n):
+        if abs(nums[i]-nums[j]) <= maxDiff:
+            graph[i].append(j)
+            graph[j].append(i)
+
+# BFS for every query
+```
+
+---
+
+## Dry Run
+
+```
+Queries = 100000
+
+Run BFS
+Run BFS
+Run BFS
+...
+```
+
+Too slow.
+
+---
+
+## Time Complexity
+
+Graph Building
+
+```
+O(n²)
+```
+
+Each BFS
+
+```
+O(V+E)
+```
+
+Total
+
+```
+O(Q × (V+E))
+```
+
+Impossible.
+
+---
+
+## Space Complexity
+
+```
+O(V+E)
+```
+
+---
+
+# Better Approach
+
+## Idea
+
+Precompute connected components using DFS/Union-Find.
+
+Then
+
+```
+Connected?
+
+YES
+NO
+```
+
+can be answered quickly.
+
+But minimum distance is still unknown.
+
+---
+
+## Algorithm
+
+```
+Build graph
+
+Union connected nodes
+
+For every query
+
+Check component
+
+If different
+
+return -1
+
+Else
+
+Run BFS
+```
+
+---
+
+## Code
+
+Not optimal because BFS is still required.
+
+---
+
+## Time Complexity
+
+```
+O(n²)
+```
+
+---
+
+## Space Complexity
+
+```
+O(n²)
+```
+
+---
+
+# Optimal Approach
+
+## Intuition
+
+This solution has **two major ideas**.
+
+### Observation 1
+
+Sort nodes according to values.
+
+Example
+
+```
+Index
+
+0 1 2 3 4
+
+Values
+
+8 2 6 11 5
+```
+
+Sort
+
+```
+Value Index
+
+2      1
+5      4
+6      2
+8      0
+11     3
+```
+
+Now close values become neighbors.
+
+---
+
+### Observation 2
+
+Suppose
+
+```
+maxDiff = 3
+```
+
+From value
+
+```
+2
+```
+
+we can directly reach
+
+```
+5
+```
+
+because
+
+```
+5-2=3
+```
+
+but not
+
+```
+6
+```
+
+if difference becomes bigger.
+
+We only need the **rightmost reachable value**.
+
+This becomes our first jump.
+
+---
+
+### Observation 3
+
+Once every node knows
+
+```
+1 jump
+```
+
+Binary Lifting gives
+
+```
+2 jumps
+
+4 jumps
+
+8 jumps
+
+16 jumps
+```
+
+exactly like LCA.
+
+---
+
+# Step 1 — Sort Values
+
+```
+pairs = sorted((value,index))
+```
+
+Example
+
+```
+nums
+
+8 2 6 11 5
+
+↓
+
+pairs
+
+(2,1)
+(5,4)
+(6,2)
+(8,0)
+(11,3)
+```
+
+---
+
+# Step 2 — Two Pointer
+
+Maintain
+
+```
+l
+r
+```
+
+such that
+
+```
+pairs[r].value - pairs[l].value <= maxDiff
+```
+
+Example
+
+```
+2 5 6 8 11
+l
+        r
+```
+
+Largest reachable
+
+```
+8
+```
+
+Store
+
+```
+f[node][0]=index of 8
+```
+
+---
+
+# Step 3 — Binary Lifting
+
+```
+f[i][0]
+```
+
+means
+
+```
+After 1 jump where can I go?
+```
+
+Then
+
+```
+f[i][1]
+```
+
+means
+
+```
+2 jumps
+```
+
+```
+f[i][2]
+```
+
+means
+
+```
+4 jumps
+```
+
+Formula
+
+```
+f[i][k]
+
+=
+
+f[f[i][k-1]][k-1]
+```
+
+Exactly same as LCA.
+
+---
+
+# Algorithm
+
+### Preprocessing
+
+```
+Sort values
+
+Use two pointers
+
+Find farthest reachable node
+
+Store in f[][0]
+
+Build Binary Lifting table
+```
+
+---
+
+### Query
+
+If
+
+```
+nums[u]>nums[v]
+```
+
+swap
+
+because we always move toward larger values.
+
+Now
+
+```
+Jump
+
+16
+
+8
+
+4
+
+2
+
+1
+```
+
+until just before destination.
+
+Answer
+
+```
+number of jumps
+```
+
+---
+
+# Code
+
+```python
+class Solution:
+    def pathExistenceQueries(self, n: int, nums: List[int], maxDiff: int, queries: List[List[int]]) -> List[int]:
+        pairs = sorted((x, i) for i, x in enumerate(nums))
+
+        LOG = 20
+        f = [[0] * LOG for _ in range(n)]
+
+        r = n - 1
+
+        for l in range(n - 1, -1, -1):
+            while pairs[r][0] - pairs[l][0] > maxDiff:
+                r -= 1
+
+            i = pairs[l][1]
+            j = pairs[r][1]
+
+            f[i][0] = j
+
+            for k in range(1, LOG):
+                f[i][k] = f[f[i][k - 1]][k - 1]
+
+        ans = []
+
+        for i, j in queries:
+
+            if nums[i] > nums[j]:
+                i, j = j, i
+
+            if i == j:
+                ans.append(0)
+                continue
+
+            if nums[i] == nums[j]:
+                ans.append(1)
+                continue
+
+            dist = 0
+
+            for k in range(LOG - 1, -1, -1):
+                if nums[f[i][k]] < nums[j]:
+                    dist |= 1 << k
+                    i = f[i][k]
+
+            if nums[f[i][0]] < nums[j]:
+                ans.append(-1)
+            else:
+                ans.append(dist + 1)
+
+        return ans
+```
+
+---
+
+# Dry Run
+
+```
+nums
+
+[2,5,7,10]
+
+maxDiff=3
+```
+
+Sorted
+
+```
+2
+5
+7
+10
+```
+
+First jumps
+
+```
+2 ->5
+
+5 ->7
+
+7 ->10
+
+10->10
+```
+
+Binary lifting
+
+```
+1 jump
+
+2 jumps
+
+4 jumps
+```
+
+Query
+
+```
+2 →10
+```
+
+Jump
+
+```
+2→7
+
+(2 jumps)
+
+7→10
+
+(1 jump)
+```
+
+Total
+
+```
+3
+```
+
+---
+
+# Binary Lifting Table Example
+
+Suppose
+
+```
+f[][0]
+
+A→B
+
+B→C
+
+C→D
+
+D→D
+```
+
+Then
+
+```
+f[][1]
+
+A→C
+
+B→D
+
+C→D
+
+D→D
+```
+
+Then
+
+```
+f[][2]
+
+A→D
+
+B→D
+
+C→D
+
+D→D
+```
+
+So one lookup gives
+
+```
+4 jumps
+```
+
+---
+
+# Why This Works
+
+Sorting transforms the graph into an ordered structure where every optimal move is toward the farthest reachable value within `maxDiff`. The two-pointer technique computes this greedy next jump for every node. Binary lifting then composes these jumps into powers of two, allowing each query to skip many intermediate nodes while still finding the minimum number of jumps or determining that no path exists. This works because moving farther within the allowed range can never reduce future reachability in the sorted order.
+
+---
+
+# Time Complexity
+
+### Preprocessing
+
+Sorting
+
+```
+O(n log n)
+```
+
+Two pointers
+
+```
+O(n)
+```
+
+Binary lifting
+
+```
+O(n log n)
+```
+
+---
+
+### Each Query
+
+Binary lifting
+
+```
+O(log n)
+```
+
+---
+
+### Overall
+
+```
+O(n log n + q log n)
+```
+
+---
+
+# Space Complexity
+
+Binary lifting table
+
+```
+O(n log n)
+```
+
+---
+
+# Recursion Tree / DP Table / Diagram
+
+Binary lifting table
+
+```
+Node
+
+A
+
+|
+
+B
+
+|
+
+C
+
+|
+
+D
+```
+
+```
+Level 0
+
+A→B
+
+B→C
+
+C→D
+
+D→D
+```
+
+```
+Level 1
+
+A→C
+
+B→D
+
+C→D
+
+D→D
+```
+
+```
+Level 2
+
+A→D
+
+B→D
+
+C→D
+
+D→D
+```
+
+Each higher level doubles the jump distance.
+
+---
+
+# Edge Cases
+
+* `u == v` → answer is `0`.
+* `nums[u] == nums[v]` but different indices → answer is `1` (there is a direct edge because the difference is `0`).
+* Destination cannot be reached → return `-1`.
+* `maxDiff = 0` → only equal-valued nodes are directly connected.
+* Very large `n` and many queries are handled efficiently due to preprocessing.
+
+---
+
+# Interview Explanation (30–60 sec)
+
+"I first sort the nodes by their values because edges depend only on value differences. Using a two-pointer sweep, I compute for every node the farthest node it can reach in one jump while staying within `maxDiff`. This forms the first level of a binary lifting table. Higher levels store destinations after `2^k` jumps. For each query, I always move from the smaller value toward the larger value, greedily taking the largest possible jumps that still stay before the target. If one more jump reaches or passes the target, I return the jump count; otherwise, the nodes are disconnected. The preprocessing takes `O(n log n)` and each query takes `O(log n)`."
+
+---
+
+# Key Takeaways
+
+* Sort by value to exploit the graph's structure.
+* Use a two-pointer sweep to compute the farthest valid one-step jump.
+* Build a binary lifting table over these jumps.
+* Answer each query in `O(log n)` by greedily taking the largest valid jumps.
+* Overall complexity is `O(n log n + q log n)`.
+
+---
+
+# Common Mistakes
+
+1. Forgetting to sort the `(value, index)` pairs before preprocessing.
+2. Building the binary lifting table incorrectly (the recurrence is `f[i][k] = f[f[i][k-1]][k-1]`).
+3. Not swapping query endpoints so traversal always goes from the smaller value to the larger value.
+4. Using `<=` instead of `<` in the binary lifting query check (`nums[f[i][k]] < nums[j]`), which can overshoot the stopping condition.
+5. Forgetting to handle `i == j` before processing jumps.
+6. Returning the accumulated jump count without checking whether the final one-step jump can actually reach the destination, which would miss unreachable cases.
