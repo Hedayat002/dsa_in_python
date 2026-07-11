@@ -1,0 +1,1004 @@
+# 2685. Count the Number of Complete Components
+
+## 1. Problem Statement
+
+You are given:
+
+* An integer `n` representing `n` vertices numbered from `0` to `n-1`.
+* A list `edges`, where `edges[i] = [u, v]` represents an undirected edge.
+
+A **connected component** is called **complete** if **every pair of distinct vertices is directly connected by an edge**.
+
+Return the **number of complete connected components**.
+
+---
+
+## 2. Examples
+
+### Example 1
+
+```
+Input:
+n = 6
+edges = [[0,1],[0,2],[1,2],[3,4]]
+
+Graph:
+
+      0
+     / \
+    1---2
+
+    3---4
+
+    5
+
+Output:
+3
+```
+
+Explanation
+
+* {0,1,2} → Complete
+* {3,4} → Complete
+* {5} → Single node → Complete
+
+Answer = **3**
+
+---
+
+### Example 2
+
+```
+Input:
+n = 6
+edges = [[0,1],[0,2],[1,2],[3,4],[3,5]]
+
+Graph:
+
+      0
+     / \
+    1---2
+
+      3
+     / \
+    4   5
+
+Output:
+1
+```
+
+Explanation
+
+Component {3,4,5}
+
+Missing edge (4,5)
+
+Not complete.
+
+Only {0,1,2} is complete.
+
+---
+
+# 3. Constraints
+
+* `1 <= n <= 50`
+* `0 <= edges.length <= n*(n-1)/2`
+* No duplicate edges.
+* Undirected graph.
+
+---
+
+# 4. Intuition
+
+A component is complete if every vertex is connected to every other vertex.
+
+Suppose a component has
+
+```
+v vertices
+```
+
+Then
+
+Maximum edges possible
+
+```
+v(v-1)/2
+```
+
+So our task becomes
+
+* Find every connected component.
+* Count vertices.
+* Count edges.
+* Check if
+
+```
+actual_edges == maximum_possible_edges
+```
+
+DFS/BFS use degree sum.
+
+DSU counts actual edges.
+
+---
+
+# 5. Brute Force Approach
+
+## Idea
+
+For every node,
+
+* Find its component.
+* Store all vertices.
+* For every pair of vertices
+
+```
+(u,v)
+```
+
+Check whether an edge exists.
+
+If every pair exists
+
+Component is complete.
+
+---
+
+## Algorithm
+
+For each component
+
+```
+Collect all vertices.
+
+For every pair
+
+    Check edge exists.
+
+If all pairs connected
+
+    answer++
+```
+
+---
+
+## Code (Brute Force)
+
+```python
+# Very slow approach
+
+from collections import defaultdict
+
+class Solution:
+    def countCompleteComponents(self, n, edges):
+
+        adj = defaultdict(set)
+
+        for u,v in edges:
+            adj[u].add(v)
+            adj[v].add(u)
+
+        visited=[False]*n
+
+        def dfs(node, comp):
+            visited[node]=True
+            comp.append(node)
+
+            for nei in adj[node]:
+                if not visited[nei]:
+                    dfs(nei,comp)
+
+        ans=0
+
+        for i in range(n):
+
+            if visited[i]:
+                continue
+
+            comp=[]
+
+            dfs(i,comp)
+
+            complete=True
+
+            m=len(comp)
+
+            for i in range(m):
+                for j in range(i+1,m):
+
+                    if comp[j] not in adj[comp[i]]:
+                        complete=False
+
+            if complete:
+                ans+=1
+
+        return ans
+```
+
+---
+
+## Dry Run
+
+Input
+
+```
+n=6
+
+edges=
+
+0-1
+0-2
+1-2
+3-4
+```
+
+Component
+
+```
+0 1 2
+```
+
+Pairs
+
+```
+0-1 ✓
+
+0-2 ✓
+
+1-2 ✓
+```
+
+Complete
+
+Component
+
+```
+3 4
+```
+
+Pair
+
+```
+3-4 ✓
+```
+
+Complete
+
+Component
+
+```
+5
+```
+
+No pair
+
+Complete
+
+Answer
+
+```
+3
+```
+
+---
+
+## Time Complexity
+
+Finding components
+
+```
+O(V+E)
+```
+
+Checking every pair
+
+```
+O(V²)
+```
+
+Worst
+
+```
+O(V²)
+```
+
+---
+
+## Space Complexity
+
+```
+O(V+E)
+```
+
+---
+
+# 6. Better Approach (DFS / BFS)
+
+Instead of checking every pair,
+
+Use a mathematical property.
+
+---
+
+## Idea
+
+For a complete graph having
+
+```
+v vertices
+```
+
+Each vertex degree
+
+```
+v-1
+```
+
+Degree sum
+
+```
+v(v-1)
+```
+
+Since
+
+```
+Degree Sum = 2 × edges
+```
+
+We simply compute
+
+```
+degree_sum
+```
+
+and compare
+
+```
+v(v-1)
+```
+
+---
+
+# DFS Approach
+
+## Algorithm
+
+Build adjacency list.
+
+For every unvisited node
+
+```
+DFS
+
+count vertices
+
+add degree
+
+After DFS
+
+if
+
+vertices*(vertices-1)==degree_sum
+
+answer++
+```
+
+---
+
+## DFS Code
+
+```python
+from collections import defaultdict
+
+class Solution:
+    def dfs(self, node, adj, visited, info):
+        visited[node] = True
+        info[0] += 1                      # vertices
+        info[1] += len(adj[node])         # degree sum
+
+        for nei in adj[node]:
+            if not visited[nei]:
+                self.dfs(nei, adj, visited, info)
+
+    def countCompleteComponents(self, n: int, edges):
+        adj = defaultdict(list)
+
+        for u, v in edges:
+            adj[u].append(v)
+            adj[v].append(u)
+
+        visited = [False] * n
+        result = 0
+
+        for i in range(n):
+            if visited[i]:
+                continue
+
+            info = [0, 0]
+
+            self.dfs(i, adj, visited, info)
+
+            if info[0] * (info[0] - 1) == info[1]:
+                result += 1
+
+        return result
+```
+
+---
+
+## Full Dry Run (DFS)
+
+Input
+
+```
+n=6
+
+edges
+
+0-1
+0-2
+1-2
+3-4
+```
+
+Adjacency
+
+```
+0 -> 1 2
+
+1 -> 0 2
+
+2 -> 0 1
+
+3 -> 4
+
+4 -> 3
+
+5 -> []
+```
+
+Start DFS(0)
+
+Visit
+
+```
+0
+
+vertices=1
+
+degree_sum=2
+```
+
+Visit
+
+```
+1
+
+vertices=2
+
+degree_sum=4
+```
+
+Visit
+
+```
+2
+
+vertices=3
+
+degree_sum=6
+```
+
+Check
+
+```
+3*(3-1)=6
+
+degree_sum=6
+
+Complete
+```
+
+Answer=1
+
+Next
+
+DFS(3)
+
+Visit
+
+```
+3
+
+vertices=1
+
+degree=1
+```
+
+Visit
+
+```
+4
+
+vertices=2
+
+degree=2
+```
+
+Check
+
+```
+2*1=2
+
+degree_sum=2
+
+Complete
+```
+
+Answer=2
+
+DFS(5)
+
+```
+vertices=1
+
+degree_sum=0
+```
+
+Check
+
+```
+1*0=0
+
+Complete
+```
+
+Answer=3
+
+Return
+
+```
+3
+```
+
+---
+
+## Time Complexity
+
+```
+O(V+E)
+```
+
+---
+
+## Space Complexity
+
+```
+O(V+E)
+```
+
+---
+
+# BFS Approach
+
+## Idea
+
+Exactly same.
+
+Only DFS replaced by queue.
+
+---
+
+## Algorithm
+
+```
+Queue
+
+Visit nodes
+
+Count
+
+Degree sum
+
+Check formula
+```
+
+---
+
+## BFS Code
+
+```python
+from collections import defaultdict, deque
+
+class Solution:
+    def bfs(self, start, adj, visited, info):
+        q = deque([start])
+        visited[start] = True
+
+        while q:
+            node = q.popleft()
+
+            info[0] += 1
+            info[1] += len(adj[node])
+
+            for nei in adj[node]:
+                if not visited[nei]:
+                    visited[nei] = True
+                    q.append(nei)
+
+    def countCompleteComponents(self, n: int, edges):
+        adj = defaultdict(list)
+
+        for u, v in edges:
+            adj[u].append(v)
+            adj[v].append(u)
+
+        visited = [False] * n
+        result = 0
+
+        for i in range(n):
+            if visited[i]:
+                continue
+
+            info = [0, 0]
+
+            self.bfs(i, adj, visited, info)
+
+            if info[0] * (info[0] - 1) == info[1]:
+                result += 1
+
+        return result
+```
+
+---
+
+## Time Complexity
+
+```
+O(V+E)
+```
+
+---
+
+## Space Complexity
+
+```
+O(V+E)
+```
+
+---
+
+# 7. Optimal Approach (DSU / Union Find)
+
+## Intuition
+
+Instead of traversing each component repeatedly,
+
+Use Union-Find to group vertices into connected components.
+
+Then
+
+For every component
+
+```
+vertices
+
+edges
+```
+
+Check
+
+```
+edges==v(v-1)/2
+```
+
+---
+
+## Algorithm
+
+1. Initialize DSU.
+2. Union every edge.
+3. Count edges for each root.
+4. For each root:
+
+   * Get component size.
+   * Compare actual edges with maximum possible.
+5. Count complete components.
+
+---
+
+## Code
+
+```python
+from collections import defaultdict
+
+class DSU:
+    def __init__(self, n):
+        self.parent = list(range(n))
+        self.size = [1] * n
+
+    def find(self, x):
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])
+        return self.parent[x]
+
+    def union(self, x, y):
+        px = self.find(x)
+        py = self.find(y)
+
+        if px == py:
+            return
+
+        if self.size[px] > self.size[py]:
+            self.parent[py] = px
+            self.size[px] += self.size[py]
+        else:
+            self.parent[px] = py
+            self.size[py] += self.size[px]
+
+
+class Solution:
+    def countCompleteComponents(self, n: int, edges):
+        dsu = DSU(n)
+
+        for u, v in edges:
+            dsu.union(u, v)
+
+        edge_count = defaultdict(int)
+
+        for u, v in edges:
+            root = dsu.find(u)
+            edge_count[root] += 1
+
+        result = 0
+
+        for i in range(n):
+            if dsu.find(i) == i:
+                vertices = dsu.size[i]
+                edges_in_component = edge_count[i]
+
+                if vertices * (vertices - 1) // 2 == edges_in_component:
+                    result += 1
+
+        return result
+```
+
+---
+
+## Full Dry Run (DSU)
+
+Input
+
+```
+n=6
+
+Edges
+
+0-1
+
+0-2
+
+1-2
+
+3-4
+```
+
+### Step 1: Union Operations
+
+Initial:
+
+```
+Parent = [0,1,2,3,4,5]
+Size   = [1,1,1,1,1,1]
+```
+
+Union(0,1)
+
+```
+Parent = [1,1,2,3,4,5]
+Size   = [1,2,1,1,1,1]
+```
+
+Union(0,2)
+
+```
+Root(0)=1
+
+Root(2)=2
+
+Parent=[1,1,1,3,4,5]
+
+Size=[1,3,1,1,1,1]
+```
+
+Union(1,2)
+
+Already same root.
+
+Union(3,4)
+
+```
+Parent=[1,1,1,4,4,5]
+
+Size=[1,3,1,1,2,1]
+```
+
+### Step 2: Count Edges
+
+```
+Root 1
+
+Edges=3
+
+Root 4
+
+Edges=1
+```
+
+### Step 3: Check
+
+Root=1
+
+```
+Vertices=3
+
+Expected edges
+
+3*2/2=3
+
+Actual=3
+
+Complete
+```
+
+Root=4
+
+```
+Vertices=2
+
+Expected=1
+
+Actual=1
+
+Complete
+```
+
+Root=5
+
+```
+Vertices=1
+
+Expected=0
+
+Actual=0
+
+Complete
+```
+
+Answer
+
+```
+3
+```
+
+---
+
+## Time Complexity
+
+* Union operations: `O(E × α(V))`
+* Counting edges: `O(E)`
+* Checking components: `O(V)`
+
+Overall:
+
+```
+O(E × α(V) + V)
+```
+
+where `α(V)` (inverse Ackermann function) is nearly constant.
+
+---
+
+## Space Complexity
+
+```
+O(V)
+```
+
+---
+
+# 8. Recursion Tree / Diagram
+
+DFS traversal for the first component:
+
+```text
+DFS(0)
+│
+├── DFS(1)
+│   │
+│   └── DFS(2)
+│
+└── (2 already visited)
+```
+
+Graph:
+
+```text
+      0
+     / \
+    1---2
+
+    3---4
+
+    5
+```
+
+---
+
+# 9. Why This Works
+
+For a connected component with `v` vertices:
+
+* A complete graph must contain exactly:
+
+[
+\frac{v(v-1)}{2}
+]
+
+edges.
+
+* In DFS/BFS, the **sum of degrees** equals `2 × edges`, so:
+
+```
+degree_sum = v × (v - 1)
+```
+
+* In DSU, we count the **actual edges**, so:
+
+```
+edges = v × (v - 1) // 2
+```
+
+If the equality holds, every possible edge exists, meaning the component is complete.
+
+---
+
+# 10. Edge Cases
+
+1. `n = 1`, no edges → one complete component.
+2. Multiple isolated nodes → every node is a complete component.
+3. Component missing one edge → not complete.
+4. Entire graph already complete.
+5. Empty edge list.
+6. Multiple disconnected complete components.
+
+---
+
+# 11. Interview Explanation (30–60 sec)
+
+> "The key observation is that a connected component with `v` vertices is complete only if it contains exactly `v(v−1)/2` edges. Using DFS or BFS, I traverse each component, count its vertices and accumulate the degree sum. Since the degree sum equals twice the number of edges, I simply verify whether `degree_sum == v(v−1)`. Alternatively, using Union-Find, I first group nodes into connected components, count the edges in each component, and compare that count against `v(v−1)/2`. Both solutions efficiently process the graph in linear time with respect to vertices and edges."
+
+---
+
+# 12. Key Takeaways
+
+* Complete graph with `v` vertices has `v(v−1)/2` edges.
+* Degree sum of an undirected graph equals `2 × edges`.
+* DFS and BFS naturally identify connected components.
+* DSU is excellent for grouping connected components efficiently.
+* All three approaches avoid expensive pairwise edge checks.
+
+---
+
+# 13. Common Mistakes
+
+1. Forgetting that the graph is **undirected**.
+2. Comparing the degree sum directly with the number of edges.
+3. Using `v(v−1)/2` instead of `v(v−1)` in the DFS/BFS degree-sum check.
+4. Not handling isolated vertices (they are complete components).
+5. Double-counting edges in DFS/BFS.
+6. Forgetting path compression or union by size/rank in DSU.
+7. Counting edges before all unions are completed in the DSU approach.
+8. Using integer division incorrectly when computing `v(v−1)//2`.
