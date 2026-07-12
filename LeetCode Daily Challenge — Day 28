@@ -1,0 +1,235 @@
+# 1331. Rank Transform of an Array
+
+## 1. Problem Statement
+
+Given an array of integers `arr`, replace each element with its **rank**.
+
+The rank represents how large the element is:
+- The rank of the smallest element is 1.
+- Rank is calculated by distinct values (ties get the same rank).
+- Rank should be as small as possible.
+
+Return the array after replacing every element with its rank.
+
+## 2. Examples
+
+**Example 1:**
+```
+Input: arr = [40,10,20,30]
+Output: [4,1,2,3]
+Explanation: 10 -> rank 1, 20 -> rank 2, 30 -> rank 3, 40 -> rank 4
+```
+
+**Example 2:**
+```
+Input: arr = [100,100,100]
+Output: [1,1,1]
+Explanation: All elements share the same rank since they're equal.
+```
+
+**Example 3:**
+```
+Input: arr = [37,12,28,9,100,56,80,5,12]
+Output: [5,3,4,2,8,6,7,1,3]
+```
+
+## 3. Constraints
+
+- `0 <= arr.length <= 10^5`
+- `-10^9 <= arr[i] <= 10^9`
+
+## 4. Intuition
+
+Rank is really just "position in sorted order," except duplicates must collapse to the same rank. So the core idea is: **sort a copy of the array, assign rank numbers 1, 2, 3, ... to the distinct sorted values, then look up each original element's rank via a hashmap.**
+
+This is fundamentally a *coordinate compression* problem — a very common technique when you need relative ordering rather than actual values.
+
+---
+
+## 5.1 Brute Force Approach
+
+### 5.2 Idea
+For every element, count how many **distinct** values in the array are strictly smaller than it, then add 1. That count is its rank.
+
+### 5.3 Algorithm
+1. Build a sorted list of **unique** values from `arr`.
+2. For each element `x` in `arr`, binary search (or linear scan) in the unique sorted list to find how many elements are smaller than `x` → that's `rank - 1`.
+3. Replace `x` with that rank.
+
+Even the "brute force" typically uses sorting since raw O(n²) comparison is wasteful and unnecessary — but here's the truly naive O(n²) version for completeness:
+
+### 5.4 Code (Naive O(n²))
+
+```python
+def arrayRankTransform(arr):
+    n = len(arr)
+    result = []
+    unique_sorted = sorted(set(arr))
+    
+    for x in arr:
+        rank = 1
+        for v in unique_sorted:
+            if v < x:
+                rank += 1
+            else:
+                break
+        result.append(rank)
+    
+    return result
+```
+
+### 5.5 Dry Run
+`arr = [40,10,20,30]`
+`unique_sorted = [10,20,30,40]`
+
+- x=40 → count smaller: 10,20,30 → rank=4
+- x=10 → count smaller: none → rank=1
+- x=20 → count smaller: 10 → rank=2
+- x=30 → count smaller: 10,20 → rank=3
+
+Output: `[4,1,2,3]` ✅
+
+### 5.6 Time Complexity
+O(n · u) where `u` = number of unique elements ≈ O(n²) worst case (all distinct).
+
+### 5.7 Space Complexity
+O(n) for `unique_sorted` and result array.
+
+---
+
+## 6.1 Better Approach
+
+### Idea
+Instead of scanning the unique list linearly for each element, use **binary search** since `unique_sorted` is already sorted. This turns the inner loop from O(u) to O(log u).
+
+### Algorithm
+1. Create `unique_sorted = sorted(set(arr))`.
+2. For each `x` in `arr`, binary search its index in `unique_sorted` → `index + 1` is the rank.
+
+### Code
+
+```python
+import bisect
+
+def arrayRankTransform(arr):
+    unique_sorted = sorted(set(arr))
+    return [bisect.bisect_left(unique_sorted, x) + 1 for x in arr]
+```
+
+### Time Complexity
+- Sorting: O(n log n)
+- Binary search per element: O(log n), total O(n log n)
+- Overall: **O(n log n)**
+
+### Space Complexity
+O(n) for the unique sorted list and output.
+
+*(Note: this is already essentially optimal — the "better" and "optimal" approaches converge here. The hashmap version below avoids repeated binary searches and is the most commonly cited optimal solution.)*
+
+---
+
+## 7.1 Optimal Approach — Sort + HashMap
+
+### Intuition
+We only need to compute each unique value's rank **once**. Instead of binary searching for every element (even duplicates, which waste searches), sort the unique values once, assign ranks 1, 2, 3, ... in a hashmap, then do O(1) lookups for every element of the original array.
+
+### Algorithm
+1. Create a sorted copy of the array (or `sorted(set(arr))` to skip duplicate work).
+2. Iterate through the sorted list, assigning increasing rank numbers to each **new distinct value** in a hashmap `rank_map`.
+3. Traverse the original `arr` and replace each element with `rank_map[element]`.
+
+### Code
+
+```python
+def arrayRankTransform(arr):
+   sorted_arr = sorted(arr)
+
+        rank_map = {}
+        rank = 1
+
+        for num in sorted_arr:
+            if num not in rank_map:
+                rank_map[num] = rank
+                rank += 1
+
+        result = [rank_map[num] for num in arr]
+        return result
+```
+### Dry Run
+`arr = [37,12,28,9,100,56,80,5,12]`
+
+1. `sorted(set(arr))` = `[5,9,12,28,37,56,80,100]`
+2. Build rank_map:
+   - 5→1, 9→2, 12→3, 28→4, 37→5, 56→6, 80→7, 100→8
+3. Map back over original array:
+   - 37→5, 12→3, 28→4, 9→2, 100→8, 56→6, 80→7, 5→1, 12→3
+
+Output: `[5,3,4,2,8,6,7,1,3]` ✅ matches expected.
+
+### Time Complexity
+- Sorting unique values: O(n log n)
+- Building hashmap: O(n)
+- Final lookup pass: O(n)
+- **Total: O(n log n)**
+
+### Space Complexity
+- `rank_map`: O(n)
+- `sorted_arr` copy: O(n)
+- **Total: O(n)**
+
+---
+
+## 8. Diagram
+
+```
+arr:            [ 40, 10, 20, 30 ]
+                    │   │   │   │
+sorted unique:  [10, 20, 30, 40]
+rank assigned:   1    2    3    4
+                    │   │   │   │
+rank_map:  {10:1, 20:2, 30:3, 40:4}
+                    │   │   │   │
+lookup arr[i] in map:
+   40 → 4
+   10 → 1
+   20 → 2
+   30 → 3
+
+Output: [4, 1, 2, 3]
+```
+
+## 9. Why This Works
+
+- Sorting gives us the correct relative order of all values.
+- Using a **set** (or skipping duplicates while iterating) ensures equal elements get the **same rank**, satisfying "ties get identical rank."
+- Since we assign ranks incrementally (1, 2, 3, ...) only to *new* distinct values, ranks are always as small as possible with no gaps.
+- The hashmap decouples "compute rank once per unique value" from "assign rank to every occurrence," making lookups O(1) instead of O(log n) each.
+
+## 10. Edge Cases
+
+- **Empty array** → return `[]` immediately (avoid indexing errors).
+- **All elements equal** → every element gets rank 1.
+- **All elements distinct** → ranks are just index+1 in sorted order (permutation-like).
+- **Negative numbers** → works fine since we rely on relative ordering, not value magnitude.
+- **Single element array** → output is `[1]`.
+- **Large range of values** (`-10^9` to `10^9`) → hashmap handles this fine since we never allocate array of that size (avoid counting sort directly on values!).
+
+## 11. Interview Explanation (30–60 sec)
+
+"This problem is really about assigning each element its position in sorted order, but with duplicates sharing the same rank. My approach: take the array, get the distinct values, and sort them — this gives me the correct order of ranks. Then I walk through this sorted list once and assign rank 1, 2, 3... to each distinct value using a hashmap. Finally, I iterate over the *original* array and just look up each value's precomputed rank in O(1). This gives O(n log n) overall due to sorting, and O(n) space for the map — much better than repeatedly binary searching or comparing every pair, which would be O(n²) or O(n log n) with more overhead."
+
+## 12. Key Takeaways
+
+- Classic **coordinate compression** pattern — very reusable for problems needing relative order instead of absolute values.
+- Sort once, map once, use hashmap for O(1) repeated lookups — avoid redundant binary searches for duplicate values.
+- Watch for duplicates: they must **not** get an incremented rank, only new distinct values do.
+- Don't be tempted to use counting sort directly on values here — the value range (`10^9`) is far too large for an array-indexed approach.
+
+## 13. Common Mistakes
+
+1. **Incrementing rank for every element instead of every distinct element** — causes duplicates to get different ranks (wrong).
+2. **Forgetting to dedupe before assigning ranks** — leads to skipped rank numbers (e.g., 1, 2, 2, 4 instead of 1, 2, 2, 3).
+3. **Not handling the empty array case**, causing index errors or unnecessary crashes.
+4. **Using value as array index** for a counting-sort-like approach — fails/crashes or wastes massive memory since values can be up to `10^9` in magnitude and negative.
+5. **Re-sorting or re-searching for every element** instead of precomputing ranks once — degrades performance unnecessarily to O(n log n) *per element* in poorly designed binary-search-in-loop solutions, or true O(n²) in fully naive versions.
+6. **Off-by-one errors** in rank assignment (starting from 0 instead of 1).
