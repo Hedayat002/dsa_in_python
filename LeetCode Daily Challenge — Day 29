@@ -1,0 +1,996 @@
+# Problem Name   : **1291. Sequential Digits**
+
+---
+
+# 1. Problem Statement
+
+A **Sequential Digit Number** is a number where every digit is exactly **one greater** than the previous digit.
+
+Examples
+
+* 123 ✔
+* 4567 ✔
+* 89 ✔
+* 135 ❌
+* 124 ❌
+
+Given two integers **low** and **high**, return all sequential digit numbers in the range **[low, high]** sorted in increasing order.
+
+---
+
+# 2. Examples
+
+### Example 1
+
+```
+Input
+
+low = 100
+high = 300
+
+Output
+
+[123,234]
+```
+
+---
+
+### Example 2
+
+```
+Input
+
+low = 1000
+high = 13000
+
+Output
+
+[1234,2345,3456,4567,5678,6789,12345]
+```
+
+---
+
+# 3. Constraints
+
+```
+10 <= low <= high <= 10^9
+```
+
+---
+
+# 4. Key Observations
+
+There are only these sequential numbers:
+
+```
+12
+23
+34
+45
+56
+67
+78
+89
+
+123
+234
+345
+456
+567
+678
+789
+
+1234
+2345
+3456
+4567
+5678
+6789
+
+12345
+23456
+34567
+45678
+56789
+
+123456
+234567
+345678
+456789
+
+1234567
+2345678
+3456789
+
+12345678
+23456789
+
+123456789
+```
+
+Total =
+
+```
+8 + 7 + 6 + 5 + 4 + 3 + 2 + 1 = 36 numbers only
+```
+
+This is why almost every optimized solution is **O(1)**.
+
+---
+
+# 5. Brute Force Approach
+
+## 5.1 Intuition
+
+Check every number between **low** and **high**.
+
+If every adjacent digit differs by exactly **1**, then it is a valid sequential digit number.
+
+---
+
+## 5.2 Logic
+
+For every number
+
+```
+Convert to string
+
+Compare
+
+digit[i]-digit[i-1]
+
+If difference !=1
+
+Not sequential
+```
+
+---
+
+## 5.3 Algorithm
+
+```
+for num in range(low,high):
+
+    convert to string
+
+    compare every adjacent digit
+
+    if valid
+
+        add answer
+```
+
+---
+
+## 5.4 Code
+
+```python
+class Solution:
+    def sequentialDigits(self, low: int, high: int):
+        ans = []
+
+        for num in range(low, high + 1):
+
+            s = str(num)
+
+            ok = True
+
+            for i in range(1, len(s)):
+                if ord(s[i]) - ord(s[i - 1]) != 1:
+                    ok = False
+                    break
+
+            if ok:
+                ans.append(num)
+
+        return ans
+```
+
+---
+
+## 5.5 Dry Run
+
+Suppose
+
+```
+low =100
+high=130
+```
+
+Check
+
+```
+100
+
+1→0 difference=-1
+
+Invalid
+```
+
+Check
+
+```
+101
+
+1→0=-1
+
+Invalid
+```
+
+...
+
+Check
+
+```
+123
+
+1→2=1
+
+2→3=1
+
+Valid
+
+Answer=[123]
+```
+
+---
+
+## 5.6 Time Complexity
+
+```
+O(high-low)
+```
+
+Worst case
+
+```
+Nearly 10^9 numbers
+```
+
+Very slow.
+
+---
+
+## 5.7 Space Complexity
+
+```
+O(1)
+```
+
+---
+
+# 6. Simulation Approach
+
+## 6.1 Intuition
+
+Instead of checking every number,
+
+Generate only sequential numbers.
+
+Example
+
+```
+Start=3
+
+Length=4
+
+Generate
+
+3456
+```
+
+---
+
+## 6.2 Logic
+
+For every possible length
+
+```
+2
+
+3
+
+4
+
+...
+
+9
+```
+
+For every starting digit
+
+```
+1
+
+2
+
+3
+
+...
+
+```
+
+Append next digit.
+
+---
+
+## 6.3 Algorithm
+
+```
+for length
+
+    for start digit
+
+        build number
+
+        if inside range
+
+            answer
+```
+
+---
+
+## 6.4 Code
+
+```python
+class Solution:
+    def sequentialDigits(self, low: int, high: int):
+        ans = []
+
+        for digits in range(len(str(low)), len(str(high)) + 1):
+
+            for start in range(1, 10):
+
+                if start + digits > 10:
+                    break
+
+                num = start
+
+                nxt = start
+
+                for _ in range(digits - 1):
+
+                    nxt += 1
+
+                    num = num * 10 + nxt
+
+                if low <= num <= high:
+                    ans.append(num)
+
+        return ans
+```
+
+---
+
+## 6.5 Dry Run
+
+Length =3
+
+Start =4
+
+```
+num=4
+
+append5
+
+45
+
+append6
+
+456
+
+Generated
+
+456
+```
+
+---
+
+## 6.6 Time Complexity
+
+```
+O(36)
+
+≈ O(1)
+```
+
+---
+
+## 6.7 Space Complexity
+
+```
+O(1)
+```
+
+---
+
+# 7. Breadth First Search (Optimal)
+
+## 7.1 Intuition
+
+Imagine every number as a node.
+
+```
+1
+
+↓
+
+12
+
+↓
+
+123
+
+↓
+
+1234
+```
+
+Every number can generate only one child.
+
+BFS naturally generates numbers in sorted order.
+
+---
+
+## 7.2 Logic
+
+Initially
+
+```
+Queue
+
+1
+
+2
+
+3
+
+...
+
+9
+```
+
+Pop
+
+```
+12
+
+Generate
+
+123
+```
+
+Pop
+
+```
+45
+
+Generate
+
+456
+```
+
+Continue until queue becomes empty.
+
+---
+
+## 7.3 Algorithm
+
+```
+Push
+
+1..9
+
+while queue
+
+    pop front
+
+    if inside range
+
+        answer
+
+    last=num%10
+
+    if last<9
+
+        push
+
+        num*10+last+1
+```
+
+---
+
+## 7.4 Code
+
+```python
+from collections import deque
+
+class Solution:
+    def sequentialDigits(self, low: int, high: int):
+
+        ans = []
+
+        q = deque(range(1,10))
+
+        while q:
+
+            num = q.popleft()
+
+            if num > high:
+                continue
+
+            if low <= num <= high:
+                ans.append(num)
+
+            last = num % 10
+
+            if last < 9:
+                q.append(num*10+last+1)
+
+        return ans
+```
+
+---
+
+## 7.5 Complete Dry Run
+
+Suppose
+
+```
+low=100
+
+high=500
+```
+
+Initial Queue
+
+```
+1 2 3 4 5 6 7 8 9
+```
+
+Pop
+
+```
+1
+
+Generate
+
+12
+
+Queue
+
+2 3 4 5 6 7 8 9 12
+```
+
+Pop
+
+```
+2
+
+Generate
+
+23
+```
+
+...
+
+Eventually
+
+Queue
+
+```
+123
+
+234
+
+345
+
+456
+```
+
+Pop
+
+```
+123
+
+Inside range
+
+Answer=[123]
+
+Generate
+
+1234
+
+>500
+
+Ignored later
+```
+
+Pop
+
+```
+234
+
+Answer
+
+[123,234]
+```
+
+Pop
+
+```
+345
+
+Answer
+
+[123,234,345]
+```
+
+Pop
+
+```
+456
+
+Answer
+
+[123,234,345,456]
+```
+
+Final Answer
+
+```
+[123,234,345,456]
+```
+
+---
+
+## 7.6 Time Complexity
+
+Maximum possible nodes
+
+```
+36
+```
+
+Therefore
+
+```
+O(36)
+
+≈ O(1)
+```
+
+---
+
+## 7.7 Space Complexity
+
+Queue stores at most
+
+```
+36 numbers
+```
+
+```
+O(1)
+```
+
+---
+
+# 8. Depth First Search
+
+## 8.1 Intuition
+
+Instead of queue, recursively build numbers.
+
+Example
+
+```
+1
+
+↓
+
+12
+
+↓
+
+123
+
+↓
+
+1234
+```
+
+---
+
+## 8.2 Logic
+
+Recursive relation
+
+```
+dfs(num)
+
+last=num%10
+
+dfs(num*10+last+1)
+```
+
+---
+
+## 8.3 Algorithm
+
+```
+DFS from
+
+1..9
+
+Store valid numbers
+
+Sort answer
+```
+
+---
+
+## 8.4 Code
+
+```python
+class Solution:
+    def sequentialDigits(self, low: int, high: int):
+
+        ans=[]
+
+        def dfs(num):
+
+            if num>high:
+                return
+
+            if low<=num<=high:
+                ans.append(num)
+
+            last=num%10
+
+            if last<9:
+                dfs(num*10+last+1)
+
+        for i in range(1,10):
+            dfs(i)
+
+        return sorted(ans)
+```
+
+---
+
+## 8.5 Dry Run
+
+Start
+
+```
+1
+
+↓
+
+12
+
+↓
+
+123
+
+↓
+
+1234
+```
+
+Backtrack
+
+```
+2
+
+↓
+
+23
+
+↓
+
+234
+
+↓
+
+2345
+```
+
+Continue similarly.
+
+---
+
+## 8.6 Time Complexity
+
+```
+O(36)
+
+≈ O(1)
+```
+
+---
+
+## 8.7 Space Complexity
+
+Recursive depth
+
+```
+9
+
+O(1)
+```
+
+---
+
+# 9. Sliding Window
+
+## 9.1 Intuition
+
+Every sequential number is a substring of
+
+```
+123456789
+```
+
+Example
+
+Window size =4
+
+```
+1234
+
+2345
+
+3456
+
+4567
+
+5678
+
+6789
+```
+
+---
+
+## 9.2 Logic
+
+Take every possible window.
+
+Convert substring to integer.
+
+If inside range
+
+Store answer.
+
+---
+
+## 9.3 Algorithm
+
+```
+Master String
+
+123456789
+
+for every window size
+
+slide window
+
+convert integer
+
+check range
+```
+
+---
+
+## 9.4 Code
+
+```python
+class Solution:
+    def sequentialDigits(self, low: int, high: int):
+
+        s="123456789"
+
+        ans=[]
+
+        for length in range(2,10):
+
+            for i in range(9-length+1):
+
+                num=int(s[i:i+length])
+
+                if num>high:
+                    break
+
+                if low<=num<=high:
+                    ans.append(num)
+
+        return ans
+```
+
+---
+
+## 9.5 Dry Run
+
+Window Size
+
+```
+3
+```
+
+Master String
+
+```
+123456789
+```
+
+Windows
+
+```
+123
+
+234
+
+345
+
+456
+
+567
+
+678
+
+789
+```
+
+Check range.
+
+---
+
+## 9.6 Time Complexity
+
+```
+36 windows
+
+O(1)
+```
+
+---
+
+## 9.7 Space Complexity
+
+```
+O(1)
+```
+
+---
+
+# 10. Comparison of All Approaches
+
+| Approach       | Time        | Space | Sorted Output   | Interview Rating |
+| -------------- | ----------- | ----- | --------------- | ---------------- |
+| Brute Force    | O(high−low) | O(1)  | Yes             | ⭐                |
+| Simulation     | O(1)        | O(1)  | Yes             | ⭐⭐⭐⭐             |
+| BFS            | O(1)        | O(1)  | Yes             | ⭐⭐⭐⭐⭐            |
+| DFS            | O(1)        | O(1)  | No (needs sort) | ⭐⭐⭐⭐             |
+| Sliding Window | O(1)        | O(1)  | Yes             | ⭐⭐⭐⭐⭐            |
+
+---
+
+# 11. Interview Notes
+
+* There are only **36 valid sequential-digit numbers**, so generating candidates is much better than checking every number.
+* **BFS** is often the preferred interview solution because it generates numbers in ascending order without sorting.
+* **Sliding Window** is the shortest and cleanest solution, using the fact that every valid number is a substring of `"123456789"`.
+* **DFS** is easy to explain recursively but requires sorting because it does not naturally produce ascending order.
+* If an interviewer asks for optimization after a brute-force solution, highlight the **limited search space** and switch to a generation-based approach.
+
+---
+
+# 12. Key Takeaways
+
+* Avoid brute force over the entire range.
+* Recognize patterns that drastically reduce the search space.
+* BFS and Sliding Window are the most interview-friendly approaches.
+* Simulation demonstrates constructive number generation.
+* DFS is a good recursive alternative but requires sorting.
+* Remember the key fact: **only 36 sequential-digit numbers exist**, which is why optimized solutions run in constant time.
