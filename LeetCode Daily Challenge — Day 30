@@ -1,0 +1,856 @@
+Absolutely. I'll follow the same pattern for every approach:
+
+1. **Problem Understanding**
+2. **Approach Intuition**
+3. **Logic**
+4. **Algorithm**
+5. **Python Code**
+6. **Code Explanation**
+7. **Complete Dry Run**
+8. **Time & Space Complexity**
+
+---
+
+# 3336. Find the Number of Subsequences With Equal GCD
+
+## Problem Breakdown
+
+We are given an array `nums`.
+
+We need to create **two disjoint subsequences** such that
+
+* Both subsequences are **non-empty**
+* Their **GCD is equal**
+* Every element has three choices
+
+  * Ignore it
+  * Put into first subsequence
+  * Put into second subsequence
+
+Return the total number of valid ways.
+
+---
+
+# Approach 1 — Brute Force (Generate Every Possibility)
+
+## Intuition
+
+Every element has exactly **3 choices**
+
+```
+nums[i]
+
+Choice 1 → Ignore
+Choice 2 → Put into First
+Choice 3 → Put into Second
+```
+
+So total possibilities become
+
+```
+3 × 3 × 3 × ...
+
+= 3^n
+```
+
+For every complete assignment,
+
+calculate
+
+```
+GCD(first)
+GCD(second)
+```
+
+If
+
+```
+first != empty
+second != empty
+GCD(first)==GCD(second)
+```
+
+answer++
+
+---
+
+## Logic
+
+```
+DFS(index)
+
+If index==n
+
+    Compute GCD of both subsequences
+
+    if valid
+        ans++
+
+Else
+
+    Ignore nums[index]
+
+    Put into first
+
+    Put into second
+```
+
+---
+
+## Algorithm
+
+```
+DFS(i)
+
+if i==n
+
+    if first empty
+        return
+
+    if second empty
+        return
+
+    if gcd(first)==gcd(second)
+        answer++
+
+return
+
+Ignore current
+
+Take in first
+
+Take in second
+```
+
+---
+
+## Python Code
+
+```python
+from math import gcd
+
+class Solution:
+    def subsequencePairCount(self, nums):
+
+        first = []
+        second = []
+
+        def find_gcd(arr):
+            g = 0
+            for x in arr:
+                g = gcd(g, x)
+            return g
+
+        def dfs(i):
+            if i == len(nums):
+
+                if not first or not second:
+                    return 0
+
+                return 1 if find_gcd(first) == find_gcd(second) else 0
+
+            ans = 0
+
+            # Skip
+            ans += dfs(i + 1)
+
+            # First subsequence
+            first.append(nums[i])
+            ans += dfs(i + 1)
+            first.pop()
+
+            # Second subsequence
+            second.append(nums[i])
+            ans += dfs(i + 1)
+            second.pop()
+
+            return ans
+
+        return dfs(0)
+```
+
+---
+
+# Code Explanation
+
+```
+first=[]
+second=[]
+```
+
+Stores both subsequences.
+
+---
+
+```
+dfs(i)
+```
+
+Means
+
+```
+We are deciding where nums[i] should go.
+```
+
+---
+
+```
+Skip
+```
+
+```
+dfs(i+1)
+```
+
+Ignore current number.
+
+---
+
+```
+Take First
+```
+
+```
+first.append()
+
+dfs()
+
+first.pop()
+```
+
+Backtracking.
+
+---
+
+```
+Take Second
+```
+
+Exactly same.
+
+---
+
+At last
+
+```
+Compute gcd
+
+Compare
+
+Return answer
+```
+
+---
+
+# Dry Run
+
+Example
+
+```
+nums=[2,4]
+```
+
+Tree
+
+```
+              []
+         /      |      \
+     skip      first    second
+
+```
+
+Complete possibilities
+
+```
+[]
+
+[2]
+
+[4]
+
+[2,4]
+
+first=[2]
+second=[4]
+
+gcd=2
+gcd=4
+
+No
+
+-----------------
+
+first=[2]
+second=[2]
+
+Impossible
+
+-----------------
+
+first=[2,4]
+second=[]
+
+No
+
+...
+
+```
+
+Finally
+
+Count all valid ones.
+
+---
+
+## Complexity
+
+Time
+
+```
+O(3^n × n)
+```
+
+Space
+
+```
+O(n)
+```
+
+---
+
+# Approach 2 — Better (Recursion + Memoization)
+
+---
+
+## Intuition
+
+In brute force,
+
+same states repeat many times.
+
+Example
+
+```
+solve(5,2,4)
+```
+
+may come from many paths.
+
+Instead of solving repeatedly,
+
+store the answer.
+
+---
+
+## State
+
+```
+solve(index, firstGCD, secondGCD)
+```
+
+Means
+
+```
+Starting from index,
+
+current gcd of first subsequence
+
+current gcd of second subsequence
+
+How many answers exist?
+```
+
+---
+
+## Transition
+
+Three choices
+
+```
+Skip
+
+solve(i+1,first,second)
+```
+
+---
+
+```
+Take First
+
+newFirst=gcd(first,nums[i])
+
+solve(i+1,newFirst,second)
+```
+
+---
+
+```
+Take Second
+
+newSecond=gcd(second,nums[i])
+
+solve(i+1,first,newSecond)
+```
+
+---
+
+## Python Code
+
+```python
+from math import gcd
+from functools import lru_cache
+
+class Solution:
+    def subsequencePairCount(self, nums):
+        MOD = 10**9 + 7
+        n = len(nums)
+
+        @lru_cache(None)
+        def solve(i, first, second):
+
+            if i == n:
+                return 1 if first != 0 and second != 0 and first == second else 0
+
+            skip = solve(i + 1, first, second)
+
+            take1 = solve(i + 1, gcd(first, nums[i]), second)
+
+            take2 = solve(i + 1, first, gcd(second, nums[i]))
+
+            return (skip + take1 + take2) % MOD
+
+        return solve(0, 0, 0)
+```
+
+---
+
+# Code Explanation
+
+State
+
+```
+(i,first,second)
+```
+
+stores
+
+```
+Current position
+
+Current gcd of first
+
+Current gcd of second
+```
+
+---
+
+Memoization
+
+```
+@lru_cache
+```
+
+stores every answer.
+
+Whenever same state comes
+
+```
+Return directly.
+```
+
+No recalculation.
+
+---
+
+# Dry Run
+
+Example
+
+```
+nums=[2,4]
+```
+
+Start
+
+```
+solve(0,0,0)
+```
+
+Branches
+
+```
+Skip
+
+solve(1,0,0)
+```
+
+---
+
+```
+Take First
+
+solve(1,2,0)
+```
+
+---
+
+```
+Take Second
+
+solve(1,0,2)
+```
+
+Suppose
+
+```
+solve(1,2,0)
+```
+
+appears again.
+
+Memoization
+
+returns stored answer.
+
+No recursion.
+
+---
+
+## Complexity
+
+Time
+
+```
+O(n × M²)
+```
+
+Space
+
+```
+O(n × M²)
+```
+
+---
+
+# Approach 3 — Optimal (Bottom-Up 3D DP)
+
+---
+
+## Intuition
+
+Convert recursion into iteration.
+
+Instead of solving top-down,
+
+fill answers from last index.
+
+---
+
+## DP Definition
+
+```
+dp[i][first][second]
+```
+
+Means
+
+```
+Starting from index i
+
+Current gcd of first
+
+Current gcd of second
+
+Number of valid ways
+```
+
+---
+
+## Base Case
+
+At
+
+```
+i=n
+```
+
+Only one state valid
+
+```
+first==second
+
+and
+
+both non-zero
+```
+
+---
+
+## Transition
+
+```
+Skip
+```
+
+```
+dp[i+1][first][second]
+```
+
+---
+
+```
+Take First
+```
+
+```
+dp[i+1][gcd(first,num)][second]
+```
+
+---
+
+```
+Take Second
+```
+
+```
+dp[i+1][first][gcd(second,num)]
+```
+
+---
+
+## Python Code
+
+```python
+from math import gcd
+
+class Solution:
+    def subsequencePairCount(self, nums):
+        MOD = 10**9 + 7
+        n = len(nums)
+        maxEl = max(nums)
+
+        dp = [[[0]*(maxEl+1) for _ in range(maxEl+1)] for _ in range(n+1)]
+
+        for first in range(maxEl+1):
+            for second in range(maxEl+1):
+                if first != 0 and second != 0 and first == second:
+                    dp[n][first][second] = 1
+
+        for i in range(n-1,-1,-1):
+
+            for first in range(maxEl+1):
+
+                for second in range(maxEl+1):
+
+                    skip = dp[i+1][first][second]
+
+                    take1 = dp[i+1][gcd(first,nums[i])][second]
+
+                    take2 = dp[i+1][first][gcd(second,nums[i])]
+
+                    dp[i][first][second] = (skip+take1+take2)%MOD
+
+        return dp[0][0][0]
+```
+
+---
+
+# Dry Run (Example: `nums = [2, 4]`)
+
+At `i = 2` (past the last element), initialize the base:
+
+```
+dp[2][1][1] = 1
+dp[2][2][2] = 1
+dp[2][3][3] = 1
+dp[2][4][4] = 1
+```
+
+All other states remain `0`.
+
+Now process `i = 1` (`nums[1] = 4`):
+
+Example state:
+
+```
+first = 0
+second = 0
+```
+
+```
+skip  = dp[2][0][0]
+take1 = dp[2][4][0]
+take2 = dp[2][0][4]
+
+dp[1][0][0] = skip + take1 + take2
+```
+
+Repeat for every `(first, second)` pair.
+
+Then process `i = 0` (`nums[0] = 2`) in the same way.
+
+The final answer is:
+
+```
+dp[0][0][0]
+```
+
+---
+
+## Complexity
+
+Time
+
+```
+O(n × M²)
+```
+
+Space
+
+```
+O(n × M²)
+```
+
+---
+
+# Approach 4 — Most Optimal (Bottom-Up 2D DP, Space Optimized)
+
+---
+
+## Intuition
+
+Notice that:
+
+```
+dp[i]
+```
+
+depends **only** on
+
+```
+dp[i+1]
+```
+
+So we do not need all `n` layers.
+
+Store only:
+
+* `prev` → represents `dp[i+1]`
+* `curr` → represents `dp[i]`
+
+After each iteration:
+
+```
+prev = curr
+```
+
+This reduces space from `O(n × M²)` to `O(M²)`.
+
+---
+
+## Python Code
+
+```python
+from math import gcd
+
+class Solution:
+    def subsequencePairCount(self, nums):
+        MOD = 10**9 + 7
+        maxEl = max(nums)
+
+        prev = [[0] * (maxEl + 1) for _ in range(maxEl + 1)]
+
+        for first in range(maxEl + 1):
+            for second in range(maxEl + 1):
+                if first != 0 and second != 0 and first == second:
+                    prev[first][second] = 1
+
+        for i in range(len(nums) - 1, -1, -1):
+
+            curr = [[0] * (maxEl + 1) for _ in range(maxEl + 1)]
+
+            for first in range(maxEl + 1):
+                for second in range(maxEl + 1):
+
+                    skip = prev[first][second]
+
+                    take1 = prev[gcd(first, nums[i])][second]
+
+                    take2 = prev[first][gcd(second, nums[i])]
+
+                    curr[first][second] = (skip + take1 + take2) % MOD
+
+            prev = curr
+
+        return prev[0][0]
+```
+
+---
+
+# Code Explanation
+
+* `prev[first][second]` stores the number of valid ways for the next index.
+* `curr[first][second]` computes the current index using the three transitions:
+
+  * Skip the element.
+  * Put it into the first subsequence.
+  * Put it into the second subsequence.
+* After finishing one index, assign:
+
+```python
+prev = curr
+```
+
+and continue with the previous array index.
+
+---
+
+# Dry Run (Example: `nums = [2, 4]`)
+
+Initial `prev` (base case):
+
+```
+prev[1][1] = 1
+prev[2][2] = 1
+prev[3][3] = 1
+prev[4][4] = 1
+```
+
+Process `4`:
+
+```
+Create curr
+
+For every (first, second):
+    curr[first][second]
+        = prev[first][second]
+        + prev[gcd(first,4)][second]
+        + prev[first][gcd(second,4)]
+```
+
+After all states:
+
+```
+prev = curr
+```
+
+Process `2` in the same way.
+
+Finally:
+
+```
+return prev[0][0]
+```
+
+---
+
+# Complexity Comparison
+
+| Approach | Technique                         | Time        | Space       |
+| -------- | --------------------------------- | ----------- | ----------- |
+| 1        | Brute Force (Backtracking)        | `O(3ⁿ × n)` | `O(n)`      |
+| 2        | Recursion + Memoization           | `O(n × M²)` | `O(n × M²)` |
+| 3        | Bottom-Up 3D DP                   | `O(n × M²)` | `O(n × M²)` |
+| 4        | Bottom-Up 2D DP (Space Optimized) | `O(n × M²)` | `O(M²)`     |
+
+This progression clearly shows how the solution evolves from exhaustive search to memoization, then iterative dynamic programming, and finally a space-optimized DP while preserving the same transition logic.
