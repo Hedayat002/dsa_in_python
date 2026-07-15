@@ -1,0 +1,492 @@
+# 3658. GCD of Odd and Even Sums (LeetCode - Easy)
+
+## Step 1: Understand the Problem
+
+You are given an integer `n`.
+
+Find two values:
+
+* **sumOdd** = Sum of the first `n` odd numbers.
+* **sumEven** = Sum of the first `n` even numbers.
+
+Then return
+
+[
+GCD(sumOdd,;sumEven)
+]
+
+---
+
+### Example
+
+```
+n = 4
+
+Odd Numbers:
+1 3 5 7
+
+sumOdd = 1+3+5+7 = 16
+
+Even Numbers:
+2 4 6 8
+
+sumEven = 2+4+6+8 = 20
+
+GCD(16,20)=4
+```
+
+Answer = **4**
+
+---
+
+# Pattern Observation
+
+Let's calculate for a few values.
+
+| n | sumOdd | sumEven | GCD |
+| - | ------ | ------- | --- |
+| 1 | 1      | 2       | 1   |
+| 2 | 4      | 6       | 2   |
+| 3 | 9      | 12      | 3   |
+| 4 | 16     | 20      | 4   |
+| 5 | 25     | 30      | 5   |
+| 6 | 36     | 42      | 6   |
+
+Looks like
+
+```
+Answer = n
+```
+
+Now let's prove it mathematically later.
+
+---
+
+# Brute Force Approach
+
+## Idea
+
+Generate
+
+* first n odd numbers
+* first n even numbers
+
+Find both sums
+
+Return gcd.
+
+---
+
+## Algorithm
+
+```
+sumOdd = 0
+sumEven = 0
+
+for i from 1 to n
+
+    odd = 2*i-1
+    even = 2*i
+
+    sumOdd += odd
+    sumEven += even
+
+return gcd(sumOdd,sumEven)
+```
+
+---
+
+## Complexity
+
+Time
+
+```
+O(n)
+```
+
+Space
+
+```
+O(1)
+```
+
+---
+
+# Brute Force Code (Python)
+
+```python
+from math import gcd
+
+class Solution:
+    def gcdOfOddEvenSums(self, n: int) -> int:
+        sumOdd = 0
+        sumEven = 0
+
+        for i in range(1, n + 1):
+            sumOdd += 2 * i - 1
+            sumEven += 2 * i
+
+        return gcd(sumOdd, sumEven)
+```
+
+---
+
+# Code Explanation
+
+```python
+sumOdd = 0
+sumEven = 0
+```
+
+Initially both sums are zero.
+
+---
+
+```python
+for i in range(1, n + 1):
+```
+
+Generate first `n` numbers.
+
+---
+
+```python
+sumOdd += 2*i-1
+```
+
+Formula for odd numbers
+
+```
+1
+3
+5
+7
+...
+```
+
+---
+
+```python
+sumEven += 2*i
+```
+
+Formula for even numbers
+
+```
+2
+4
+6
+8
+...
+```
+
+---
+
+```python
+return gcd(sumOdd,sumEven)
+```
+
+Return greatest common divisor.
+
+---
+
+# Dry Run (Brute Force)
+
+## Input
+
+```
+n = 4
+```
+
+Initially
+
+```
+sumOdd = 0
+sumEven = 0
+```
+
+---
+
+### Iteration 1
+
+```
+odd = 1
+even = 2
+
+sumOdd = 1
+sumEven = 2
+```
+
+---
+
+### Iteration 2
+
+```
+odd = 3
+even = 4
+
+sumOdd = 4
+sumEven = 6
+```
+
+---
+
+### Iteration 3
+
+```
+odd = 5
+even = 6
+
+sumOdd = 9
+sumEven = 12
+```
+
+---
+
+### Iteration 4
+
+```
+odd = 7
+even = 8
+
+sumOdd = 16
+sumEven = 20
+```
+
+Finally
+
+```
+gcd(16,20)=4
+```
+
+Answer
+
+```
+4
+```
+
+---
+
+# Can We Do Better?
+
+Yes.
+
+Instead of generating numbers, use formulas.
+
+---
+
+# Mathematical Observation
+
+## Sum of first n odd numbers
+
+This is a famous formula.
+
+```
+1+3+5+... = n²
+```
+
+So
+
+```
+sumOdd = n²
+```
+
+Example
+
+```
+n=5
+
+1+3+5+7+9
+
+=25
+
+=5²
+```
+
+Correct.
+
+---
+
+## Sum of first n even numbers
+
+```
+2+4+6+8+...
+
+=2(1+2+3+...)
+
+=2 × n(n+1)/2
+
+=n(n+1)
+```
+
+So
+
+```
+sumEven = n(n+1)
+```
+
+Example
+
+```
+2+4+6+8+10
+
+=30
+
+5×6=30
+```
+
+Correct.
+
+---
+
+Now calculate
+
+```
+GCD(n², n(n+1))
+```
+
+Take common factor `n`.
+
+```
+= n × GCD(n,n+1)
+```
+
+Since
+
+```
+Consecutive numbers are always coprime
+
+GCD(n,n+1)=1
+```
+
+Therefore
+
+```
+Answer = n
+```
+
+No calculations are even needed.
+
+---
+
+# Optimal Approach
+
+## Idea
+
+Since
+
+```
+GCD(sumOdd,sumEven)=n
+```
+
+Simply return `n`.
+
+---
+
+## Complexity
+
+Time
+
+```
+O(1)
+```
+
+Space
+
+```
+O(1)
+```
+
+---
+
+# Optimal Code (Python)
+
+```python
+class Solution:
+    def gcdOfOddEvenSums(self, n: int) -> int:
+        return n
+```
+
+---
+
+# Code Explanation
+
+```python
+return n
+```
+
+Using the mathematical proof:
+
+```
+sumOdd = n²
+
+sumEven = n(n+1)
+
+GCD(n²,n(n+1))
+
+= n × GCD(n,n+1)
+
+= n × 1
+
+= n
+```
+
+Hence the answer is simply `n`.
+
+---
+
+# Dry Run (Optimal)
+
+## Input
+
+```
+n = 4
+```
+
+Directly
+
+```
+return 4
+```
+
+Output
+
+```
+4
+```
+
+---
+
+## Input
+
+```
+n = 5
+```
+
+Directly
+
+```
+return 5
+```
+
+Output
+
+```
+5
+```
+
+---
+
+# Comparison
+
+| Approach       | Time | Space | Idea                                                          |
+| -------------- | ---- | ----- | ------------------------------------------------------------- |
+| Brute Force    | O(n) | O(1)  | Generate odd/even numbers, compute sums, then GCD             |
+| Optimal (Math) | O(1) | O(1)  | Use formulas: `sumOdd = n²`, `sumEven = n(n+1)`, so `GCD = n` |
+
+### Key Pattern to Remember
+
+* Sum of first `n` odd numbers = `n²`
+* Sum of first `n` even numbers = `n(n+1)`
+* `gcd(n, n+1) = 1` (consecutive integers are always coprime)
+* Therefore, `gcd(n², n(n+1)) = n`
