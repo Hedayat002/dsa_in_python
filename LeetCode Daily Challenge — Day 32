@@ -1,0 +1,867 @@
+# 3867. Sum of GCD of Formed Pairs (Medium)
+
+Let's solve this exactly in the pattern you requested.
+
+---
+
+# Step 1: Understand the Problem
+
+We are given an array `nums`.
+
+We need to perform **three operations**.
+
+### Operation 1
+
+For every index `i`
+
+```
+mxi = maximum element from nums[0...i]
+
+prefixGcd[i] = gcd(nums[i], mxi)
+```
+
+---
+
+### Operation 2
+
+Sort the entire `prefixGcd` array.
+
+---
+
+### Operation 3
+
+Pair
+
+* smallest element with largest element
+* second smallest with second largest
+* ...
+
+For every pair
+
+```
+answer += gcd(pair)
+```
+
+If one element remains (odd size), ignore it.
+
+---
+
+## Example
+
+```
+nums = [3,6,2,8]
+```
+
+Build
+
+```
+prefixGcd
+
+3 -> gcd(3,3)=3
+
+6 -> gcd(6,6)=6
+
+2 -> gcd(2,6)=2
+
+8 -> gcd(8,8)=8
+
+prefixGcd=[3,6,2,8]
+```
+
+Sort
+
+```
+[2,3,6,8]
+```
+
+Pairs
+
+```
+(2,8)
+
+(3,6)
+```
+
+Answer
+
+```
+gcd(2,8)=2
+
+gcd(3,6)=3
+
+Total=5
+```
+
+---
+
+# Brute Force Approach
+
+## Idea
+
+Simply follow the statement exactly.
+
+1. Find maximum from beginning till every index.
+2. Compute gcd.
+3. Sort.
+4. Pair smallest with largest.
+5. Compute gcd of every pair.
+
+---
+
+## Brute Force Logic
+
+For every index
+
+```
+Find prefix maximum by scanning from 0 to i.
+
+Compute gcd.
+```
+
+Finding prefix maximum every time costs
+
+```
+O(i)
+```
+
+So total becomes
+
+```
+1+2+3+...
+
+= O(n²)
+```
+
+After that
+
+```
+Sort
+
+Pair
+
+Done
+```
+
+---
+
+# Brute Force Algorithm
+
+```
+prefixGcd=[]
+
+for every index i
+
+    find maximum from 0...i
+
+    compute gcd(nums[i],maximum)
+
+Store in prefixGcd
+
+Sort
+
+Use two pointers
+
+Return answer
+```
+
+---
+
+# Brute Force Code (Python)
+
+```python
+from math import gcd
+
+class Solution:
+    def sumGCD(self, nums):
+        n = len(nums)
+
+        prefixGcd = []
+
+        for i in range(n):
+
+            mx = nums[0]
+
+            for j in range(i + 1):
+                mx = max(mx, nums[j])
+
+            prefixGcd.append(gcd(nums[i], mx))
+
+        prefixGcd.sort()
+
+        ans = 0
+
+        l = 0
+        r = n - 1
+
+        while l < r:
+            ans += gcd(prefixGcd[l], prefixGcd[r])
+            l += 1
+            r -= 1
+
+        return ans
+```
+
+---
+
+# Brute Force Code Explanation
+
+### Step 1
+
+```python
+prefixGcd=[]
+```
+
+Stores gcd values.
+
+---
+
+### Step 2
+
+```python
+for i in range(n):
+```
+
+Visit every element.
+
+---
+
+### Step 3
+
+```python
+mx=nums[0]
+
+for j in range(i+1):
+    mx=max(mx,nums[j])
+```
+
+Find prefix maximum by scanning.
+
+---
+
+### Step 4
+
+```python
+prefixGcd.append(gcd(nums[i],mx))
+```
+
+Store gcd.
+
+---
+
+### Step 5
+
+```python
+prefixGcd.sort()
+```
+
+Sort array.
+
+---
+
+### Step 6
+
+```python
+while l<r:
+```
+
+Pair smallest and largest.
+
+---
+
+### Step 7
+
+```python
+ans+=gcd(prefixGcd[l],prefixGcd[r])
+```
+
+Add gcd of pair.
+
+---
+
+# Brute Force Dry Run
+
+```
+nums=[3,6,2,8]
+```
+
+---
+
+### i=0
+
+```
+Scan
+
+3
+
+max=3
+
+gcd(3,3)=3
+
+prefix=[3]
+```
+
+---
+
+### i=1
+
+Scan
+
+```
+3
+
+6
+```
+
+Maximum
+
+```
+6
+```
+
+```
+gcd(6,6)=6
+
+prefix=[3,6]
+```
+
+---
+
+### i=2
+
+Scan
+
+```
+3
+
+6
+
+2
+```
+
+Maximum
+
+```
+6
+```
+
+```
+gcd(2,6)=2
+
+prefix=[3,6,2]
+```
+
+---
+
+### i=3
+
+Scan
+
+```
+3
+
+6
+
+2
+
+8
+```
+
+Maximum
+
+```
+8
+```
+
+```
+gcd(8,8)=8
+
+prefix=[3,6,2,8]
+```
+
+---
+
+Sort
+
+```
+[2,3,6,8]
+```
+
+Pairs
+
+```
+2 8
+
+gcd=2
+
+answer=2
+```
+
+Next
+
+```
+3 6
+
+gcd=3
+
+answer=5
+```
+
+Return
+
+```
+5
+```
+
+---
+
+# Optimal Approach
+
+## Observation
+
+Notice this part.
+
+For every index
+
+```
+Need maximum till current index.
+```
+
+Instead of scanning every time,
+
+maintain
+
+```
+currentMax
+```
+
+Example
+
+```
+nums
+
+3 6 2 8
+```
+
+Process
+
+```
+currentMax=3
+
+currentMax=max(3,6)=6
+
+currentMax=max(6,2)=6
+
+currentMax=max(6,8)=8
+```
+
+Every update takes
+
+```
+O(1)
+```
+
+instead of
+
+```
+O(n)
+```
+
+This removes the quadratic loop.
+
+---
+
+# Optimal Logic
+
+Maintain
+
+```
+mxi
+```
+
+Initially
+
+```
+0
+```
+
+For every number
+
+```
+mxi=max(mxi,nums[i])
+
+prefixGcd[i]=gcd(nums[i],mxi)
+```
+
+Sort
+
+Two pointers
+
+Done.
+
+---
+
+# Optimal Code
+
+```python
+from math import gcd
+
+class Solution:
+    def sumGCD(self, nums):
+
+        if not nums:
+            return 0
+
+        n = len(nums)
+        prefixGcd = [0] * n
+        mxi = 0
+
+        for i in range(n):
+            mxi = max(mxi, nums[i])
+            prefixGcd[i] = gcd(nums[i], mxi)
+
+        prefixGcd.sort()
+
+        ans = 0
+        l = 0
+        r = n - 1
+
+        while l < r:
+            ans += gcd(prefixGcd[l], prefixGcd[r])
+            l += 1
+            r -= 1
+
+        return ans
+```
+
+---
+
+# Optimal Code Explanation
+
+### Step 1
+
+```python
+if not nums:
+    return 0
+```
+
+Edge case (though the constraints guarantee `n >= 1`).
+
+---
+
+### Step 2
+
+```python
+prefixGcd=[0]*n
+```
+
+Create an array to store gcd values.
+
+---
+
+### Step 3
+
+```python
+mxi=0
+```
+
+Stores the maximum element seen so far.
+
+---
+
+### Step 4
+
+```python
+for i in range(n):
+```
+
+Traverse the array.
+
+---
+
+### Step 5
+
+```python
+mxi=max(mxi,nums[i])
+```
+
+Update the running prefix maximum.
+
+---
+
+### Step 6
+
+```python
+prefixGcd[i]=gcd(nums[i],mxi)
+```
+
+Compute the gcd of the current element and the prefix maximum.
+
+---
+
+### Step 7
+
+```python
+prefixGcd.sort()
+```
+
+Sort the computed gcd values.
+
+---
+
+### Step 8
+
+```python
+l=0
+r=n-1
+```
+
+Initialize two pointers.
+
+---
+
+### Step 9
+
+```python
+while l<r:
+```
+
+Pair the smallest and largest remaining elements.
+
+---
+
+### Step 10
+
+```python
+ans+=gcd(prefixGcd[l],prefixGcd[r])
+```
+
+Add the gcd of the current pair to the answer.
+
+---
+
+### Step 11
+
+```python
+l+=1
+r-=1
+```
+
+Move inward to the next pair.
+
+---
+
+### Step 12
+
+```python
+return ans
+```
+
+Return the final sum.
+
+---
+
+# Optimal Dry Run
+
+```
+nums
+
+[3,6,2,8]
+```
+
+---
+
+Initially
+
+```
+mxi=0
+
+prefix=[0,0,0,0]
+```
+
+---
+
+### i=0
+
+```
+mxi=max(0,3)=3
+
+prefix[0]=gcd(3,3)=3
+```
+
+```
+prefix=[3,0,0,0]
+```
+
+---
+
+### i=1
+
+```
+mxi=max(3,6)=6
+
+prefix[1]=gcd(6,6)=6
+```
+
+```
+prefix=[3,6,0,0]
+```
+
+---
+
+### i=2
+
+```
+mxi=max(6,2)=6
+
+prefix[2]=gcd(2,6)=2
+```
+
+```
+prefix=[3,6,2,0]
+```
+
+---
+
+### i=3
+
+```
+mxi=max(6,8)=8
+
+prefix[3]=gcd(8,8)=8
+```
+
+```
+prefix=[3,6,2,8]
+```
+
+---
+
+Sort
+
+```
+[2,3,6,8]
+```
+
+---
+
+Two pointers
+
+```
+l=0
+
+r=3
+```
+
+Pair
+
+```
+(2,8)
+
+gcd=2
+
+ans=2
+```
+
+Move
+
+```
+l=1
+
+r=2
+```
+
+Pair
+
+```
+(3,6)
+
+gcd=3
+
+ans=5
+```
+
+Pointers cross.
+
+Return
+
+```
+5
+```
+
+---
+
+# Time Complexity
+
+## Brute Force
+
+* Finding prefix maximum for every index: **O(n²)**
+* Computing GCDs: **O(n · log M)** (where `M` is the maximum value in `nums`)
+* Sorting: **O(n log n)**
+* Pairing and GCD computation: **O(n · log M)**
+
+**Overall Time Complexity:**
+
+[
+\boxed{O(n^2 + n\log n + n\log M) \approx O(n^2)}
+]
+
+---
+
+## Optimal
+
+* Single pass to maintain prefix maximum: **O(n)**
+* GCD computations: **O(n · log M)**
+* Sorting: **O(n log n)**
+* Pairing and GCD computation: **O(n · log M)**
+
+**Overall Time Complexity:**
+
+[
+\boxed{O(n\log n + n\log M)}
+]
+
+Since `log M` (with `M ≤ 10^9`) is small compared to `log n`, this is commonly written as:
+
+[
+\boxed{O(n\log n)}
+]
+
+---
+
+# Space Complexity
+
+## Brute Force
+
+* `prefixGcd` array: **O(n)**
+* Other variables: **O(1)**
+
+**Total Space Complexity:**
+
+[
+\boxed{O(n)}
+]
+
+---
+
+## Optimal
+
+* `prefixGcd` array: **O(n)**
+* Running maximum and pointers: **O(1)**
+
+**Total Space Complexity:**
+
+[
+\boxed{O(n)}
+]
+
+---
+
+# Pattern Learned
+
+This problem combines several common algorithmic techniques:
+
+1. **Running Prefix Maximum** – Maintain a prefix property in a single pass instead of recomputing it.
+2. **Prefix Transformation** – Build a derived array (`prefixGcd`) from the original array.
+3. **Sorting** – Arrange values to enable the required pairing strategy.
+4. **Two Pointers** – Pair the smallest and largest elements efficiently after sorting.
+5. **GCD Computation** – Use the Euclidean algorithm to compute gcd values efficiently.
