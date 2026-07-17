@@ -1,0 +1,1019 @@
+This is a **Hard** problem because the number of pairs is huge.
+
+* (n \le 10^5)
+* Total pairs = (\frac{n(n-1)}{2}) ≈ **5 × 10⁹**
+* We cannot generate every pair.
+
+Let's solve it exactly in the interview order.
+
+---
+
+# Step 1. Understand the Problem
+
+We are given
+
+```text
+nums = [2,3,4]
+```
+
+All possible pairs are
+
+```
+(2,3)
+(2,4)
+(3,4)
+```
+
+Take GCD of every pair.
+
+```
+gcd(2,3)=1
+gcd(2,4)=2
+gcd(3,4)=1
+```
+
+So
+
+```
+gcdPairs=[1,2,1]
+```
+
+Sort it
+
+```
+[1,1,2]
+```
+
+If query is
+
+```
+0 -> 1
+2 -> 2
+```
+
+Return
+
+```
+[1,2]
+```
+
+---
+
+# Brute Force Solution
+
+## Idea
+
+Generate every pair.
+
+```
+for i
+    for j>i
+        gcd(nums[i],nums[j])
+```
+
+Store every gcd.
+
+Sort.
+
+Answer queries.
+
+---
+
+## Logic
+
+Example
+
+```
+nums=[4,4,2,1]
+```
+
+Pairs
+
+```
+4 4 ->4
+4 2 ->2
+4 1 ->1
+4 2 ->2
+4 1 ->1
+2 1 ->1
+```
+
+Store
+
+```
+[4,2,1,2,1,1]
+```
+
+Sort
+
+```
+[1,1,1,2,2,4]
+```
+
+Answer queries directly.
+
+---
+
+# Brute Force Code (Python)
+
+```python
+from math import gcd
+
+class Solution:
+    def gcdValues(self, nums, queries):
+        gcdPairs = []
+
+        n = len(nums)
+
+        for i in range(n):
+            for j in range(i + 1, n):
+                gcdPairs.append(gcd(nums[i], nums[j]))
+
+        gcdPairs.sort()
+
+        ans = []
+
+        for q in queries:
+            ans.append(gcdPairs[q])
+
+        return ans
+```
+
+---
+
+# Brute Force Code Explanation
+
+```python
+gcdPairs = []
+```
+
+Stores every pair gcd.
+
+---
+
+```python
+for i in range(n):
+```
+
+Pick first element.
+
+---
+
+```python
+for j in range(i+1,n):
+```
+
+Pick second element.
+
+---
+
+```python
+gcdPairs.append(gcd(nums[i],nums[j]))
+```
+
+Store gcd.
+
+---
+
+```python
+gcdPairs.sort()
+```
+
+Sort according to question.
+
+---
+
+```python
+ans.append(gcdPairs[q])
+```
+
+Answer every query.
+
+---
+
+# Brute Force Dry Run
+
+```
+nums=[2,3,4]
+```
+
+Initially
+
+```
+gcdPairs=[]
+```
+
+---
+
+i=0
+
+j=1
+
+```
+gcd(2,3)=1
+
+gcdPairs=[1]
+```
+
+j=2
+
+```
+gcd(2,4)=2
+
+gcdPairs=[1,2]
+```
+
+---
+
+i=1
+
+j=2
+
+```
+gcd(3,4)=1
+
+gcdPairs=[1,2,1]
+```
+
+Sort
+
+```
+[1,1,2]
+```
+
+Queries
+
+```
+0 ->1
+
+2 ->2
+
+2 ->2
+```
+
+Answer
+
+```
+[1,2,2]
+```
+
+---
+
+# Brute Force Complexity
+
+### Time
+
+Generate pairs
+
+[
+O(n^2)
+]
+
+Each gcd
+
+[
+O(\log V)
+]
+
+Sorting
+
+[
+O(n^2\log n)
+]
+
+Overall
+
+[
+O(n^2\log n)
+]
+
+---
+
+### Space
+
+Need to store all pairs
+
+[
+O(n^2)
+]
+
+Impossible for (n=10^5).
+
+---
+
+# Why Brute Force Fails?
+
+Maximum pairs
+
+```
+100000*99999/2
+
+≈5,000,000,000
+```
+
+Cannot even store.
+
+Need another observation.
+
+---
+
+# Optimal Solution
+
+## Observation
+
+We never actually need every pair.
+
+We only need
+
+> **How many pairs have gcd = 1?**
+
+How many have gcd = 2?
+
+How many have gcd = 3?
+
+...
+
+Suppose
+
+```
+GCD 1 -> 8 pairs
+
+GCD 2 -> 5 pairs
+
+GCD 3 -> 1 pair
+
+GCD 4 -> 4 pairs
+```
+
+Sorted gcd array automatically becomes
+
+```
+1 1 1 1 1 1 1 1
+2 2 2 2 2
+3
+4 4 4 4
+```
+
+We don't need to generate them individually.
+
+We only need counts.
+
+---
+
+# Key Observation
+
+Maximum value
+
+```
+50000
+```
+
+Not
+
+```
+100000
+```
+
+So work on values instead of indices.
+
+---
+
+# Step 1 Frequency Array
+
+Example
+
+```
+nums=[2,3,4,6]
+```
+
+Frequency
+
+```
+1 ->0
+2 ->1
+3 ->1
+4 ->1
+5 ->0
+6 ->1
+```
+
+---
+
+# Step 2 Count multiples
+
+Suppose
+
+```
+g=2
+```
+
+Multiples
+
+```
+2
+4
+6
+8
+...
+```
+
+Count numbers divisible by 2.
+
+Example
+
+```
+2
+4
+6
+```
+
+Total
+
+```
+3 numbers
+```
+
+Possible pairs
+
+```
+C(3,2)=3
+```
+
+But these pairs may have gcd
+
+```
+2
+4
+6
+```
+
+Not necessarily exactly 2.
+
+Need Inclusion Exclusion.
+
+---
+
+# Step 3 Inclusion Exclusion
+
+Suppose
+
+```
+cnt[2]=6
+```
+
+Means
+
+```
+6 pairs divisible by 2
+```
+
+Among them
+
+```
+2 pairs actually gcd=4
+
+1 pair gcd=6
+```
+
+Then
+
+```
+exact gcd=2
+
+=
+
+6-2-1
+
+=3
+```
+
+Formula
+
+```
+exact[g]
+
+=
+
+pairs divisible by g
+
+-
+
+exact[2g]
+
+-
+
+exact[3g]
+
+...
+
+```
+
+We process from largest to smallest.
+
+---
+
+# Step 4 Compute Exact Counts
+
+Let
+
+```
+exact[g]
+```
+
+Store number of pairs whose gcd is exactly g.
+
+Pseudo
+
+```
+for g=maxValue to 1
+
+    count divisible by g
+
+    pairs=C(count,2)
+
+    subtract multiples
+
+    exact[g]=remaining
+```
+
+---
+
+# Step 5 Prefix Sum
+
+Suppose
+
+```
+exact
+
+1->8
+2->5
+3->1
+4->4
+```
+
+Sorted array is
+
+```
+1 repeated 8
+
+2 repeated 5
+
+3 repeated 1
+
+4 repeated 4
+```
+
+Create cumulative
+
+```
+g=1
+
+8
+
+g=2
+
+13
+
+g=3
+
+14
+
+g=4
+
+18
+```
+
+Meaning
+
+```
+indices
+
+0...7 ->1
+
+8...12 ->2
+
+13 ->3
+
+14...17 ->4
+```
+
+Now binary search.
+
+---
+
+# Binary Search
+
+Suppose
+
+Query
+
+```
+10
+```
+
+Need first cumulative
+
+```
+>=11
+```
+
+Because index starts from zero.
+
+```
+8
+
+13
+```
+
+Answer
+
+```
+2
+```
+
+---
+
+# Optimal Code
+
+```python
+from bisect import bisect_right
+
+class Solution:
+    def gcdValues(self, nums, queries):
+        mx = max(nums)
+
+        # Frequency of every value
+        freq = [0] * (mx + 1)
+        for x in nums:
+            freq[x] += 1
+
+        # exact[g] = number of pairs whose gcd is exactly g
+        exact = [0] * (mx + 1)
+
+        for g in range(mx, 0, -1):
+            count = 0
+
+            # Count numbers divisible by g
+            for multiple in range(g, mx + 1, g):
+                count += freq[multiple]
+
+            pairs = count * (count - 1) // 2
+
+            # Remove pairs whose gcd is multiple of g
+            for multiple in range(2 * g, mx + 1, g):
+                pairs -= exact[multiple]
+
+            exact[g] = pairs
+
+        # Prefix counts
+        prefix = []
+        total = 0
+
+        for g in range(1, mx + 1):
+            total += exact[g]
+            prefix.append(total)
+
+        ans = []
+
+        for q in queries:
+            ans.append(bisect_right(prefix, q) + 1)
+
+        return ans
+```
+
+---
+
+# Optimal Code Explanation
+
+### Frequency
+
+```python
+freq[x]+=1
+```
+
+Stores frequency of every number.
+
+---
+
+### Count divisible numbers
+
+```python
+for multiple in range(g,mx+1,g):
+```
+
+Visit
+
+```
+g
+
+2g
+
+3g
+```
+
+Count how many numbers are divisible.
+
+---
+
+### Total divisible pairs
+
+```python
+pairs=count*(count-1)//2
+```
+
+Choose any two.
+
+---
+
+### Remove larger gcd
+
+```python
+pairs-=exact[multiple]
+```
+
+Subtract gcd
+
+```
+2g
+
+3g
+
+4g
+```
+
+Only exact g remains.
+
+---
+
+### Prefix
+
+```
+1
+
+1,2
+
+1,2,3
+```
+
+Stores cumulative counts.
+
+---
+
+### Binary Search
+
+```python
+bisect_right(prefix,q)
+```
+
+Returns first gcd whose cumulative count exceeds index `q`. Since `prefix` is 0-based cumulative counts but gcd values start at 1, the answer is `index + 1`.
+
+---
+
+# Complete Dry Run
+
+Example
+
+```
+nums=[2,3,4]
+```
+
+Maximum
+
+```
+mx=4
+```
+
+Frequency
+
+```
+1->0
+
+2->1
+
+3->1
+
+4->1
+```
+
+---
+
+## g=4
+
+Divisible
+
+```
+4
+```
+
+Count
+
+```
+1
+```
+
+Pairs
+
+```
+0
+```
+
+Exact
+
+```
+0
+```
+
+---
+
+## g=3
+
+Divisible
+
+```
+3
+```
+
+Count
+
+```
+1
+```
+
+Pairs
+
+```
+0
+```
+
+Exact
+
+```
+0
+```
+
+---
+
+## g=2
+
+Divisible
+
+```
+2
+
+4
+```
+
+Count
+
+```
+2
+```
+
+Pairs
+
+```
+1
+```
+
+Subtract
+
+```
+exact[4]=0
+```
+
+Remain
+
+```
+exact[2]=1
+```
+
+---
+
+## g=1
+
+Divisible
+
+```
+2
+
+3
+
+4
+```
+
+Count
+
+```
+3
+```
+
+Pairs
+
+```
+3
+```
+
+Subtract
+
+```
+exact[2]=1
+
+exact[3]=0
+
+exact[4]=0
+```
+
+Remain
+
+```
+exact[1]=2
+```
+
+---
+
+Final
+
+```
+exact
+
+1->2
+
+2->1
+
+3->0
+
+4->0
+```
+
+Sorted gcd array
+
+```
+1
+
+1
+
+2
+```
+
+Exactly correct.
+
+---
+
+Prefix
+
+```
+g=1
+
+2
+
+g=2
+
+3
+
+g=3
+
+3
+
+g=4
+
+3
+```
+
+Queries
+
+```
+0
+
+bisect_right([2,3,3,3],0)=0
+
+answer=1
+```
+
+---
+
+Query
+
+```
+2
+
+bisect_right(...,2)=1
+
+answer=2
+```
+
+Output
+
+```
+[1,2,2]
+```
+
+---
+
+# Complexity Comparison
+
+| Approach                                                  | Time Complexity                                                           | Space Complexity | Works for Constraints? |
+| --------------------------------------------------------- | ------------------------------------------------------------------------- | ---------------- | ---------------------- |
+| Brute Force                                               | (O(n^2 \log n)) (plus GCD computations)                                   | (O(n^2))         | ❌ No                   |
+| Optimal (Frequency + Inclusion-Exclusion + Binary Search) | (O(M \log M + Q \log M)), where (M = \max(\text{nums}) \le 5 \times 10^4) | (O(M))           | ✅ Yes                  |
+
+Here, (M) is the maximum value in `nums`, and the harmonic-series sum of iterating over multiples gives the (O(M \log M)) behavior. This makes the solution efficient for the given limits.
