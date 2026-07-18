@@ -1,0 +1,720 @@
+# 1979. Find Greatest Common Divisor of Array (Easy)
+
+---
+
+# Problem Understanding
+
+You are given an integer array `nums`.
+
+You need to:
+
+1. Find the **smallest** element in the array.
+2. Find the **largest** element in the array.
+3. Return the **Greatest Common Divisor (GCD)** of these two numbers.
+
+Remember,
+
+> **GCD** is the largest positive number that divides both numbers without leaving a remainder.
+
+---
+
+## Example
+
+```
+nums = [2,5,6,9,10]
+
+Smallest = 2
+Largest  = 10
+
+GCD(2,10) = 2
+
+Answer = 2
+```
+
+---
+
+# Brute Force Solution
+
+## Logic
+
+Instead of using the Euclidean Algorithm, we'll calculate GCD manually.
+
+### Step 1
+
+Find the smallest number in array.
+
+### Step 2
+
+Find the largest number in array.
+
+### Step 3
+
+The GCD can never be greater than the smaller number.
+
+So,
+
+Start checking from
+
+```
+smallest
+smallest-1
+smallest-2
+...
+1
+```
+
+The first number that divides both numbers is our answer.
+
+---
+
+## Algorithm
+
+```
+Find smallest element
+Find largest element
+
+for i from smallest down to 1
+    if smallest % i == 0
+       and largest % i == 0
+
+          return i
+```
+
+---
+
+# Brute Force Code
+
+```python
+class Solution:
+    def findGCD(self, nums: List[int]) -> int:
+        smallest = min(nums)
+        largest = max(nums)
+
+        for i in range(smallest, 0, -1):
+            if smallest % i == 0 and largest % i == 0:
+                return i
+```
+
+---
+
+# Code Explanation
+
+### Step 1
+
+```python
+smallest = min(nums)
+largest = max(nums)
+```
+
+Find minimum and maximum numbers.
+
+---
+
+### Step 2
+
+```python
+for i in range(smallest, 0, -1):
+```
+
+Check every possible divisor from largest possible value down to 1.
+
+---
+
+### Step 3
+
+```python
+if smallest % i == 0 and largest % i == 0:
+```
+
+If both numbers are divisible by `i`, then `i` is a common divisor.
+
+---
+
+### Step 4
+
+```python
+return i
+```
+
+Since we're checking from largest to smallest, the first valid divisor is the greatest common divisor.
+
+---
+
+# Dry Run (Brute Force)
+
+Example
+
+```
+nums = [2,5,6,9,10]
+```
+
+### Find Min and Max
+
+```
+smallest = 2
+largest = 10
+```
+
+Loop
+
+### i = 2
+
+```
+2 % 2 = 0
+10 % 2 = 0
+
+Both divisible
+
+Return 2
+```
+
+Answer
+
+```
+2
+```
+
+---
+
+Another Example
+
+```
+nums = [7,5,6,8,3]
+```
+
+```
+smallest = 3
+largest = 8
+```
+
+Loop
+
+```
+i = 3
+
+3 % 3 = 0
+8 % 3 = 2
+
+Not divisible
+```
+
+Next
+
+```
+i = 2
+
+3 % 2 = 1
+
+Not divisible
+```
+
+Next
+
+```
+i = 1
+
+3 % 1 = 0
+8 % 1 = 0
+
+Return 1
+```
+
+Answer
+
+```
+1
+```
+
+---
+
+# Optimal Solution
+
+## Observation
+
+Finding GCD by checking every divisor is unnecessary.
+
+There is a famous algorithm called the **Euclidean Algorithm**, which computes the GCD much faster.
+
+Python already provides it:
+
+```python
+from math import gcd
+```
+
+So the work becomes
+
+```
+Find minimum
+Find maximum
+
+Return gcd(minimum, maximum)
+```
+
+---
+
+# Optimal Logic
+
+```
+Find smallest
+
+Find largest
+
+Return gcd(smallest, largest)
+```
+
+---
+
+# Optimal Code (Using `min()` and `max()`)
+
+```python
+from math import gcd
+
+class Solution:
+    def findGCD(self, nums: List[int]) -> int:
+        smallest = min(nums)
+        largest = max(nums)
+
+        return gcd(smallest, largest)
+```
+
+---
+
+# Code Explanation
+
+```python
+smallest = min(nums)
+```
+
+Find minimum element.
+
+---
+
+```python
+largest = max(nums)
+```
+
+Find maximum element.
+
+---
+
+```python
+return gcd(smallest, largest)
+```
+
+Uses the Euclidean Algorithm internally and returns the GCD.
+
+---
+
+# Dry Run (Optimal)
+
+Example
+
+```
+nums = [2,5,6,9,10]
+```
+
+```
+smallest = 2
+largest = 10
+```
+
+Now
+
+```
+gcd(2,10)
+```
+
+Euclidean Algorithm:
+
+```
+10 % 2 = 0
+
+GCD = 2
+```
+
+Return
+
+```
+2
+```
+
+---
+
+# Optimal Solution (Without `min()` and `max()`)
+
+Sometimes interviewers ask you to find the minimum and maximum in a **single traversal** instead of calling `min()` and `max()` separately.
+
+Your second solution does exactly that.
+
+```python
+from math import gcd
+
+class Solution:
+    def findGCD(self, nums: List[int]) -> int:
+        smallest = largest = nums[0]
+
+        for num in nums[1:]:
+            if num < smallest:
+                smallest = num
+            elif num > largest:
+                largest = num
+
+        return gcd(smallest, largest)
+```
+
+---
+
+# Code Explanation
+
+Initialize both values with the first element.
+
+```python
+smallest = largest = nums[0]
+```
+
+Suppose
+
+```
+nums = [2,5,6,9,10]
+```
+
+Initially
+
+```
+smallest = 2
+largest = 2
+```
+
+Traverse the remaining elements.
+
+```
+num = 5
+
+5 < 2 ?
+No
+
+5 > 2 ?
+Yes
+
+largest = 5
+```
+
+---
+
+```
+num = 6
+
+6 > 5
+
+largest = 6
+```
+
+---
+
+```
+num = 9
+
+largest = 9
+```
+
+---
+
+```
+num = 10
+
+largest = 10
+```
+
+Finally
+
+```
+smallest = 2
+largest = 10
+```
+
+Return
+
+```
+gcd(2,10)=2
+```
+
+---
+
+# Complete Dry Run (Single Traversal Version)
+
+```
+nums = [7,5,6,8,3]
+```
+
+Initially
+
+```
+smallest = 7
+largest = 7
+```
+
+---
+
+### num = 5
+
+```
+5 < 7
+
+smallest = 5
+```
+
+State
+
+```
+smallest = 5
+largest = 7
+```
+
+---
+
+### num = 6
+
+```
+6 < 5 ?
+
+No
+
+6 > 7 ?
+
+No
+```
+
+State
+
+```
+smallest = 5
+largest = 7
+```
+
+---
+
+### num = 8
+
+```
+8 > 7
+
+largest = 8
+```
+
+State
+
+```
+smallest = 5
+largest = 8
+```
+
+---
+
+### num = 3
+
+```
+3 < 5
+
+smallest = 3
+```
+
+State
+
+```
+smallest = 3
+largest = 8
+```
+
+---
+
+Now
+
+```
+gcd(3,8)
+```
+
+Euclidean Algorithm
+
+```
+8 % 3 = 2
+
+3 % 2 = 1
+
+2 % 1 = 0
+
+Answer = 1
+```
+
+Return
+
+```
+1
+```
+
+---
+
+# Euclidean Algorithm (How `gcd()` Works)
+
+Suppose
+
+```
+gcd(48,18)
+```
+
+```
+48 % 18 = 12
+
+Now
+
+gcd(18,12)
+```
+
+```
+18 % 12 = 6
+
+Now
+
+gcd(12,6)
+```
+
+```
+12 % 6 = 0
+
+Answer = 6
+```
+
+The process repeats until the remainder becomes **0**. The last non-zero divisor is the GCD.
+
+---
+
+# Time Complexity Analysis
+
+## Brute Force
+
+### Finding Minimum
+
+```
+O(n)
+```
+
+### Finding Maximum
+
+```
+O(n)
+```
+
+### Checking Divisors
+
+At worst, we test every number from `smallest` down to `1`.
+
+```
+O(smallest)
+```
+
+where `smallest` is the minimum element in the array.
+
+### Total Time Complexity
+
+```
+O(n + smallest)
+```
+
+Since `smallest ≤ 1000` in this problem, this is acceptable, but it doesn't scale well for larger values.
+
+---
+
+## Optimal (Using `min()` and `max()`)
+
+Finding minimum:
+
+```
+O(n)
+```
+
+Finding maximum:
+
+```
+O(n)
+```
+
+GCD (Euclidean Algorithm):
+
+```
+O(log(min(smallest, largest)))
+```
+
+### Total Time Complexity
+
+```
+O(n + log(min))
+```
+
+Since `log(min)` is tiny compared to `n`, we usually simplify it to:
+
+```
+O(n)
+```
+
+---
+
+## Optimal (Single Traversal)
+
+One traversal to find both minimum and maximum:
+
+```
+O(n)
+```
+
+GCD computation:
+
+```
+O(log(min))
+```
+
+### Total Time Complexity
+
+```
+O(n + log(min))
+≈ O(n)
+```
+
+This version performs only one pass through the array, making it slightly more efficient than separate `min()` and `max()` calls in practice.
+
+---
+
+# Space Complexity
+
+## Brute Force
+
+Only a few variables (`smallest`, `largest`, `i`) are used.
+
+```
+Space = O(1)
+```
+
+---
+
+## Optimal (Both Versions)
+
+Only constant extra variables are used, and `gcd()` is implemented iteratively in Python's standard library.
+
+```
+Space = O(1)
+```
+
+---
+
+# Comparison
+
+| Approach                    | Idea                                                 | Time Complexity            | Space Complexity |
+| --------------------------- | ---------------------------------------------------- | -------------------------- | ---------------- |
+| Brute Force                 | Check every possible divisor from `smallest` to `1`  | **O(n + smallest)**        | **O(1)**         |
+| Optimal (`min()` + `max()`) | Use built-in functions and Euclidean GCD             | **O(n + log(min)) ≈ O(n)** | **O(1)**         |
+| Optimal (Single Traversal)  | Find min and max in one pass, then use Euclidean GCD | **O(n + log(min)) ≈ O(n)** | **O(1)**         |
+
+### Key Takeaway
+
+* **Brute Force** helps understand the definition of GCD by explicitly testing all possible divisors.
+* **Optimal** uses the **Euclidean Algorithm**, which is mathematically proven to compute the GCD much faster.
+* Between the two optimal implementations, the **single-traversal version** is slightly more efficient because it finds both the minimum and maximum in one pass through the array before calling `gcd()`.
+
