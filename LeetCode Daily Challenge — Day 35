@@ -1,0 +1,997 @@
+# 1081. Smallest Subsequence of Distinct Characters
+
+## Problem Understanding
+
+You are given a string `s`.
+
+You have to return the **lexicographically smallest subsequence** that:
+
+1. Contains **every distinct character exactly once**.
+2. Maintains the **relative order** of characters (because it is a subsequence).
+
+### Example
+
+```
+Input:
+s = "bcabc"
+
+Possible subsequences with unique letters:
+"bca"
+"cab"
+"abc"
+
+Smallest lexicographically:
+"abc"
+```
+
+---
+
+# Brute Force Solution
+
+## Brute Force Logic
+
+Think like this.
+
+### Step 1
+
+Find all distinct characters.
+
+```
+s = "cbacdcbc"
+
+Distinct characters =
+{a,b,c,d}
+
+Need answer length = 4
+```
+
+---
+
+### Step 2
+
+Generate **every possible subsequence**.
+
+A string of length **n** has
+
+```
+2^n
+```
+
+subsequences.
+
+For each subsequence:
+
+* Check whether every distinct character appears exactly once.
+* If yes,
+
+  * compare with current smallest answer.
+  * update answer if smaller.
+
+Finally return smallest answer.
+
+---
+
+## Brute Force Example
+
+```
+s = "bcabc"
+
+Subsequences:
+
+b
+c
+a
+bc
+ba
+ca
+bac
+bca
+abc
+cab
+...
+```
+
+Valid ones
+
+```
+bca
+cab
+abc
+```
+
+Smallest
+
+```
+abc
+```
+
+---
+
+# Brute Force Code (Python)
+
+```python
+class Solution:
+    def removeDuplicateLetters(self, s: str) -> str:
+
+        unique = set(s)
+        n = len(s)
+
+        ans = None
+
+        for mask in range(1 << n):
+
+            subseq = []
+
+            for i in range(n):
+                if mask & (1 << i):
+                    subseq.append(s[i])
+
+            subseq = "".join(subseq)
+
+            if len(subseq) != len(unique):
+                continue
+
+            if len(set(subseq)) != len(unique):
+                continue
+
+            if set(subseq) != unique:
+                continue
+
+            if ans is None or subseq < ans:
+                ans = subseq
+
+        return ans
+```
+
+---
+
+# Brute Force Code Explanation
+
+### Distinct characters
+
+```python
+unique = set(s)
+```
+
+Need these characters exactly once.
+
+---
+
+### Generate every subsequence
+
+```python
+for mask in range(1 << n):
+```
+
+Binary mask generates all subsequences.
+
+---
+
+### Build subsequence
+
+```python
+for i in range(n):
+
+    if mask & (1 << i):
+        subseq.append(s[i])
+```
+
+Take characters whose bit is ON.
+
+---
+
+### Ignore wrong length
+
+```python
+if len(subseq) != len(unique):
+    continue
+```
+
+Need exactly one occurrence of every distinct character.
+
+---
+
+### Ignore duplicates
+
+```python
+if len(set(subseq)) != len(unique):
+    continue
+```
+
+Duplicate character exists.
+
+---
+
+### Check all characters present
+
+```python
+if set(subseq) != unique:
+    continue
+```
+
+Every distinct character must exist.
+
+---
+
+### Update answer
+
+```python
+if ans is None or subseq < ans:
+    ans = subseq
+```
+
+Lexicographically smallest.
+
+---
+
+# Brute Force Dry Run
+
+```
+s = "bcabc"
+
+Distinct:
+{a,b,c}
+
+Generate
+
+b
+×
+
+c
+×
+
+bc
+×
+
+abc
+✓
+
+Current answer = abc
+
+cab
+✓
+
+abc < cab
+
+Keep abc
+
+Finish
+
+Answer = abc
+```
+
+---
+
+# Brute Force Complexity
+
+### Time
+
+Generate
+
+```
+2^n
+```
+
+Each subsequence takes O(n).
+
+Overall
+
+```
+O(n × 2^n)
+```
+
+---
+
+### Space
+
+Maximum subsequence
+
+```
+O(n)
+```
+
+---
+
+# Why Brute Force is Bad?
+
+For
+
+```
+n = 1000
+```
+
+```
+2^1000
+```
+
+Impossible.
+
+Need a greedy solution.
+
+---
+
+# Optimal Solution (Greedy + Monotonic Stack)
+
+## Main Idea
+
+We want the **smallest lexicographical order**.
+
+Whenever we find a **smaller character**, we would like it to come earlier.
+
+Example
+
+```
+Stack:
+d
+
+Current:
+a
+
+Better answer:
+a...
+```
+
+So remove `d`.
+
+But...
+
+Can we always remove it?
+
+No.
+
+Only if that character appears **again later**.
+
+Otherwise we lose it forever.
+
+---
+
+## Key Observation
+
+We can remove stack top only if
+
+```
+It appears later again.
+```
+
+That's why we store
+
+```
+Last occurrence of every character.
+```
+
+---
+
+## Three Important Data Structures
+
+### 1. last
+
+```
+last[ch]
+```
+
+Stores last index of each character.
+
+Example
+
+```
+s = cbacdcbc
+
+Index
+
+0 c
+1 b
+2 a
+3 c
+4 d
+5 c
+6 b
+7 c
+
+last
+
+a → 2
+b → 6
+c → 7
+d → 4
+```
+
+---
+
+### 2. stack
+
+Stores current answer.
+
+Example
+
+```
+[a,c,d]
+```
+
+---
+
+### 3. visited
+
+Avoid duplicate characters.
+
+Example
+
+```
+visited =
+
+a
+c
+d
+```
+
+If character already exists
+
+Skip it.
+
+---
+
+# Greedy Logic
+
+For every character
+
+```
+If already used
+
+Skip.
+```
+
+Otherwise
+
+Try removing larger characters from stack.
+
+But remove only if
+
+* stack not empty
+* top > current
+* top appears later again
+
+Then push current character.
+
+Finally join stack.
+
+---
+
+# Optimal Code
+
+```python
+class Solution:
+    def removeDuplicateLetters(self, s: str) -> str:
+        # Last occurrence of each character
+        last = {}
+        for i, ch in enumerate(s):
+            last[ch] = i
+
+        stack = []
+        visited = set()
+
+        for i, ch in enumerate(s):
+
+            # Skip duplicate characters
+            if ch in visited:
+                continue
+
+            # Pop while:
+            # 1. Stack is not empty
+            # 2. Top character is greater than current
+            # 3. Top character appears again later
+            while stack and stack[-1] > ch and last[stack[-1]] > i:
+                visited.remove(stack.pop())
+
+            stack.append(ch)
+            visited.add(ch)
+
+        return "".join(stack)
+```
+
+---
+
+# Optimal Code Explanation
+
+---
+
+## Step 1
+
+Store last occurrence.
+
+```python
+last = {}
+
+for i, ch in enumerate(s):
+    last[ch] = i
+```
+
+Example
+
+```
+cbacdcbc
+
+last
+
+c : 7
+b : 6
+a : 2
+d : 4
+```
+
+---
+
+## Step 2
+
+Create stack
+
+```python
+stack = []
+```
+
+Stores answer.
+
+---
+
+## Step 3
+
+Visited
+
+```python
+visited = set()
+```
+
+Avoid duplicates.
+
+---
+
+## Step 4
+
+Traverse string
+
+```python
+for i, ch in enumerate(s):
+```
+
+Process one character at a time.
+
+---
+
+## Step 5
+
+Already present?
+
+```python
+if ch in visited:
+    continue
+```
+
+Example
+
+```
+stack
+
+a c d
+
+Current
+
+c
+
+Already present
+
+Skip
+```
+
+---
+
+## Step 6
+
+Pop larger characters
+
+```python
+while stack and stack[-1] > ch and last[stack[-1]] > i:
+```
+
+Three conditions
+
+### Condition 1
+
+```
+stack not empty
+```
+
+Otherwise cannot pop.
+
+---
+
+### Condition 2
+
+```
+stack[-1] > ch
+```
+
+Current character is smaller.
+
+Better lexicographical order.
+
+---
+
+### Condition 3
+
+```
+last[top] > current index
+```
+
+Top appears later again.
+
+Safe to remove.
+
+---
+
+Example
+
+```
+Stack
+
+c
+
+Current
+
+b
+
+c>b
+
+Last(c)=7
+
+Current index=1
+
+7>1
+
+Safe
+
+Pop c
+```
+
+---
+
+## Step 7
+
+Remove from visited
+
+```python
+visited.remove(stack.pop())
+```
+
+Because it will be added later.
+
+---
+
+## Step 8
+
+Push current
+
+```python
+stack.append(ch)
+visited.add(ch)
+```
+
+Current becomes part of answer.
+
+---
+
+## Step 9
+
+Return answer
+
+```python
+return "".join(stack)
+```
+
+---
+
+# Complete Dry Run
+
+## Example
+
+```
+s = "cbacdcbc"
+```
+
+---
+
+## Last occurrence
+
+```
+c → 7
+b → 6
+a → 2
+d → 4
+```
+
+---
+
+### i = 0
+
+```
+ch = c
+
+stack = []
+
+Push
+
+stack = [c]
+visited={c}
+```
+
+---
+
+### i = 1
+
+```
+ch = b
+
+Top=c
+
+c>b
+
+Last(c)=7>1
+
+Pop c
+
+stack=[]
+
+Push b
+
+stack=[b]
+visited={b}
+```
+
+---
+
+### i = 2
+
+```
+ch=a
+
+Top=b
+
+b>a
+
+Last(b)=6>2
+
+Pop b
+
+stack=[]
+
+Push a
+
+stack=[a]
+visited={a}
+```
+
+---
+
+### i = 3
+
+```
+ch=c
+
+Top=a
+
+a<c
+
+Push
+
+stack=[a,c]
+visited={a,c}
+```
+
+---
+
+### i = 4
+
+```
+ch=d
+
+Top=c
+
+c<d
+
+Push
+
+stack=[a,c,d]
+visited={a,c,d}
+```
+
+---
+
+### i = 5
+
+```
+ch=c
+
+Already visited
+
+Skip
+
+stack=[a,c,d]
+```
+
+---
+
+### i = 6
+
+```
+ch=b
+
+Top=d
+
+d>b
+
+Last(d)=4
+
+4>6 ?
+
+No
+
+Cannot pop d
+
+Now top still d, so stop checking. We cannot remove characters below it because stack order must be preserved.
+
+Push b
+
+stack=[a,c,d,b]
+visited={a,c,d,b}
+```
+
+---
+
+### i = 7
+
+```
+ch=c
+
+Already visited
+
+Skip
+```
+
+---
+
+Final stack
+
+```
+[a,c,d,b]
+```
+
+Answer
+
+```
+acdb
+```
+
+---
+
+# Why Condition 3 is Necessary?
+
+Suppose
+
+```
+Stack
+
+d
+
+Current
+
+a
+```
+
+Looks tempting to remove `d`.
+
+But
+
+```
+Last(d)=current index
+```
+
+No more `d` later.
+
+If removed,
+
+```
+d disappears forever.
+```
+
+Answer becomes invalid.
+
+So we **must keep it**.
+
+---
+
+# Intuition to Remember
+
+Whenever a smaller character comes:
+
+* Remove larger characters **only if you can get them later again**.
+* Otherwise keep them.
+* Never insert duplicate characters.
+
+This greedy strategy guarantees the lexicographically smallest valid subsequence.
+
+---
+
+# Time Complexity
+
+## Brute Force
+
+Generating all subsequences:
+
+```
+O(2^n)
+```
+
+Building/checking each subsequence:
+
+```
+O(n)
+```
+
+Total:
+
+```
+O(n × 2^n)
+```
+
+---
+
+## Optimal
+
+Building `last`:
+
+```
+O(n)
+```
+
+Traversing string:
+
+```
+O(n)
+```
+
+Each character is pushed **once** and popped **at most once**, so all stack operations together are **O(n)** (amortized).
+
+Overall:
+
+```
+O(n)
+```
+
+---
+
+# Space Complexity
+
+## Brute Force
+
+Subsequence + recursion/temporary storage:
+
+```
+O(n)
+```
+
+---
+
+## Optimal
+
+* `last` stores at most 26 lowercase letters → `O(1)` (or `O(k)` for an alphabet of size `k`).
+* `visited` stores at most 26 letters → `O(1)`.
+* `stack` stores at most 26 distinct letters → `O(1)`.
+
+In terms of the input alphabet used in this problem:
+
+```
+O(1)
+```
+
+More generally (if the alphabet size is not fixed):
+
+```
+O(k)
+```
