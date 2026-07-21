@@ -1,0 +1,879 @@
+ # 3499. Maximize Active Section with Trade I
+
+## Problem Explanation
+
+You are given a binary string `s`.
+
+* `'1'` = Active section
+* `'0'` = Inactive section
+
+You can perform **at most one trade**.
+
+A trade consists of **two operations**:
+
+1. Choose a contiguous block of **1's surrounded by 0's**, and convert it into **0's**.
+2. Then choose a contiguous block of **0's surrounded by 1's**, and convert it into **1's**.
+
+The string is considered as
+
+```
+t = "1" + s + "1"
+```
+
+The extra `'1'` characters are only used to determine whether blocks are surrounded. They **do not count** in the final answer.
+
+We need to return the **maximum number of active ('1') sections** after performing at most one trade.
+
+---
+
+# Observation
+
+Suppose we have
+
+```
+0...0 111 0...0
+```
+
+The middle `111` is surrounded by zeros.
+
+If we remove it
+
+```
+0...0 000 0...0
+```
+
+Both zero blocks merge into one large zero block.
+
+Now that merged zero block is surrounded by ones.
+
+Then we flip that merged block into ones.
+
+So,
+
+We lose
+
+```
+length of removed 1-block
+```
+
+but immediately gain
+
+```
+left zero run + removed one run + right zero run
+```
+
+Net increase
+
+```
+(leftZero + oneRun + rightZero)
+- oneRun
+
+= leftZero + rightZero
+```
+
+Notice something important:
+
+The **length of removed one block cancels out!**
+
+Only the lengths of the **two neighboring zero runs matter.**
+
+This is the key observation.
+
+---
+
+# Brute Force Solution
+
+## Brute Force Logic
+
+We try every removable block of `1`s.
+
+For every such block,
+
+1. Copy the string.
+2. Convert that 1-block into 0.
+3. Find the merged zero block.
+4. Convert that merged zero block into 1.
+5. Count total ones.
+6. Take maximum answer.
+
+This checks every possible trade.
+
+---
+
+## Brute Force Code (Python)
+
+```python
+class Solution:
+    def maxActiveSections(self, s: str) -> int:
+
+        n = len(s)
+        ans = s.count('1')
+
+        t = "1" + s + "1"
+        m = len(t)
+
+        i = 1
+
+        while i < m - 1:
+
+            if (
+                t[i] == '1'
+                and t[i - 1] == '0'
+            ):
+
+                j = i
+
+                while j < m - 1 and t[j] == '1':
+                    j += 1
+
+                if j < m - 1 and t[j] == '0':
+
+                    arr = list(t)
+
+                    for k in range(i, j):
+                        arr[k] = '0'
+
+                    left = i - 1
+                    while arr[left] == '0':
+                        left -= 1
+
+                    right = j
+                    while arr[right] == '0':
+                        right += 1
+
+                    for k in range(left + 1, right):
+                        arr[k] = '1'
+
+                    cnt = 0
+
+                    for k in range(1, m - 1):
+                        if arr[k] == '1':
+                            cnt += 1
+
+                    ans = max(ans, cnt)
+
+                i = j
+
+            else:
+                i += 1
+
+        return ans
+```
+
+---
+
+# Brute Force Code Explanation
+
+### Step 1
+
+```python
+ans = s.count('1')
+```
+
+If no trade is possible, this is already the answer.
+
+---
+
+### Step 2
+
+```python
+t = "1" + s + "1"
+```
+
+Add virtual ones.
+
+Example
+
+```
+01010
+
+↓
+
+1010101
+```
+
+---
+
+### Step 3
+
+Find every removable one block.
+
+```
+0011100
+   ^^^
+```
+
+---
+
+### Step 4
+
+Copy string.
+
+```
+arr = list(t)
+```
+
+---
+
+### Step 5
+
+Remove the one block.
+
+```
+111
+
+↓
+
+000
+```
+
+---
+
+### Step 6
+
+Find merged zero block.
+
+Example
+
+```
+00011100
+
+↓
+
+00000000
+```
+
+The three zero regions become one.
+
+---
+
+### Step 7
+
+Flip merged zero block into ones.
+
+```
+000000
+
+↓
+
+111111
+```
+
+---
+
+### Step 8
+
+Count total ones.
+
+Update maximum.
+
+---
+
+# Brute Force Dry Run
+
+Input
+
+```
+s = "01010"
+```
+
+Augmented
+
+```
+1010101
+```
+
+Current ones
+
+```
+2
+```
+
+Possible removable one blocks
+
+```
+1
+ ^
+1010101
+
+second
+
+1010101
+  ^
+
+third
+
+1010101
+    ^
+```
+
+Try removing middle one.
+
+```
+1010101
+
+↓
+
+1000101
+```
+
+Merged zero block
+
+```
+000
+```
+
+Flip
+
+```
+1111101
+```
+
+Ignoring augmented ones
+
+```
+11110
+```
+
+Count ones
+
+```
+4
+```
+
+Answer becomes
+
+```
+4
+```
+
+No better answer exists.
+
+Return
+
+```
+4
+```
+
+---
+
+# Optimal Solution
+
+## Key Observation
+
+Suppose we have
+
+```
+0001110000
+```
+
+Left zero run
+
+```
+3
+```
+
+One block
+
+```
+3
+```
+
+Right zero run
+
+```
+4
+```
+
+Remove
+
+```
+111
+```
+
+We get
+
+```
+0000000000
+```
+
+Entire zero block length
+
+```
+3 + 3 + 4
+```
+
+Flip it
+
+Gain
+
+```
+3+3+4
+```
+
+Lost
+
+```
+3
+```
+
+Net gain
+
+```
+(3+3+4)-3
+
+=7
+
+= leftZero + rightZero
+```
+
+So we **never need the length of the one block.**
+
+We only need
+
+```
+left zero length
++
+right zero length
+```
+
+Therefore,
+
+* Count total ones.
+* Scan every zero run.
+* Store previous zero run.
+* Current gain
+
+```
+previousZero + currentZero
+```
+
+Take maximum.
+
+Finally
+
+```
+answer
+
+=
+
+total ones
+
++
+
+maximum gain
+```
+
+---
+
+# Optimal Code
+
+```python
+class Solution:
+    def maxActiveSections(self, s: str) -> int:
+
+        n = len(s)
+
+        ones = 0
+        max_sum = 0
+
+        prev_run = -1
+
+        i = 0
+
+        while i < n:
+
+            if s[i] == '1':
+
+                ones += 1
+                i += 1
+
+            else:
+
+                curr = 0
+
+                while i < n and s[i] == '0':
+                    curr += 1
+                    i += 1
+
+                if prev_run > 0:
+                    max_sum = max(max_sum, prev_run + curr)
+
+                prev_run = curr
+
+        return ones + max_sum
+```
+
+---
+
+# Optimal Code Explanation
+
+### Variables
+
+```python
+ones = 0
+```
+
+Stores total active sections.
+
+---
+
+```python
+max_sum = 0
+```
+
+Best gain possible.
+
+---
+
+```python
+prev_run = -1
+```
+
+Length of previous zero block.
+
+Initially none exists.
+
+---
+
+### Traverse string
+
+```
+101000100
+```
+
+Move left to right.
+
+---
+
+### If current is one
+
+```python
+ones += 1
+```
+
+Simply count ones.
+
+---
+
+### If current is zero
+
+Measure complete zero run.
+
+Example
+
+```
+0000
+```
+
+Length
+
+```
+curr = 4
+```
+
+---
+
+### Can we make a trade?
+
+Only if a previous zero run exists.
+
+```
+000111000
+
+prev=3
+
+curr=3
+
+gain=6
+```
+
+Update
+
+```python
+max_sum=max(max_sum,6)
+```
+
+---
+
+### Store current run
+
+```python
+prev_run = curr
+```
+
+Current becomes previous for next iteration.
+
+---
+
+### Final Answer
+
+```
+ones + max_sum
+```
+
+---
+
+# Complete Dry Run
+
+Input
+
+```
+s = "01010"
+```
+
+Initially
+
+```
+ones = 0
+
+max_sum = 0
+
+prev_run = -1
+```
+
+---
+
+### i = 0
+
+```
+0
+```
+
+Measure zero run
+
+```
+curr = 1
+```
+
+Previous doesn't exist.
+
+```
+prev_run = 1
+```
+
+---
+
+### i = 1
+
+```
+1
+```
+
+```
+ones = 1
+```
+
+---
+
+### i = 2
+
+```
+0
+```
+
+Measure
+
+```
+curr = 1
+```
+
+Now
+
+```
+prev_run = 1
+
+curr =1
+```
+
+Possible gain
+
+```
+1+1=2
+```
+
+Update
+
+```
+max_sum=2
+```
+
+Store
+
+```
+prev_run=1
+```
+
+---
+
+### i = 3
+
+```
+1
+```
+
+```
+ones=2
+```
+
+---
+
+### i = 4
+
+```
+0
+```
+
+Measure
+
+```
+curr=1
+```
+
+Gain
+
+```
+1+1=2
+```
+
+```
+max_sum=2
+```
+
+Store
+
+```
+prev_run=1
+```
+
+Traversal finished.
+
+Final answer
+
+```
+ones + max_sum
+
+=2+2
+
+=4
+```
+
+Return
+
+```
+4
+```
+
+---
+
+# Why Does This Work?
+
+Every valid trade removes exactly one surrounded block of ones.
+
+Removing that block joins the left and right zero runs into one larger zero run.
+
+The size of the removable one block gets added to the merged zero block but is also removed from the existing ones count, so it cancels out.
+
+Therefore, the only extra active sections gained are:
+
+```
+left zero run
++
+right zero run
+```
+
+So we only need the lengths of consecutive zero runs.
+
+---
+
+# Time & Space Complexity
+
+## Brute Force
+
+### Time Complexity
+
+Let:
+
+* `n` = length of string
+* There can be up to **O(n)** removable `1` blocks.
+
+For each block we may:
+
+* Copy the string → **O(n)**
+* Flip a block → **O(n)**
+* Find merged zero block → **O(n)**
+* Count ones → **O(n)**
+
+Each attempt is **O(n)**, and there can be **O(n)** attempts.
+
+**Total Time Complexity:**
+
+```
+O(n × n)
+
+= O(n²)
+```
+
+---
+
+### Space Complexity
+
+We create a copy of the string for each attempt.
+
+```
+arr = list(t)
+```
+
+Size of `arr` is proportional to `n`.
+
+**Total Space Complexity:**
+
+```
+O(n)
+```
+
+---
+
+## Optimal
+
+### Time Complexity
+
+The pointer `i` scans the string only once.
+
+* Every `'1'` is visited once.
+* Every `'0'` is visited once while measuring its zero run.
+
+No character is processed more than once.
+
+**Total Time Complexity:**
+
+```
+O(n)
+```
+
+---
+
+### Space Complexity
+
+We only use a few integer variables:
+
+* `ones`
+* `max_sum`
+* `prev_run`
+* `curr`
+* `i`
+
+No extra arrays, lists, or hash maps are used.
+
+**Total Space Complexity:**
+
+```
+O(1)
+```
+
+### Complexity Summary
+
+| Approach    | Time      | Space    |
+| ----------- | --------- | -------- |
+| Brute Force | **O(n²)** | **O(n)** |
+| Optimal     | **O(n)**  | **O(1)** |
