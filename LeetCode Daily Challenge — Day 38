@@ -1,0 +1,847 @@
+This is a **Hard Interval + Segment Tree** problem. The trick is understanding **what trade actually does**. Once you understand that, the implementation becomes much simpler.
+
+---
+
+# Step 1. Understand the Trade
+
+For every query we consider
+
+```
+t = '1' + s[l...r] + '1'
+```
+
+Suppose inside `t`
+
+```
+000111000
+```
+
+The trade is
+
+1. Pick one **1-block** surrounded by 0s
+
+```
+000111000
+   ^^^
+```
+
+Turn it into
+
+```
+000000000
+```
+
+Now the two neighboring zero blocks merge.
+
+```
+000000000
+```
+
+Now convert this merged zero block (surrounded by 1s because of augmentation)
+
+into
+
+```
+111111111
+```
+
+Net effect:
+
+```
+gain =
+left zero block
++
+right zero block
+```
+
+because
+
+```
+lose = ones removed
+
+gain = leftZero + removedOnes + rightZero
+
+Net =
+(leftZero+removedOnes+rightZero)
+-
+removedOnes
+
+=
+leftZero + rightZero
+```
+
+**Very important observation**
+
+The size of removed 1 block does **NOT** matter.
+
+Only the two adjacent zero blocks matter.
+
+This is the entire problem.
+
+---
+
+# Brute Force
+
+---
+
+## Idea
+
+For every query
+
+Extract substring
+
+```
+sub=s[l:r+1]
+```
+
+Augment
+
+```
+t='1'+sub+'1'
+```
+
+Run Length Encode
+
+Example
+
+```
+1010011
+
+↓
+
+1
+0
+1
+00
+11
+```
+
+For every 1-block
+
+```
+0 111 00
+```
+
+calculate
+
+```
+leftZero+rightZero
+```
+
+Take maximum.
+
+Answer
+
+```
+onesInsideSubstring
++
+bestGain
+```
+
+---
+
+## Brute Force Complexity
+
+For every query
+
+```
+O(length)
+```
+
+Worst case
+
+```
+O(n*q)
+
+100000 ×100000
+
+10^10
+
+TLE
+```
+
+---
+
+# Optimal Idea
+
+---
+
+Instead of processing every query independently,
+
+process the whole string once.
+
+---
+
+## Step 1
+
+Store every zero block.
+
+Example
+
+```
+001110000100011
+
+Zero blocks
+
+00
+0000
+000
+```
+
+Store
+
+```
+length
+start
+end
+```
+
+Example
+
+```
+length=[2,4,3]
+
+start=[0,5,10]
+
+end=[1,8,12]
+```
+
+---
+
+## Step 2
+
+Every possible trade corresponds to
+
+```
+zero[i]
+1-block
+zero[i+1]
+```
+
+Its gain
+
+```
+gain[i]
+
+=
+
+zeroLength[i]
++
+zeroLength[i+1]
+```
+
+Example
+
+```
+2 111 4
+
+gain=6
+
+4 11 3
+
+gain=7
+```
+
+Store
+
+```
+gain=[6,7]
+```
+
+---
+
+## Step 3
+
+Build Segment Tree over gain.
+
+```
+gain
+
+6 7 4 9 2
+
+↓
+
+segment tree
+
+supports
+
+maximum gain
+```
+
+Query
+
+```
+maximum gain between i..j
+
+O(logn)
+```
+
+---
+
+# Why Binary Search?
+
+Every query has different boundaries.
+
+Need first zero block touching query.
+
+Need last zero block touching query.
+
+Use
+
+```
+bisect_left
+
+bisect_right
+```
+
+on
+
+```
+zeroStarts
+zeroEnds
+```
+
+Both
+
+```
+O(logn)
+```
+
+---
+
+# Cases
+
+Suppose query cuts zero blocks.
+
+Example
+
+```
+000111000
+
+query
+
+  ^^^^^
+
+011100
+```
+
+Left zero block is partial.
+
+Need
+
+```
+partial length
+```
+
+Similarly right.
+
+Middle blocks remain complete.
+
+Hence three candidates.
+
+---
+
+## Candidate 1
+
+Use left partial block
+
+```
+partialLeft
++
+next full block
+```
+
+---
+
+## Candidate 2
+
+Use right partial block
+
+```
+previous full block
++
+partialRight
+```
+
+---
+
+## Candidate 3
+
+Entirely internal blocks
+
+Use segment tree.
+
+---
+
+Maximum of all three.
+
+---
+
+# Optimal Code (Python)
+
+```python
+from typing import List
+from bisect import bisect_left, bisect_right
+
+
+class SegmentTree:
+
+    def __init__(self, values):
+
+        self.n = len(values)
+        self.tree = [0] * (4 * max(1, self.n))
+
+        if self.n:
+            self.build(1, 0, self.n - 1, values)
+
+    def build(self, node, l, r, values):
+
+        if l == r:
+            self.tree[node] = values[l]
+            return
+
+        mid = (l + r) // 2
+
+        self.build(node * 2, l, mid, values)
+        self.build(node * 2 + 1, mid + 1, r, values)
+
+        self.tree[node] = max(
+            self.tree[node * 2],
+            self.tree[node * 2 + 1]
+        )
+
+    def query(self, left, right):
+
+        if left > right or self.n == 0:
+            return 0
+
+        return self.solve(
+            1,
+            0,
+            self.n - 1,
+            left,
+            right
+        )
+
+    def solve(self, node, l, r, ql, qr):
+
+        if ql <= l and r <= qr:
+            return self.tree[node]
+
+        mid = (l + r) // 2
+
+        ans = 0
+
+        if ql <= mid:
+            ans = max(
+                ans,
+                self.solve(node * 2, l, mid, ql, qr)
+            )
+
+        if qr > mid:
+            ans = max(
+                ans,
+                self.solve(node * 2 + 1, mid + 1, r, ql, qr)
+            )
+
+        return ans
+
+
+class Solution:
+
+    def maxActiveSectionsAfterTrade(
+        self,
+        s: str,
+        queries: List[List[int]]
+    ) -> List[int]:
+
+        n = len(s)
+
+        totalOnes = s.count('1')
+
+        zeroLength = []
+        zeroStart = []
+        zeroEnd = []
+
+        i = 0
+
+        while i < n:
+
+            j = i
+
+            while j < n and s[j] == s[i]:
+                j += 1
+
+            if s[i] == '0':
+                zeroLength.append(j - i)
+                zeroStart.append(i)
+                zeroEnd.append(j - 1)
+
+            i = j
+
+        m = len(zeroLength)
+
+        if m < 2:
+            return [totalOnes] * len(queries)
+
+        gain = []
+
+        for i in range(m - 1):
+            gain.append(
+                zeroLength[i]
+                +
+                zeroLength[i + 1]
+            )
+
+        seg = SegmentTree(gain)
+
+        ans = []
+
+        for left, right in queries:
+
+            first = bisect_left(zeroEnd, left)
+
+            last = bisect_right(
+                zeroStart,
+                right
+            ) - 1
+
+            if (
+                first >= m
+                or
+                last < 0
+                or
+                first >= last
+            ):
+                ans.append(totalOnes)
+                continue
+
+            firstLen = (
+                zeroEnd[first]
+                -
+                max(zeroStart[first], left)
+                +
+                1
+            )
+
+            lastLen = (
+                min(zeroEnd[last], right)
+                -
+                zeroStart[last]
+                +
+                1
+            )
+
+            if first + 1 == last:
+
+                best = firstLen + lastLen
+
+            else:
+
+                leftGain = (
+                    firstLen
+                    +
+                    zeroLength[first + 1]
+                )
+
+                rightGain = (
+                    zeroLength[last - 1]
+                    +
+                    lastLen
+                )
+
+                middleGain = seg.query(
+                    first + 1,
+                    last - 2
+                )
+
+                best = max(
+                    leftGain,
+                    rightGain,
+                    middleGain
+                )
+
+            ans.append(
+                totalOnes + best
+            )
+
+        return ans
+```
+
+---
+
+# Complete Dry Run
+
+Suppose
+
+```
+s = 0100
+```
+
+Zero blocks
+
+```
+0
+00
+```
+
+```
+length=[1,2]
+
+start=[0,2]
+
+end=[0,3]
+```
+
+Gain
+
+```
+1+2=3
+
+gain=[3]
+```
+
+Segment Tree
+
+```
+3
+```
+
+---
+
+Query
+
+```
+[0,3]
+```
+
+Entire string.
+
+```
+first=0
+
+last=1
+```
+
+Adjacent.
+
+Left partial
+
+```
+length=1
+```
+
+Right partial
+
+```
+length=2
+```
+
+Best
+
+```
+1+2=3
+```
+
+Original ones
+
+```
+1
+```
+
+Answer
+
+```
+1+3=4
+```
+
+Correct.
+
+---
+
+Query
+
+```
+[0,2]
+
+substring
+
+010
+```
+
+Partial last zero block
+
+```
+only first cell
+
+length=1
+```
+
+First block
+
+```
+1
+```
+
+Gain
+
+```
+1+1=2
+```
+
+Original ones
+
+```
+1
+
+Answer=3
+```
+
+Correct.
+
+---
+
+# Why Segment Tree Works?
+
+Suppose
+
+```
+zero
+
+2
+5
+4
+6
+3
+```
+
+Gain array
+
+```
+7
+9
+10
+9
+```
+
+Query only middle
+
+Need
+
+```
+max gain between
+
+1..2
+
+↓
+
+max(9,10)
+
+↓
+
+10
+```
+
+Segment Tree gives it in
+
+```
+O(log n)
+```
+
+instead of
+
+```
+O(n)
+```
+
+---
+
+# Time Complexity
+
+### Preprocessing
+
+Run Length Encoding
+
+```
+O(n)
+```
+
+Build Gain Array
+
+```
+O(n)
+```
+
+Build Segment Tree
+
+```
+O(n)
+```
+
+Total preprocessing
+
+```
+O(n)
+```
+
+---
+
+### Per Query
+
+Binary Search
+
+```
+O(log n)
+```
+
+Segment Tree Query
+
+```
+O(log n)
+```
+
+Total
+
+```
+O(log n)
+```
+
+---
+
+### Overall
+
+```
+O(n + q log n)
+```
+
+which easily passes the constraints (`n, q ≤ 10^5`).
+
+---
+
+# Space Complexity
+
+Run-length encoded zero-block information:
+
+```
+O(number of zero blocks) ≤ O(n)
+```
+
+Gain array:
+
+```
+O(n)
+```
+
+Segment tree:
+
+```
+O(n)
+```
+
+Overall auxiliary space:
+
+```
+O(n)
+```
+
+This is the optimal approach for the given constraints, reducing the brute-force `O(nq)` solution to `O(n + q log n)` by preprocessing zero runs and answering each query with binary searches plus a segment-tree range-maximum query.
