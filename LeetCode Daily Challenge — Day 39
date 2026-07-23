@@ -1,0 +1,485 @@
+# 3513. Number of Unique XOR Triplets I
+
+## Problem Understanding
+
+You are given a permutation `nums` containing every integer from `1` to `n` exactly once.
+
+A XOR triplet is
+
+[
+nums[i] \oplus nums[j] \oplus nums[k]
+]
+
+where
+
+[
+i \le j \le k
+]
+
+Since indices can be equal, the same element may be chosen multiple times.
+
+Return the number of **distinct XOR values** obtainable.
+
+---
+
+# Observation
+
+Remember these XOR properties:
+
+```
+a ^ a = 0
+a ^ 0 = a
+a ^ a ^ a = a
+a ^ a ^ b = b
+a ^ b ^ b = a
+```
+
+So repeated indices are automatically handled by normal XOR.
+
+---
+
+# Brute Force Approach
+
+## Idea
+
+Generate every valid triplet
+
+```
+i <= j <= k
+```
+
+Compute
+
+```
+nums[i] ^ nums[j] ^ nums[k]
+```
+
+Store every answer inside a set.
+
+Finally return
+
+```
+len(set)
+```
+
+---
+
+## Brute Force Code
+
+```python
+from typing import List
+
+class Solution:
+    def uniqueXorTriplets(self, nums: List[int]) -> int:
+        n = len(nums)
+        st = set()
+
+        for i in range(n):
+            for j in range(i, n):
+                for k in range(j, n):
+                    st.add(nums[i] ^ nums[j] ^ nums[k])
+
+        return len(st)
+```
+
+---
+
+# Code Explanation
+
+```
+st = set()
+```
+
+Stores all distinct XOR values.
+
+---
+
+Outer loop
+
+```
+for i in range(n):
+```
+
+Choose first index.
+
+---
+
+Middle loop
+
+```
+for j in range(i, n):
+```
+
+Ensures
+
+```
+i <= j
+```
+
+---
+
+Inner loop
+
+```
+for k in range(j, n):
+```
+
+Ensures
+
+```
+j <= k
+```
+
+Therefore
+
+```
+i <= j <= k
+```
+
+---
+
+Compute XOR
+
+```
+nums[i] ^ nums[j] ^ nums[k]
+```
+
+Insert into the set.
+
+---
+
+Finally
+
+```
+return len(st)
+```
+
+---
+
+# Dry Run
+
+Example
+
+```
+nums = [3,1,2]
+```
+
+Triplets
+
+```
+(0,0,0)
+
+3^3^3 = 3
+Set = {3}
+```
+
+```
+(0,0,1)
+
+3^3^1 = 1
+Set = {1,3}
+```
+
+```
+(0,0,2)
+
+3^3^2 = 2
+Set = {1,2,3}
+```
+
+```
+(0,1,1)
+
+3^1^1 = 3
+Set unchanged
+```
+
+```
+(0,1,2)
+
+3^1^2 = 0
+Set = {0,1,2,3}
+```
+
+Remaining triplets only produce values already present.
+
+Answer
+
+```
+4
+```
+
+---
+
+# Complexity
+
+### Time
+
+There are
+
+[
+\frac{n(n+1)(n+2)}6
+]
+
+triplets.
+
+So
+
+```
+O(n³)
+```
+
+---
+
+### Space
+
+Worst case
+
+```
+O(number of unique XOR values)
+```
+
+---
+
+# Optimal Approach
+
+Now use the important property of this problem.
+
+The array is **always a permutation of**
+
+```
+1,2,3,...,n
+```
+
+So only the value of `n` matters.
+
+After analyzing the XOR space:
+
+* if `n = 1`
+
+```
+{1}
+```
+
+Answer
+
+```
+1
+```
+
+---
+
+* if `n = 2`
+
+```
+{1,2}
+```
+
+Answer
+
+```
+2
+```
+
+---
+
+* if `n >= 3`
+
+Every integer from
+
+```
+0
+```
+
+up to
+
+```
+2^(bit_length(n)) - 1
+```
+
+can be produced.
+
+Hence
+
+```
+Answer = 2^(bit_length(n))
+```
+
+where
+
+```
+bit_length(n)
+```
+
+is the number of bits needed to represent `n`.
+
+Example
+
+```
+n = 3
+
+bit_length = 2
+
+Answer = 2² = 4
+```
+
+Possible XOR values
+
+```
+0 1 2 3
+```
+
+---
+
+Example
+
+```
+n = 5
+
+bit_length = 3
+
+Answer = 2³ = 8
+```
+
+Possible XOR values
+
+```
+0..7
+```
+
+---
+
+Example
+
+```
+n = 8
+
+bit_length = 4
+
+Answer = 16
+```
+
+Possible XOR values
+
+```
+0..15
+```
+
+---
+
+# Optimal Code
+
+```python
+from typing import List
+
+class Solution:
+    def uniqueXorTriplets(self, nums: List[int]) -> int:
+        n = len(nums)
+
+        if n == 1:
+            return 1
+
+        if n == 2:
+            return 2
+
+        return 1 << n.bit_length()
+```
+
+---
+
+# Dry Run (Optimal)
+
+### Example 1
+
+```
+nums = [1]
+```
+
+```
+n = 1
+
+return 1
+```
+
+---
+
+### Example 2
+
+```
+nums = [1,2]
+```
+
+```
+n = 2
+
+return 2
+```
+
+---
+
+### Example 3
+
+```
+nums = [3,1,2]
+```
+
+```
+n = 3
+
+bit_length(3)=2
+
+1<<2 = 4
+
+return 4
+```
+
+---
+
+### Example 4
+
+```
+nums = [1,2,3,4,5]
+```
+
+```
+n = 5
+
+bit_length=3
+
+1<<3 = 8
+
+return 8
+```
+
+---
+
+# Complexity Comparison
+
+| Approach    | Time      | Space                        |
+| ----------- | --------- | ---------------------------- |
+| Brute Force | **O(n³)** | **O(U)** (unique XOR values) |
+| Optimal     | **O(1)**  | **O(1)**                     |
+
+where `U` is the number of distinct XOR results.
+
+---
+
+# Key Pattern to Remember
+
+When the array is a **permutation of `1...n`**:
+
+* `n = 1` → answer = **1**
+* `n = 2` → answer = **2**
+* `n ≥ 3` → answer = **2^(bit_length(n))**
+
+So the entire optimal solution reduces to:
+
+```python
+if n == 1:
+    return 1
+if n == 2:
+    return 2
+return 1 << n.bit_length()
+```
+
+This runs in constant time and constant space.
