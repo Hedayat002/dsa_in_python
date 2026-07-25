@@ -1,0 +1,774 @@
+# 3536. Maximum Product of Two Digits (Easy)
+
+## Problem Explanation
+
+You are given a positive integer `n`.
+
+Your task is to find the **maximum product** that can be obtained by multiplying **any two digits** of `n`.
+
+**Note:**
+
+* You can use the same digit twice **only if it appears twice** in the number.
+* We only multiply **two different positions**, not one digit with itself unless it exists multiple times.
+
+### Example
+
+```
+n = 124
+
+Digits = [1,2,4]
+
+Possible products:
+1 × 2 = 2
+1 × 4 = 4
+2 × 4 = 8
+
+Maximum = 8
+```
+
+---
+
+# Brute Force Solution
+
+## Brute Force Logic
+
+### Step 1
+
+Extract every digit from the number.
+
+There are many ways:
+
+* Convert integer to string
+* Convert integer to list
+* Extract using `%10`
+
+For beginners, string conversion is easiest.
+
+```
+n = 124
+
+str(n) = "124"
+
+digits = [1,2,4]
+```
+
+---
+
+### Step 2
+
+Check every possible pair.
+
+```
+for i
+    for j = i+1
+
+        product = digits[i] * digits[j]
+
+        answer = max(answer, product)
+```
+
+Since every pair is checked, we are guaranteed to find the maximum product.
+
+---
+
+# Brute Force Code (Python)
+
+```python
+class Solution:
+    def maxProduct(self, n: int) -> int:
+        digits = [int(ch) for ch in str(n)]
+
+        ans = 0
+
+        for i in range(len(digits)):
+            for j in range(i + 1, len(digits)):
+                ans = max(ans, digits[i] * digits[j])
+
+        return ans
+```
+
+---
+
+# Code Explanation
+
+### Convert number into digits
+
+```python
+digits = [int(ch) for ch in str(n)]
+```
+
+Example
+
+```
+n = 124
+
+str(n)
+↓
+
+"124"
+
+↓
+
+digits = [1,2,4]
+```
+
+---
+
+Initialize answer
+
+```python
+ans = 0
+```
+
+---
+
+Outer loop chooses first digit.
+
+```python
+for i in range(len(digits)):
+```
+
+---
+
+Inner loop chooses second digit.
+
+```python
+for j in range(i + 1, len(digits)):
+```
+
+Using `i+1` avoids
+
+* same position
+* duplicate pairs
+
+Example
+
+```
+(1,2)
+
+Don't check
+
+(2,1)
+```
+
+---
+
+Calculate product
+
+```python
+digits[i] * digits[j]
+```
+
+---
+
+Store maximum
+
+```python
+ans = max(ans, digits[i] * digits[j])
+```
+
+---
+
+Return answer
+
+```python
+return ans
+```
+
+---
+
+# Full Dry Run (Brute Force)
+
+## Input
+
+```
+n = 124
+```
+
+Convert
+
+```
+digits = [1,2,4]
+
+ans = 0
+```
+
+---
+
+### First iteration
+
+```
+i = 0
+
+digit = 1
+```
+
+#### j = 1
+
+```
+2
+
+product = 1×2 = 2
+
+ans = max(0,2)
+
+ans = 2
+```
+
+---
+
+#### j = 2
+
+```
+4
+
+product = 1×4 = 4
+
+ans = max(2,4)
+
+ans = 4
+```
+
+---
+
+### Second iteration
+
+```
+i = 1
+
+digit = 2
+```
+
+#### j = 2
+
+```
+digit = 4
+
+product = 8
+
+ans = max(4,8)
+
+ans = 8
+```
+
+---
+
+### Third iteration
+
+```
+i = 2
+
+No j left
+```
+
+Return
+
+```
+8
+```
+
+---
+
+# Brute Force Complexity
+
+### Time Complexity
+
+Suppose there are **d digits**.
+
+Nested loops check every pair.
+
+```
+O(d²)
+```
+
+Since
+
+```
+n ≤ 10^9
+
+Maximum digits = 10
+```
+
+Practically constant, but algorithmically
+
+```
+O(d²)
+```
+
+---
+
+### Space Complexity
+
+Digits list stores every digit.
+
+```
+O(d)
+```
+
+---
+
+# Optimal Solution
+
+## Main Observation
+
+To get the **maximum product**, we only need the **largest digit** and the **second largest digit**.
+
+Why?
+
+Suppose digits are
+
+```
+[1,2,4,8,5]
+```
+
+Largest two digits
+
+```
+8
+5
+```
+
+Maximum product
+
+```
+8 × 5 = 40
+```
+
+Any smaller digit can only decrease the product.
+
+So instead of checking every pair, simply keep track of:
+
+* largest digit
+* second largest digit
+
+while scanning the number once.
+
+---
+
+# Optimal Logic
+
+Maintain
+
+```
+largest
+second
+```
+
+Initially
+
+```
+largest = -1
+second = -1
+```
+
+Extract digits one by one using
+
+```
+digit = n % 10
+```
+
+If current digit is larger than `largest`
+
+```
+second = largest
+largest = digit
+```
+
+Otherwise, if it is larger than `second`
+
+```
+second = digit
+```
+
+Continue until the number becomes zero.
+
+Finally,
+
+```
+largest × second
+```
+
+is the answer.
+
+---
+
+# Optimal Code
+
+```python
+class Solution:
+    def maxProduct(self, n: int) -> int:
+        largest = -1
+        second = -1
+
+        while n > 0:
+            digit = n % 10
+
+            if digit > largest:
+                second = largest
+                largest = digit
+            elif digit > second:
+                second = digit
+
+            n //= 10
+
+        ans = largest * second
+        return ans
+```
+
+---
+
+# Code Explanation
+
+Initialize largest digits.
+
+```python
+largest = -1
+second = -1
+```
+
+We use `-1` because digits are between `0` and `9`.
+
+---
+
+Extract last digit.
+
+```python
+digit = n % 10
+```
+
+Example
+
+```
+124 % 10 = 4
+```
+
+---
+
+If current digit is the largest.
+
+```python
+if digit > largest:
+```
+
+Move old largest into second.
+
+```python
+second = largest
+largest = digit
+```
+
+Example
+
+Current
+
+```
+largest = 5
+second = 3
+
+digit = 8
+```
+
+Update
+
+```
+second = 5
+largest = 8
+```
+
+---
+
+Otherwise
+
+```python
+elif digit > second:
+```
+
+Only second largest changes.
+
+Example
+
+```
+largest = 8
+second = 3
+
+digit = 6
+```
+
+Update
+
+```
+largest = 8
+second = 6
+```
+
+---
+
+Remove last digit.
+
+```python
+n //= 10
+```
+
+Example
+
+```
+124
+
+↓
+
+12
+
+↓
+
+1
+
+↓
+
+0
+```
+
+---
+
+Return answer.
+
+```python
+ans = largest * second
+return ans
+```
+
+---
+
+# Full Dry Run (Optimal)
+
+## Input
+
+```
+n = 124
+```
+
+Initially
+
+```
+largest = -1
+second = -1
+```
+
+---
+
+### Iteration 1
+
+```
+digit = 124 % 10 = 4
+```
+
+```
+4 > -1
+
+second = -1
+largest = 4
+```
+
+State
+
+```
+largest = 4
+second = -1
+```
+
+Remove digit
+
+```
+n = 12
+```
+
+---
+
+### Iteration 2
+
+```
+digit = 12 % 10 = 2
+```
+
+```
+2 > largest?
+
+2 > 4
+
+No
+```
+
+Check second
+
+```
+2 > -1
+
+Yes
+```
+
+Update
+
+```
+second = 2
+```
+
+State
+
+```
+largest = 4
+second = 2
+```
+
+Remove
+
+```
+n = 1
+```
+
+---
+
+### Iteration 3
+
+```
+digit = 1
+```
+
+Check
+
+```
+1 > 4
+
+No
+```
+
+Check second
+
+```
+1 > 2
+
+No
+```
+
+Nothing changes.
+
+State
+
+```
+largest = 4
+second = 2
+```
+
+Remove
+
+```
+n = 0
+```
+
+Loop ends.
+
+---
+
+Return
+
+```
+largest × second
+
+4 × 2
+
+= 8
+```
+
+---
+
+# Another Dry Run
+
+## Input
+
+```
+n = 98792
+```
+
+Digits processed from right to left:
+
+| Current Digit | largest | second |
+| ------------- | ------- | ------ |
+| 2             | 2       | -1     |
+| 9             | 9       | 2      |
+| 7             | 9       | 7      |
+| 8             | 9       | 8      |
+| 9             | 9       | 9      |
+
+Return
+
+```
+9 × 9 = 81
+```
+
+Notice that the second `9` is used because it appears twice in the number.
+
+---
+
+# Optimal Complexity
+
+### Time Complexity
+
+Suppose the number has **d digits**.
+
+We visit each digit exactly once.
+
+```
+O(d)
+```
+
+---
+
+### Space Complexity
+
+We only store
+
+* `largest`
+* `second`
+* `digit`
+
+No extra list or array is created.
+
+```
+O(1)
+```
+
+---
+
+# Complexity Comparison
+
+| Approach    | Time  | Space |
+| ----------- | ----- | ----- |
+| Brute Force | O(d²) | O(d)  |
+| Optimal     | O(d)  | O(1)  |
+
+---
+
+# Pattern to Remember
+
+This problem follows the **"Track Largest and Second Largest While Traversing"** pattern.
+
+Whenever a problem asks for:
+
+* largest two numbers,
+* maximum product of two values,
+* top two elements,
+
+you can often solve it in **one pass** by maintaining:
+
+```python
+largest = -1
+second = -1
+
+for value in values:
+    if value > largest:
+        second = largest
+        largest = value
+    elif value > second:
+        second = value
+```
+
+This avoids sorting (`O(d log d)`) or checking every pair (`O(d²)`), giving an optimal **O(d)** solution with **O(1)** extra space.
+
