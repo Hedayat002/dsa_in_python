@@ -1,0 +1,897 @@
+# 28. Maximum Product of Three Numbers (LeetCode)
+
+## Problem Statement
+
+Given an integer array `nums`, choose **exactly three numbers** such that their product is maximum and return that product.
+
+### Example 1
+
+```text
+Input: nums = [1,2,3]
+Output: 6
+```
+
+### Example 2
+
+```text
+Input: nums = [1,2,3,4]
+Output: 24
+```
+
+### Example 3
+
+```text
+Input: nums = [-1,-2,-3]
+Output: -6
+```
+
+---
+
+# Brute Force Solution
+
+## Brute Force Logic
+
+The simplest idea is:
+
+* Try every possible combination of 3 numbers.
+* Calculate their product.
+* Keep updating the maximum product.
+
+Since we don't know which three numbers produce the largest product, we simply check all possibilities.
+
+### Steps
+
+For every index `i`
+
+* For every index `j > i`
+
+  * For every index `k > j`
+
+    * Compute
+
+      `nums[i] * nums[j] * nums[k]`
+
+    * Update answer if product is larger.
+
+---
+
+## Brute Force Code
+
+```python
+from typing import List
+
+class Solution:
+    def maximumProduct(self, nums: List[int]) -> int:
+
+        n = len(nums)
+        ans = float('-inf')
+
+        for i in range(n):
+            for j in range(i + 1, n):
+                for k in range(j + 1, n):
+
+                    product = nums[i] * nums[j] * nums[k]
+                    ans = max(ans, product)
+
+        return ans
+```
+
+---
+
+## Code Explanation
+
+```python
+ans = float('-inf')
+```
+
+Initially maximum product is negative infinity.
+
+---
+
+Outer loop selects first number.
+
+```python
+for i in range(n):
+```
+
+---
+
+Middle loop selects second number.
+
+```python
+for j in range(i + 1, n):
+```
+
+---
+
+Inner loop selects third number.
+
+```python
+for k in range(j + 1, n):
+```
+
+---
+
+Compute product.
+
+```python
+product = nums[i] * nums[j] * nums[k]
+```
+
+---
+
+Update answer.
+
+```python
+ans = max(ans, product)
+```
+
+---
+
+Finally return answer.
+
+```python
+return ans
+```
+
+---
+
+# Brute Force Dry Run
+
+Example
+
+```text
+nums = [1,2,3,4]
+```
+
+Possible triples
+
+### (1,2,3)
+
+Product
+
+```
+1×2×3 = 6
+```
+
+Maximum = 6
+
+---
+
+### (1,2,4)
+
+```
+1×2×4 = 8
+```
+
+Maximum = 8
+
+---
+
+### (1,3,4)
+
+```
+1×3×4 = 12
+```
+
+Maximum = 12
+
+---
+
+### (2,3,4)
+
+```
+2×3×4 = 24
+```
+
+Maximum = 24
+
+Return
+
+```
+24
+```
+
+---
+
+# Can We Do Better?
+
+Yes.
+
+Checking every combination takes
+
+```
+O(N³)
+```
+
+which is too slow for large arrays.
+
+We need to observe a pattern.
+
+---
+
+# Important Observation
+
+After sorting the array,
+
+Suppose
+
+```text
+[-10,-8,-5,1,3,5]
+```
+
+There are only **two possible candidates** for the maximum product.
+
+## Case 1
+
+Take the three largest numbers.
+
+```
+5 × 3 × 1
+```
+
+---
+
+## Case 2
+
+Take the two smallest numbers and the largest number.
+
+```
+(-10) × (-8) × 5
+```
+
+Because
+
+```
+Negative × Negative = Positive
+```
+
+Sometimes two large negative numbers create a much bigger positive product.
+
+Example
+
+```text
+[-100,-99,1,2,3]
+```
+
+Three largest
+
+```
+3×2×1 = 6
+```
+
+Two smallest + largest
+
+```
+(-100)×(-99)×3 = 29700
+```
+
+Huge difference.
+
+Therefore answer is always
+
+```
+max(
+largest1 × largest2 × largest3,
+smallest1 × smallest2 × largest1
+)
+```
+
+---
+
+# Better (Sorting) Solution
+
+## Logic
+
+Sort the array.
+
+After sorting,
+
+Compute
+
+### Option 1
+
+Product of last three numbers.
+
+### Option 2
+
+Product of first two numbers and last number.
+
+Return maximum.
+
+---
+
+## Code
+
+```python
+from typing import List
+
+class Solution:
+    def maximumProduct(self, nums: List[int]) -> int:
+
+        # Sort array
+        nums.sort()
+
+        # Three largest numbers
+        option1 = nums[-1] * nums[-2] * nums[-3]
+
+        # Two smallest + largest
+        option2 = nums[0] * nums[1] * nums[-1]
+
+        return max(option1, option2)
+```
+
+---
+
+## Code Explanation
+
+### Sort
+
+```python
+nums.sort()
+```
+
+Example
+
+```
+Before
+
+[4,-5,2,-8,6]
+
+After
+
+[-8,-5,2,4,6]
+```
+
+---
+
+### Option 1
+
+```python
+option1 = nums[-1] * nums[-2] * nums[-3]
+```
+
+Take
+
+Largest
+
+```
+6
+```
+
+Second largest
+
+```
+4
+```
+
+Third largest
+
+```
+2
+```
+
+Product
+
+```
+6×4×2
+```
+
+---
+
+### Option 2
+
+```python
+option2 = nums[0] * nums[1] * nums[-1]
+```
+
+Take
+
+```
+-8
+-5
+6
+```
+
+Product
+
+```
+(-8)×(-5)×6
+```
+
+---
+
+Finally
+
+```python
+return max(option1, option2)
+```
+
+---
+
+# Dry Run (Sorting Solution)
+
+Example
+
+```text
+nums = [-10,-10,5,2]
+```
+
+Sort
+
+```
+[-10,-10,2,5]
+```
+
+Option 1
+
+```
+5×2×(-10)
+
+= -100
+```
+
+Option 2
+
+```
+(-10)×(-10)×5
+
+= 500
+```
+
+Maximum
+
+```
+500
+```
+
+Return
+
+```
+500
+```
+
+---
+
+# Can We Do Even Better?
+
+Yes.
+
+Sorting itself costs
+
+```
+O(N log N)
+```
+
+We actually don't need the whole sorted array.
+
+We only need
+
+* largest number
+* second largest
+* third largest
+
+and
+
+* smallest number
+* second smallest
+
+These five numbers are enough.
+
+So we can find them in **one traversal**.
+
+---
+
+# Optimal Solution (Single Pass)
+
+## Logic
+
+Maintain
+
+```
+max1
+max2
+max3
+```
+
+Largest three numbers.
+
+Also maintain
+
+```
+min1
+min2
+```
+
+Smallest two numbers.
+
+Update them while traversing the array once.
+
+Finally compute
+
+```
+option1 = max1 × max2 × max3
+
+option2 = min1 × min2 × max1
+
+answer = max(option1, option2)
+```
+
+---
+
+## Optimal Code
+
+```python
+from typing import List
+
+class Solution:
+    def maximumProduct(self, nums: List[int]) -> int:
+
+        # Three largest numbers
+        max1 = max2 = max3 = float('-inf')
+
+        # Two smallest numbers
+        min1 = min2 = float('inf')
+
+        for num in nums:
+
+            # Update largest three numbers
+            if num > max1:
+                max3 = max2
+                max2 = max1
+                max1 = num
+
+            elif num > max2:
+                max3 = max2
+                max2 = num
+
+            elif num > max3:
+                max3 = num
+
+            # Update smallest two numbers
+            if num < min1:
+                min2 = min1
+                min1 = num
+
+            elif num < min2:
+                min2 = num
+
+        option1 = max1 * max2 * max3
+        option2 = min1 * min2 * max1
+
+        return max(option1, option2)
+```
+
+---
+
+# Code Explanation
+
+### Initialization
+
+```python
+max1 = max2 = max3 = float('-inf')
+```
+
+Stores
+
+```
+Largest
+Second Largest
+Third Largest
+```
+
+---
+
+```python
+min1 = min2 = float('inf')
+```
+
+Stores
+
+```
+Smallest
+Second Smallest
+```
+
+---
+
+### Updating Largest Numbers
+
+Suppose
+
+```
+Current
+
+max1=9
+max2=7
+max3=5
+```
+
+New number
+
+```
+10
+```
+
+Then
+
+```
+max3 = 7
+max2 = 9
+max1 = 10
+```
+
+Largest numbers remain correctly ordered.
+
+---
+
+Suppose new number
+
+```
+8
+```
+
+Then
+
+```
+max1 = 9
+max2 = 8
+max3 = 7
+```
+
+---
+
+Suppose new number
+
+```
+6
+```
+
+Then
+
+```
+max1 = 9
+max2 = 8
+max3 = 6
+```
+
+---
+
+### Updating Smallest Numbers
+
+Current
+
+```
+min1 = -8
+min2 = -5
+```
+
+New number
+
+```
+-10
+```
+
+Then
+
+```
+min2 = -8
+min1 = -10
+```
+
+---
+
+# Complete Dry Run
+
+Example
+
+```text
+nums = [-10,-10,5,2]
+```
+
+Initial
+
+```
+max1 = -∞
+max2 = -∞
+max3 = -∞
+
+min1 = +∞
+min2 = +∞
+```
+
+---
+
+## Iteration 1
+
+```
+num = -10
+```
+
+Largest
+
+```
+max1 = -10
+max2 = -∞
+max3 = -∞
+```
+
+Smallest
+
+```
+min1 = -10
+min2 = +∞
+```
+
+---
+
+## Iteration 2
+
+```
+num = -10
+```
+
+Largest
+
+```
+max1 = -10
+max2 = -10
+max3 = -∞
+```
+
+Smallest
+
+```
+min1 = -10
+min2 = -10
+```
+
+---
+
+## Iteration 3
+
+```
+num = 5
+```
+
+Largest
+
+```
+max1 = 5
+max2 = -10
+max3 = -10
+```
+
+Smallest
+
+```
+min1 = -10
+min2 = -10
+```
+
+---
+
+## Iteration 4
+
+```
+num = 2
+```
+
+Largest
+
+```
+max1 = 5
+max2 = 2
+max3 = -10
+```
+
+Smallest
+
+```
+min1 = -10
+min2 = -10
+```
+
+---
+
+Compute
+
+Option 1
+
+```
+5 × 2 × (-10)
+
+= -100
+```
+
+Option 2
+
+```
+(-10) × (-10) × 5
+
+= 500
+```
+
+Return
+
+```
+500
+```
+
+---
+
+# Why Does the Optimal Algorithm Work?
+
+The maximum product of three numbers can only come from one of these two combinations:
+
+1. **The three largest values** (`max1 × max2 × max3`).
+2. **The two smallest values (possibly large negatives) and the largest value** (`min1 × min2 × max1`).
+
+No other combination can produce a larger product:
+
+* Replacing one of the three largest positive numbers with a smaller positive number decreases the product.
+* If using negative numbers, only the two most negative values can maximize the positive product when multiplied together.
+
+Thus checking these two cases is sufficient.
+
+---
+
+# Time Complexity
+
+## Brute Force
+
+Three nested loops
+
+```
+O(N³)
+```
+
+Space
+
+```
+O(1)
+```
+
+---
+
+## Sorting Solution
+
+Sorting
+
+```
+O(N log N)
+```
+
+Extra Space
+
+```
+O(1)
+```
+
+(Python's built-in sort uses additional internal memory, but in interview analysis it's commonly treated as `O(1)` auxiliary space or implementation-dependent.)
+
+---
+
+## Optimal Solution
+
+Single traversal
+
+```
+O(N)
+```
+
+Extra Space
+
+```
+O(1)
+```
+
+---
+
+# Summary
+
+| Approach           | Time           | Space                                          | Idea                                                                                                        |
+| ------------------ | -------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Brute Force        | **O(N³)**      | **O(1)**                                       | Check every combination of three numbers.                                                                   |
+| Sorting            | **O(N log N)** | **O(1)** (auxiliary, implementation-dependent) | Sort, then compare the product of the three largest with the product of the two smallest and the largest.   |
+| Optimal (One Pass) | **O(N)**       | **O(1)**                                       | Track the three largest and two smallest numbers in a single pass, then compare the two candidate products. |
