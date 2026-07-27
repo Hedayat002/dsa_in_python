@@ -1,0 +1,676 @@
+# 1464. Maximum Product of Two Elements in an Array (LeetCode - Easy)
+
+## Problem Understanding
+
+You are given an integer array `nums`.
+
+You have to choose **two different elements** and calculate:
+
+[
+(nums[i]-1) \times (nums[j]-1)
+]
+
+Your task is to return the **maximum possible product**.
+
+### Example
+
+```text
+nums = [3,4,5,2]
+
+Possible pairs:
+
+(3,4) → (2×3)=6
+(3,5) → (2×4)=8
+(3,2) → (2×1)=2
+(4,5) → (3×4)=12   ← Maximum
+(4,2) → (3×1)=3
+(5,2) → (4×1)=4
+
+Answer = 12
+```
+
+---
+
+# Brute Force Solution
+
+## Brute Force Logic
+
+The simplest idea is:
+
+* Check every possible pair.
+* Compute
+
+```text
+(nums[i]-1) * (nums[j]-1)
+```
+
+* Keep updating the maximum answer.
+
+Since every pair is checked, the answer is guaranteed to be correct.
+
+---
+
+## Brute Force Algorithm
+
+1. Initialize `ans = 0`
+2. Traverse first element using `i`
+3. Traverse second element using `j = i+1`
+4. Calculate
+
+```text
+product = (nums[i]-1)*(nums[j]-1)
+```
+
+5. Update maximum.
+6. Return answer.
+
+---
+
+## Brute Force Code (Python)
+
+```python
+from typing import List
+
+class Solution:
+    def maxProduct(self, nums: List[int]) -> int:
+
+        ans = 0
+
+        n = len(nums)
+
+        for i in range(n):
+            for j in range(i + 1, n):
+
+                product = (nums[i] - 1) * (nums[j] - 1)
+
+                ans = max(ans, product)
+
+        return ans
+```
+
+---
+
+# Code Explanation
+
+```python
+ans = 0
+```
+
+Stores maximum product.
+
+---
+
+```python
+n = len(nums)
+```
+
+Length of array.
+
+---
+
+```python
+for i in range(n):
+```
+
+Choose first element.
+
+---
+
+```python
+for j in range(i+1, n):
+```
+
+Choose second element.
+
+Only pairs are considered once.
+
+---
+
+```python
+product = (nums[i]-1)*(nums[j]-1)
+```
+
+Calculate required value.
+
+---
+
+```python
+ans = max(ans, product)
+```
+
+Update maximum.
+
+---
+
+```python
+return ans
+```
+
+Return final answer.
+
+---
+
+# Dry Run (Brute Force)
+
+### Input
+
+```text
+nums = [3,4,5,2]
+```
+
+Initially
+
+```text
+ans = 0
+```
+
+### i = 0
+
+### j = 1
+
+```text
+(3-1)*(4-1)
+=2*3
+=6
+
+ans=6
+```
+
+---
+
+### j = 2
+
+```text
+(3-1)*(5-1)
+
+=2*4
+=8
+
+ans=8
+```
+
+---
+
+### j = 3
+
+```text
+(3-1)*(2-1)
+
+=2*1
+=2
+
+ans=8
+```
+
+---
+
+### i = 1
+
+### j = 2
+
+```text
+(4-1)*(5-1)
+
+=3*4
+=12
+
+ans=12
+```
+
+---
+
+### j = 3
+
+```text
+3*1
+
+=3
+
+ans=12
+```
+
+---
+
+### i = 2
+
+### j = 3
+
+```text
+4*1
+
+=4
+
+ans=12
+```
+
+---
+
+Finish
+
+```text
+Return 12
+```
+
+---
+
+# Brute Force Complexity
+
+### Time Complexity
+
+There are
+
+```text
+n(n-1)/2
+```
+
+pairs.
+
+So,
+
+[
+O(n^2)
+]
+
+---
+
+### Space Complexity
+
+Only one variable is used.
+
+[
+O(1)
+]
+
+---
+
+# Optimal Solution 1 (Sorting) ✅ Your Solution
+
+## Observation
+
+The expression is
+
+```text
+(nums[i]-1)*(nums[j]-1)
+```
+
+Subtracting `1` from every element **does not change their relative order**.
+
+Therefore, the largest product will always come from the **two largest numbers**.
+
+So,
+
+1. Sort the array.
+2. Take last two elements.
+3. Compute the answer.
+
+---
+
+## Algorithm
+
+1. Sort array.
+2. Pick largest element.
+3. Pick second largest element.
+4. Return product.
+
+---
+
+## Optimal Code (Sorting)
+
+```python
+from typing import List
+
+class Solution:
+    def maxProduct(self, nums: List[int]) -> int:
+
+        nums.sort()
+
+        return (nums[-1] - 1) * (nums[-2] - 1)
+```
+
+---
+
+# Code Explanation
+
+```python
+nums.sort()
+```
+
+Sorts array in ascending order.
+
+Example
+
+```text
+[3,4,5,2]
+
+↓
+
+[2,3,4,5]
+```
+
+---
+
+```python
+nums[-1]
+```
+
+Largest number.
+
+```text
+5
+```
+
+---
+
+```python
+nums[-2]
+```
+
+Second largest.
+
+```text
+4
+```
+
+---
+
+```python
+return (nums[-1]-1)*(nums[-2]-1)
+```
+
+```text
+(5-1)*(4-1)
+
+=4×3
+
+=12
+```
+
+Return answer.
+
+---
+
+# Dry Run (Sorting)
+
+Input
+
+```text
+nums = [3,4,5,2]
+```
+
+Sort
+
+```text
+[2,3,4,5]
+```
+
+Largest
+
+```text
+5
+```
+
+Second Largest
+
+```text
+4
+```
+
+Answer
+
+```text
+(5-1)*(4-1)
+
+=4×3
+
+=12
+```
+
+Return
+
+```text
+12
+```
+
+---
+
+# Why Does This Work?
+
+Suppose
+
+```text
+a ≥ b ≥ c ≥ d
+```
+
+Then
+
+```text
+(a-1) ≥ (b-1) ≥ (c-1) ≥ (d-1)
+```
+
+Since all values are non-negative (`nums[i] >= 1`), multiplying the two largest adjusted values always gives the maximum product. Thus, choosing the two largest numbers is optimal.
+
+---
+
+# Optimal Solution 2 (Best - One Pass, No Sorting)
+
+We don't actually need to sort.
+
+We only need the:
+
+* Largest element
+* Second largest element
+
+Find both in one traversal.
+
+---
+
+## Logic
+
+Maintain:
+
+```text
+first  = largest
+second = second largest
+```
+
+For every number:
+
+* If it's larger than `first`, shift `first` to `second`.
+* Otherwise, if it's larger than `second`, update `second`.
+
+Finally,
+
+```text
+(first-1)*(second-1)
+```
+
+---
+
+## One-Pass Code (Most Optimal)
+
+```python
+from typing import List
+
+class Solution:
+    def maxProduct(self, nums: List[int]) -> int:
+
+        first = 0
+        second = 0
+
+        for num in nums:
+
+            if num >= first:
+                second = first
+                first = num
+
+            elif num > second:
+                second = num
+
+        return (first - 1) * (second - 1)
+```
+
+---
+
+# Code Explanation
+
+```python
+first = 0
+second = 0
+```
+
+Store the two largest numbers.
+
+---
+
+For each `num`:
+
+```python
+if num >= first:
+```
+
+A new largest number is found.
+
+Move current `first` to `second`.
+
+```python
+second = first
+first = num
+```
+
+---
+
+Otherwise,
+
+```python
+elif num > second:
+```
+
+Update only the second largest.
+
+---
+
+Finally,
+
+```python
+return (first - 1) * (second - 1)
+```
+
+Return the required product.
+
+---
+
+# Dry Run (One Pass)
+
+Input
+
+```text
+nums = [3,4,5,2]
+```
+
+Initially
+
+```text
+first = 0
+second = 0
+```
+
+---
+
+### num = 3
+
+```text
+3 >= 0
+
+second = 0
+first = 3
+```
+
+```text
+first=3
+second=0
+```
+
+---
+
+### num = 4
+
+```text
+4 >= 3
+
+second = 3
+first = 4
+```
+
+```text
+first=4
+second=3
+```
+
+---
+
+### num = 5
+
+```text
+5 >= 4
+
+second = 4
+first = 5
+```
+
+```text
+first=5
+second=4
+```
+
+---
+
+### num = 2
+
+```text
+2 > second?
+
+2 > 4
+
+No
+```
+
+State remains
+
+```text
+first=5
+second=4
+```
+
+Answer
+
+```text
+(5-1)*(4-1)
+
+=4×3
+
+=12
+```
+
+Return
+
+```text
+12
+```
+
+---
+
+# Complexity Comparison
+
+| Approach                | Time Complexity | Space Complexity                                |
+| ----------------------- | --------------- | ----------------------------------------------- |
+| Brute Force             | **O(n²)**       | **O(1)**                                        |
+| Sorting (Your Solution) | **O(n log n)**  | **O(1)** (ignoring sort implementation details) |
+| One-Pass (Most Optimal) | **O(n)**        | **O(1)**                                        |
+
+---
+
+# Key Interview Takeaways
+
+* **Brute Force:** Check every pair to guarantee the maximum product.
+* **Sorting:** The maximum product comes from the two largest numbers because subtracting `1` preserves their order.
+* **One-Pass:** Keep track of the largest and second-largest elements while scanning the array once. This achieves the optimal **O(n)** time and **O(1)** extra space.
