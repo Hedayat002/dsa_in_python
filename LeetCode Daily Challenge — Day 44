@@ -1,0 +1,851 @@
+# 3517. Smallest Palindromic Rearrangement I (LeetCode 3517)
+
+**Difficulty:** Medium
+
+---
+
+# Problem Statement
+
+You are given a **palindromic string** `s`.
+
+Your task is to rearrange its characters so that:
+
+1. It is still a palindrome.
+2. Among all possible palindromes, return the **lexicographically smallest** one.
+
+---
+
+## Example
+
+### Example 1
+
+```text
+Input:
+s = "babab"
+
+Output:
+"abbba"
+```
+
+Possible palindromes are
+
+```
+babab
+abbba
+```
+
+Lexicographically,
+
+```
+abbba < babab
+```
+
+So answer is
+
+```
+abbba
+```
+
+---
+
+# Observation
+
+Since the given string is **already a palindrome**, an important property exists.
+
+For every character,
+
+* all frequencies are even
+* OR exactly one character has an odd frequency.
+
+This guarantees another palindrome can always be formed.
+
+---
+
+# Brute Force Solution
+
+## Idea
+
+Generate **every permutation** of the string.
+
+For each permutation:
+
+* Check if it is palindrome.
+* Keep the smallest lexicographically.
+
+Finally return it.
+
+---
+
+## Why does this work?
+
+Suppose
+
+```
+s = "babab"
+```
+
+Permutations are
+
+```
+abbab
+ababb
+abbba   ← palindrome
+babab   ← palindrome
+...
+```
+
+Among all palindromes
+
+```
+abbba
+babab
+```
+
+Choose
+
+```
+abbba
+```
+
+---
+
+# Brute Force Algorithm
+
+```
+Generate all permutations
+
+For every permutation
+
+    if palindrome
+
+         answer = minimum(answer, permutation)
+
+Return answer
+```
+
+---
+
+# Brute Force Code (Python)
+
+```python
+from itertools import permutations
+
+class Solution:
+    def smallestPalindrome(self, s: str) -> str:
+        ans = None
+
+        for p in set(permutations(s)):
+            cur = "".join(p)
+
+            if cur == cur[::-1]:
+                if ans is None or cur < ans:
+                    ans = cur
+
+        return ans
+```
+
+---
+
+# Code Explanation
+
+```
+Generate every permutation
+
+↓
+
+Convert tuple into string
+
+↓
+
+Check palindrome
+
+↓
+
+Update smallest answer
+
+↓
+
+Return answer
+```
+
+---
+
+# Dry Run
+
+```
+s = "aba"
+```
+
+Permutations
+
+```
+aba   palindrome
+aab
+baa
+baa
+aba
+```
+
+Smallest palindrome
+
+```
+aba
+```
+
+Return
+
+```
+aba
+```
+
+---
+
+# Complexity
+
+Generating permutations
+
+```
+Time :
+O(n! × n)
+
+Space :
+O(n!)
+```
+
+Impossible for
+
+```
+n = 100000
+```
+
+So brute force is only for understanding.
+
+---
+
+# Better Solution (Your Solution)
+
+```python
+class Solution:
+    def smallestPalindrome(self, s: str) -> str:
+        s = list(s)
+
+        n = len(s)
+        mid = n // 2
+
+        s[:mid] = sorted(s[:mid])
+
+        for i in range(mid):
+            s[n - 1 - i] = s[i]
+
+        return "".join(s)
+```
+
+---
+
+# Why does this work?
+
+This solution uses one very important property.
+
+## Property
+
+The input string is **already a palindrome**.
+
+Example
+
+```
+daccad
+```
+
+Left half
+
+```
+dac
+```
+
+Right half
+
+```
+cad
+```
+
+Notice
+
+```
+Right half = reverse(left half)
+```
+
+If we rearrange only the **left half**, then simply mirror it to the right side.
+
+The palindrome property is automatically preserved.
+
+So we only need to make the **left half as small as possible**.
+
+The smallest arrangement is simply
+
+```
+sort(left half)
+```
+
+Then mirror it.
+
+---
+
+# Step-by-Step Logic
+
+Example
+
+```
+s = "daccad"
+```
+
+Length
+
+```
+6
+```
+
+Middle
+
+```
+mid = 3
+```
+
+Left half
+
+```
+dac
+```
+
+Sort it
+
+```
+acd
+```
+
+Now string becomes
+
+```
+acdcad
+```
+
+Mirror
+
+```
+Index 0 → 5
+
+a → a
+
+Index 1 → 4
+
+c → c
+
+Index 2 → 3
+
+d → d
+```
+
+Result
+
+```
+acddca
+```
+
+Smallest possible palindrome.
+
+---
+
+# Code Explanation
+
+## Step 1
+
+Convert into list
+
+```python
+s = list(s)
+```
+
+Because strings cannot be modified.
+
+---
+
+## Step 2
+
+```python
+mid = n // 2
+```
+
+Find middle.
+
+---
+
+## Step 3
+
+```python
+s[:mid] = sorted(s[:mid])
+```
+
+Sort only left half.
+
+Example
+
+```
+dac
+
+↓
+
+acd
+```
+
+---
+
+## Step 4
+
+Mirror
+
+```python
+for i in range(mid):
+    s[n-1-i] = s[i]
+```
+
+Example
+
+```
+a c d _ _ _
+
+↓
+
+a c d d c a
+```
+
+---
+
+## Step 5
+
+Return
+
+```python
+"".join(s)
+```
+
+---
+
+# Complete Dry Run (Better Solution)
+
+Input
+
+```
+s = "babab"
+```
+
+Convert
+
+```
+['b','a','b','a','b']
+```
+
+```
+n = 5
+mid = 2
+```
+
+Left half
+
+```
+['b','a']
+```
+
+Sort
+
+```
+['a','b']
+```
+
+Array becomes
+
+```
+a b b a b
+```
+
+Mirror
+
+```
+i = 0
+
+last = 4
+
+a → index 4
+
+a b b a a
+```
+
+```
+i = 1
+
+last = 3
+
+b → index 3
+
+a b b b a
+```
+
+Final
+
+```
+abbba
+```
+
+---
+
+# Why is this Correct?
+
+Original palindrome
+
+```
+Left + Middle + Reverse(Left)
+```
+
+If
+
+```
+Left = smallest possible
+```
+
+then
+
+```
+Left + Middle + Reverse(Left)
+```
+
+is automatically the lexicographically smallest palindrome because the leftmost differing character determines lexicographic order.
+
+---
+
+# Complexity (Better Solution)
+
+Sorting only half
+
+```
+Left size = n/2
+```
+
+Sorting
+
+```
+Time = O((n/2) log(n/2))
+      = O(n log n)
+```
+
+Mirroring
+
+```
+O(n)
+```
+
+Overall
+
+```
+Time = O(n log n)
+
+Space = O(n)
+```
+
+---
+
+# Optimal Solution (Frequency Counting)
+
+```python
+class Solution:
+    def smallestPalindrome(self, s: str) -> str:
+        freq = [0] * 26
+
+        # Count frequency
+        for ch in s:
+            freq[ord(ch) - ord('a')] += 1
+
+        left = []
+        middle = ""
+
+        # Build left half in lexicographical order
+        for i in range(26):
+            left.append(chr(i + ord('a')) * (freq[i] // 2))
+
+            if freq[i] % 2 == 1:
+                middle = chr(i + ord('a'))
+
+        left = "".join(left)
+
+        return left + middle + left[::-1]
+```
+
+---
+
+# Main Idea
+
+Instead of sorting, directly build the smallest left half using character frequencies.
+
+Since there are only **26 lowercase letters**, we process them in alphabetical order.
+
+---
+
+# Logic
+
+Example
+
+```
+s = "daccad"
+```
+
+Frequency
+
+| Character | Count |
+| --------- | ----: |
+| a         |     2 |
+| c         |     2 |
+| d         |     2 |
+
+Left half
+
+```
+a → 1
+
+c → 1
+
+d → 1
+```
+
+Left
+
+```
+acd
+```
+
+Middle
+
+```
+None
+```
+
+Reverse
+
+```
+dca
+```
+
+Final
+
+```
+acddca
+```
+
+---
+
+# Code Explanation
+
+### Step 1
+
+Count frequencies.
+
+```
+a : 2
+b : 3
+c : 0
+...
+```
+
+---
+
+### Step 2
+
+Build left half.
+
+```python
+freq[i] // 2
+```
+
+Because every palindrome places half the occurrences on the left and half on the right.
+
+Example
+
+```
+b : 5
+
+Left gets
+
+5//2 = 2
+```
+
+---
+
+### Step 3
+
+Find middle.
+
+```python
+if freq[i] % 2 == 1:
+```
+
+The odd-frequency character goes in the center.
+
+Example
+
+```
+b : 5
+
+Middle
+
+b
+```
+
+---
+
+### Step 4
+
+Mirror.
+
+```
+left[::-1]
+```
+
+Example
+
+```
+left
+
+acd
+
+↓
+
+reverse
+
+dca
+```
+
+---
+
+### Step 5
+
+Return
+
+```
+left + middle + reverse
+```
+
+---
+
+# Complete Dry Run (Optimal)
+
+Input
+
+```
+s = "babab"
+```
+
+Frequency
+
+```
+a = 2
+
+b = 3
+```
+
+Left
+
+```
+a → 1
+
+b → 1
+
+left = "ab"
+```
+
+Middle
+
+```
+b
+```
+
+Reverse
+
+```
+ba
+```
+
+Answer
+
+```
+ab
+
++
+
+b
+
++
+
+ba
+
+=
+
+abbba
+```
+
+---
+
+# Why is This Optimal?
+
+We iterate through the alphabet in sorted order (`a` to `z`). Appending `freq[i] // 2` copies of each character guarantees the left half is already the smallest possible lexicographically, without any sorting step. Mirroring that left half preserves the palindrome property.
+
+---
+
+# Complexity (Optimal)
+
+Counting frequencies
+
+```
+O(n)
+```
+
+Building the answer
+
+```
+O(n)
+```
+
+Loop over alphabet
+
+```
+26 iterations = O(1)
+```
+
+Overall
+
+```
+Time = O(n)
+
+Space = O(n)
+```
+
+(The output string itself requires `O(n)` space.)
+
+---
+
+# Comparison
+
+| Method                         | Time       | Space | Suitable for n = 100000? |
+| ------------------------------ | ---------- | ----- | ------------------------ |
+| Brute Force (all permutations) | O(n! × n)  | O(n!) | ❌ Impossible             |
+| Sort Left Half (Your Solution) | O(n log n) | O(n)  | ✅ Yes                    |
+| Frequency Counting (Optimal)   | **O(n)**   | O(n)  | ✅ Best                   |
+
+---
+
+# Why is the Frequency Solution Better?
+
+Your solution is elegant and takes advantage of the fact that the input is already a palindrome. However, it still performs a comparison-based sort on half of the string, costing **O(n log n)** time.
+
+The frequency-counting solution avoids sorting entirely:
+
+* Counting characters: **O(n)**
+* Processing 26 letters: **O(1)**
+* Building the palindrome: **O(n)**
+
+So its overall complexity is **O(n)**, making it asymptotically faster while using the same amount of extra space. It is the optimal approach for this problem because the alphabet size is fixed (26 lowercase English letters).
