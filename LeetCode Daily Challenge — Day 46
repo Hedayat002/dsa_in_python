@@ -1,0 +1,883 @@
+# 3014. Minimum Number of Pushes to Type Word I
+
+## Problem Understanding
+
+You are given a word containing **distinct lowercase letters**.
+
+There are **8 keys (2 to 9)** available.
+
+You are free to map letters to keys in **any way you want**.
+
+If a letter is
+
+* first on a key → **1 push**
+* second on a key → **2 pushes**
+* third on a key → **3 pushes**
+* ...
+
+Your task is to **design the mapping so that the total number of pushes is minimum**.
+
+---
+
+## Important Observation
+
+There are only **8 keys**.
+
+Therefore,
+
+* First **8 letters** can all be placed as first letters on different keys.
+
+  * Cost = 1 each
+
+* Next **8 letters**
+
+  * become second letters
+  * Cost = 2 each
+
+* Next **8 letters**
+
+  * Cost = 3 each
+
+* Remaining
+
+  * Cost = 4 each
+
+So the push cost depends **only on the position of assignment**, not on the character itself.
+
+---
+
+# Brute Force Solution (Idea 1)
+
+## Logic
+
+Suppose we actually simulate assigning letters to keys.
+
+Initially
+
+```
+Key2
+Key3
+Key4
+Key5
+Key6
+Key7
+Key8
+Key9
+```
+
+All keys are empty.
+
+Assign letters one by one.
+
+```
+First letter → Key2
+Second → Key3
+Third → Key4
+...
+Eighth → Key9
+```
+
+Now every key has one letter.
+
+For the 9th letter,
+
+again start from Key2.
+
+Since Key2 already has one letter,
+
+this becomes second position.
+
+Hence cost = 2.
+
+Continue similarly.
+
+This directly simulates the mapping.
+
+---
+
+## Code
+
+```python
+class Solution:
+    def minimumPushes(self, word: str) -> int:
+        if len(word) <= 8:
+            return len(word)
+
+        count = 0
+        mp = {}          # stores how many letters are already assigned to each key
+        assign = 2
+
+        for ch in word:
+
+            if assign > 9:
+                assign = 2
+
+            mp[assign] = mp.get(assign, 0) + 1
+
+            count += mp[assign]
+
+            assign += 1
+
+        return count
+```
+
+---
+
+# Code Explanation
+
+### Step 1
+
+```python
+if len(word) <= 8:
+    return len(word)
+```
+
+If there are at most 8 letters,
+
+each letter gets its own key.
+
+Every letter costs 1.
+
+---
+
+### Step 2
+
+```python
+count = 0
+```
+
+Stores final answer.
+
+---
+
+### Step 3
+
+```python
+mp = {}
+```
+
+Dictionary storing
+
+```
+Key → number of letters already assigned
+```
+
+Example
+
+```
+{
+2:2,
+3:1,
+4:3
+}
+```
+
+means
+
+```
+Key2 has 2 letters
+Key3 has 1 letter
+Key4 has 3 letters
+```
+
+---
+
+### Step 4
+
+```python
+assign = 2
+```
+
+Current key number.
+
+Starts from Key2.
+
+---
+
+### Step 5
+
+```python
+if assign > 9:
+    assign = 2
+```
+
+After Key9,
+
+start again from Key2.
+
+---
+
+### Step 6
+
+```python
+mp[assign] = mp.get(assign,0)+1
+```
+
+Increase number of letters on current key.
+
+Suppose
+
+Before
+
+```
+Key2 : 1 letter
+```
+
+After assigning another
+
+```
+Key2 : 2 letters
+```
+
+---
+
+### Step 7
+
+```python
+count += mp[assign]
+```
+
+The position becomes the push count.
+
+Example
+
+```
+First letter on key
+
+mp[2]=1
+
+cost=1
+```
+
+Second
+
+```
+mp[2]=2
+
+cost=2
+```
+
+Third
+
+```
+mp[2]=3
+
+cost=3
+```
+
+---
+
+### Step 8
+
+```python
+assign += 1
+```
+
+Move to next key.
+
+---
+
+# Full Dry Run
+
+Example
+
+```
+word = "xycdefghij"
+```
+
+Length = 10
+
+---
+
+Initially
+
+```
+count = 0
+
+assign = 2
+
+mp = {}
+```
+
+---
+
+### x
+
+Assign Key2
+
+```
+mp[2]=1
+
+cost=1
+
+count=1
+```
+
+Next key
+
+```
+assign=3
+```
+
+---
+
+### y
+
+Key3
+
+```
+mp[3]=1
+
+cost=1
+
+count=2
+```
+
+---
+
+### c
+
+Key4
+
+```
+cost=1
+
+count=3
+```
+
+---
+
+### d
+
+Key5
+
+```
+cost=1
+
+count=4
+```
+
+---
+
+### e
+
+Key6
+
+```
+count=5
+```
+
+---
+
+### f
+
+Key7
+
+```
+count=6
+```
+
+---
+
+### g
+
+Key8
+
+```
+count=7
+```
+
+---
+
+### h
+
+Key9
+
+```
+count=8
+```
+
+Now
+
+```
+assign=10
+
+reset to 2
+```
+
+---
+
+### i
+
+Key2 already contains one letter.
+
+```
+mp[2]=2
+
+cost=2
+
+count=10
+```
+
+---
+
+### j
+
+Key3
+
+```
+mp[3]=2
+
+cost=2
+
+count=12
+```
+
+Answer
+
+```
+12
+```
+
+Correct.
+
+---
+
+# Time Complexity
+
+Dictionary operations are O(1).
+
+Loop runs n times.
+
+```
+Time = O(n)
+```
+
+---
+
+# Space Complexity
+
+Dictionary stores at most
+
+```
+8 keys
+```
+
+```
+Space = O(1)
+```
+
+---
+
+# Better Solution (Solution 2)
+
+Instead of simulating keys,
+
+observe:
+
+Every letter appears exactly once.
+
+Since all letters are distinct,
+
+we only need to know **how many letters exist**, not which key they use.
+
+The solution creates a frequency array.
+
+---
+
+## Code
+
+```python
+class Solution:
+    def minimumPushes(self, word: str) -> int:
+        mp = [0] * 26
+
+        for ch in word:
+            mp[ord(ch) - ord('a')] = 1
+
+        mp.sort(reverse=True)
+
+        ans = 0
+
+        for i in range(26):
+            ans += mp[i] * ((i // 8) + 1)
+
+        return ans
+```
+
+---
+
+# Logic
+
+Since letters are distinct,
+
+frequency array becomes
+
+Example
+
+```
+word="abcde"
+
+[1,1,1,1,1,0,0,0....]
+```
+
+Sorting keeps all 1s first.
+
+```
+1 1 1 1 1 0 0 ...
+```
+
+Now assign costs by index.
+
+```
+Index 0-7  → cost 1
+
+Index 8-15 → cost 2
+
+Index 16-23 → cost 3
+
+Index 24-25 → cost 4
+```
+
+Formula
+
+```
+(i//8)+1
+```
+
+gives exactly those costs.
+
+---
+
+# Why Sort?
+
+Imagine frequencies weren't all 1 (this idea is needed for Problem 3016).
+
+Sorting ensures highest-frequency letters get the cheapest positions.
+
+For **3014**, all frequencies are already 1, so sorting is **not necessary**—it simply makes the approach resemble the generalized solution.
+
+---
+
+# Code Explanation
+
+Frequency array
+
+```
+mp = [0]*26
+```
+
+Mark letters
+
+```
+mp[ord(ch)-97]=1
+```
+
+Sort descending
+
+```
+1 1 1 1 1 0 0 ...
+```
+
+Loop over all letters
+
+```
+ans += mp[i] * ((i//8)+1)
+```
+
+If
+
+```
+mp[i]=0
+```
+
+it contributes nothing.
+
+If
+
+```
+mp[i]=1
+```
+
+add its assigned push cost.
+
+---
+
+# Dry Run
+
+Example
+
+```
+word="xycdefghij"
+```
+
+Frequency
+
+```
+c d e f g h i j x y
+
+all =1
+```
+
+After sorting
+
+```
+1 1 1 1 1 1 1 1 1 1 0...
+```
+
+Now
+
+| i | cost | freq | ans |
+| - | ---- | ---- | --- |
+| 0 | 1    | 1    | 1   |
+| 1 | 1    | 1    | 2   |
+| 2 | 1    | 1    | 3   |
+| 3 | 1    | 1    | 4   |
+| 4 | 1    | 1    | 5   |
+| 5 | 1    | 1    | 6   |
+| 6 | 1    | 1    | 7   |
+| 7 | 1    | 1    | 8   |
+| 8 | 2    | 1    | 10  |
+| 9 | 2    | 1    | 12  |
+
+Answer
+
+```
+12
+```
+
+---
+
+# Time Complexity
+
+Build frequency
+
+```
+O(n)
+```
+
+Sort 26 elements
+
+```
+O(26 log 26)
+```
+
+Loop
+
+```
+O(26)
+```
+
+Overall
+
+```
+O(n)
+```
+
+because 26 is constant.
+
+---
+
+# Space Complexity
+
+Frequency array
+
+```
+26 integers
+```
+
+```
+O(1)
+```
+
+---
+
+# Optimal Solution (Best)
+
+Now notice something even more important.
+
+The actual letters **do not matter at all**.
+
+Only the **number of letters** matters.
+
+Suppose
+
+```
+word length = 20
+```
+
+Then costs are simply
+
+```
+1 1 1 1 1 1 1 1
+2 2 2 2 2 2 2 2
+3 3 3 3
+```
+
+We can compute the answer directly.
+
+---
+
+## Code
+
+```python
+class Solution:
+    def minimumPushes(self, word: str) -> int:
+        ans = 0
+
+        for i in range(len(word)):
+            ans += (i // 8) + 1
+
+        return ans
+```
+
+---
+
+# Logic
+
+Each index represents one assigned letter.
+
+The cost depends only on which group of 8 it belongs to.
+
+```
+Index 0-7
+
+cost=1
+```
+
+```
+Index 8-15
+
+cost=2
+```
+
+```
+Index 16-23
+
+cost=3
+```
+
+```
+Index 24-25
+
+cost=4
+```
+
+Formula
+
+```
+(i // 8) + 1
+```
+
+produces exactly these costs.
+
+---
+
+# Code Explanation
+
+Initialize
+
+```python
+ans = 0
+```
+
+Loop over every letter
+
+```python
+for i in range(len(word)):
+```
+
+Find its push count
+
+```python
+(i // 8) + 1
+```
+
+Add to answer
+
+```python
+ans += (i // 8) + 1
+```
+
+Return
+
+```python
+return ans
+```
+
+---
+
+# Full Dry Run
+
+Example
+
+```
+word="xycdefghij"
+
+length=10
+```
+
+| i | i//8 | cost | ans |
+| - | ---- | ---- | --- |
+| 0 | 0    | 1    | 1   |
+| 1 | 0    | 1    | 2   |
+| 2 | 0    | 1    | 3   |
+| 3 | 0    | 1    | 4   |
+| 4 | 0    | 1    | 5   |
+| 5 | 0    | 1    | 6   |
+| 6 | 0    | 1    | 7   |
+| 7 | 0    | 1    | 8   |
+| 8 | 1    | 2    | 10  |
+| 9 | 1    | 2    | 12  |
+
+Return
+
+```
+12
+```
+
+---
+
+# Time Complexity
+
+Loop runs once for each letter.
+
+```
+Time = O(n)
+```
+
+---
+
+# Space Complexity
+
+No extra data structure is used.
+
+```
+Space = O(1)
+```
+
+---
+
+# Comparison of All Three Solutions
+
+| Solution             | Main Idea                                                                                | Time                                            | Space                     |
+| -------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------- | ------------------------- |
+| **Solution 1**       | Simulate assigning letters to the 8 keys using a dictionary                              | **O(n)**                                        | **O(1)** (at most 8 keys) |
+| **Solution 2**       | Build a frequency array, sort it, then assign costs by groups of 8                       | **O(n)** (sorting 26 elements is constant time) | **O(1)**                  |
+| **Optimal Solution** | Realize only the length of the word matters; compute costs directly using `(i // 8) + 1` | **O(n)**                                        | **O(1)**                  |
+
+## Key Learning Pattern
+
+When you can **reorder or remap elements freely**, ask yourself:
+
+1. **Does the actual value matter, or only the rank/order?**
+2. **Can I group positions by their cost?**
+3. **Can the entire mapping be replaced by a simple mathematical formula?**
+
+In this problem, once you realize that every letter is distinct and the mapping is completely flexible, the characters themselves become irrelevant. The answer depends only on how many letters occupy the 1-push, 2-push, 3-push, and 4-push groups, leading to the elegant formula:
+
+[
+\text{cost of the } i^\text{th} \text{ assigned letter} = \left(\left\lfloor \frac{i}{8} \right\rfloor + 1\right)
+]
+
+This observation reduces the solution to a single loop with constant extra space.
