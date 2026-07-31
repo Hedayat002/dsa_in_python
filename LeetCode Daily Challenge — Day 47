@@ -1,0 +1,1013 @@
+# 3016. Minimum Number of Pushes to Type Word II
+
+**Difficulty:** Medium
+
+---
+
+# Step 1. Understand the Problem
+
+We have **8 keys (2 to 9)**.
+
+Each key can contain **any number of letters**.
+
+Example:
+
+```
+Key 2 : a d h
+Key 3 : b e
+Key 4 : c
+...
+```
+
+Unlike the normal keypad, **we are free to remap the letters**.
+
+The only rule is
+
+* Every letter appears exactly once.
+* A key may contain any number of letters.
+
+---
+
+### Cost of pressing
+
+Inside one key
+
+```
+1st letter  -> 1 push
+2nd letter  -> 2 pushes
+3rd letter  -> 3 pushes
+...
+```
+
+Example
+
+```
+Key 2
+
+a
+b
+c
+d
+
+Typing
+
+a = 1 push
+b = 2 pushes
+c = 3 pushes
+d = 4 pushes
+```
+
+Our goal
+
+> Arrange letters on the keypad so that typing the given word requires the minimum total pushes.
+
+---
+
+# Observation
+
+Suppose
+
+```
+word = "aaaaab"
+```
+
+Frequency
+
+```
+a = 5
+b = 1
+```
+
+Obviously
+
+```
+a should require 1 push
+
+NOT
+
+5 pushes
+```
+
+because it appears many times.
+
+So
+
+**Higher frequency letters should receive lower push cost.**
+
+This is exactly like assigning cheapest seats to most frequent passengers.
+
+---
+
+# Brute Force Solution
+
+---
+
+## Brute Force Idea
+
+Generate every possible keypad mapping.
+
+For each mapping
+
+```
+Calculate total pushes.
+
+Keep minimum.
+```
+
+---
+
+## Why?
+
+Because we don't know which mapping is best.
+
+Try all.
+
+---
+
+### Example
+
+Suppose
+
+```
+word = "abc"
+```
+
+Possible mappings
+
+```
+Mapping 1
+
+Key2 : a b c
+
+Cost
+
+a=1
+b=2
+c=3
+
+Total =6
+```
+
+Another
+
+```
+Key2:a
+Key3:b
+Key4:c
+
+Total=3
+```
+
+Another
+
+```
+Key2:b
+Key3:a
+Key4:c
+
+Total=3
+```
+
+Thousands of mappings...
+
+Take minimum.
+
+---
+
+# Brute Force Algorithm
+
+```
+Generate every assignment of letters to keys.
+
+For every mapping
+
+    Find push cost of every character.
+
+    Calculate answer.
+
+Return minimum.
+```
+
+---
+
+# Why is Brute Force Impossible?
+
+There are
+
+```
+26 letters
+
+Each can go to any of 8 keys.
+```
+
+Number of mappings
+
+```
+≈ 8^26
+```
+
+which is astronomical.
+
+Even worse,
+
+letters inside each key can be arranged differently.
+
+Impossible.
+
+---
+
+# Brute Force Code (Conceptual)
+
+```python
+class Solution:
+    def minimumPushes(self, word: str) -> int:
+        # Impossible to implement efficiently.
+        # Would generate every keypad mapping,
+        # calculate total pushes,
+        # and return the minimum.
+        pass
+```
+
+---
+
+# Brute Force Complexity
+
+If
+
+```
+L = distinct letters
+```
+
+Mappings
+
+```
+≈ 8^L
+```
+
+Time
+
+```
+O(8^26)
+```
+
+Space
+
+```
+Huge
+```
+
+Impossible.
+
+---
+
+# Now Think Better
+
+Instead of assigning letters randomly,
+
+what really matters?
+
+Only
+
+```
+frequency
+```
+
+because
+
+```
+Frequently used letters
+↓
+
+should require
+
+↓
+
+fewer pushes.
+```
+
+---
+
+# Key Observation
+
+There are **8 keys.**
+
+Therefore
+
+```
+Exactly 8 letters
+
+can have cost = 1
+```
+
+because every key has only one first position.
+
+Example
+
+```
+Key2 first letter
+
+Key3 first letter
+
+...
+
+Key9 first letter
+
+Total =8 letters
+```
+
+After that,
+
+next 8 letters
+
+must occupy second position.
+
+So
+
+```
+Cost =2
+```
+
+Again
+
+```
+Next 8 letters
+
+Cost=3
+```
+
+Finally
+
+```
+Last 2 letters
+
+Cost=4
+```
+
+because
+
+```
+26
+
+=
+
+8+8+8+2
+```
+
+---
+
+# Therefore
+
+Sort frequencies descending.
+
+```
+Highest frequency
+
+↓
+
+1 push
+
+Next highest
+
+↓
+
+1 push
+
+...
+
+First 8 frequencies
+
+↓
+
+Cost=1
+```
+
+Then
+
+```
+9th frequency
+
+↓
+
+Cost=2
+```
+
+etc.
+
+---
+
+# Visual Understanding
+
+Suppose frequencies are
+
+```
+20
+18
+17
+15
+12
+10
+9
+8
+7
+6
+5
+4
+3
+2
+1
+...
+```
+
+Assign
+
+```
+20 ->1
+
+18 ->1
+
+17 ->1
+
+15 ->1
+
+12 ->1
+
+10 ->1
+
+9 ->1
+
+8 ->1
+```
+
+Now first positions are full.
+
+Next
+
+```
+7 ->2
+
+6 ->2
+
+5 ->2
+
+4 ->2
+
+...
+```
+
+Exactly what gives minimum answer.
+
+---
+
+# Optimal Algorithm
+
+### Step 1
+
+Count frequency of every letter.
+
+```
+freq[26]
+```
+
+---
+
+### Step 2
+
+Sort descending.
+
+Example
+
+```
+Before
+
+[5,0,7,1,2...]
+
+After
+
+[7,5,2,1,0...]
+```
+
+---
+
+### Step 3
+
+Assign push cost.
+
+Index
+
+```
+0~7
+
+Cost=1
+```
+
+Index
+
+```
+8~15
+
+Cost=2
+```
+
+Index
+
+```
+16~23
+
+Cost=3
+```
+
+Index
+
+```
+24~25
+
+Cost=4
+```
+
+Formula
+
+```
+(i // 8)+1
+```
+
+---
+
+# Why?
+
+Let's verify.
+
+```
+i=0
+
+0//8=0
+
++1=1
+```
+
+Correct.
+
+---
+
+```
+i=5
+
+5//8=0
+
++1=1
+```
+
+Correct.
+
+---
+
+```
+i=8
+
+8//8=1
+
++1=2
+```
+
+Correct.
+
+---
+
+```
+i=15
+
+15//8=1
+
++1=2
+```
+
+Correct.
+
+---
+
+```
+i=16
+
+16//8=2
+
++1=3
+```
+
+Correct.
+
+---
+
+```
+i=24
+
+24//8=3
+
++1=4
+```
+
+Correct.
+
+---
+
+# Optimal Code
+
+```python
+class Solution:
+    def minimumPushes(self, word: str) -> int:
+        freq = [0] * 26
+
+        # Count frequency of each character
+        for ch in word:
+            freq[ord(ch) - ord('a')] += 1
+
+        # Highest frequencies first
+        freq.sort(reverse=True)
+
+        ans = 0
+
+        # Assign minimum push cost
+        for i in range(26):
+            ans += freq[i] * ((i // 8) + 1)
+
+        return ans
+```
+
+---
+
+# Code Explanation
+
+---
+
+## Step 1
+
+```python
+freq = [0] * 26
+```
+
+Frequency array.
+
+```
+index
+
+0=a
+
+1=b
+
+...
+
+25=z
+```
+
+---
+
+## Step 2
+
+```python
+for ch in word:
+    freq[ord(ch)-97]+=1
+```
+
+Example
+
+```
+word
+
+"aabbcc"
+
+freq
+
+a=2
+
+b=2
+
+c=2
+```
+
+---
+
+## Step 3
+
+```python
+freq.sort(reverse=True)
+```
+
+Suppose
+
+```
+Before
+
+[2,5,1,7]
+```
+
+After
+
+```
+[7,5,2,1]
+```
+
+Most frequent first.
+
+---
+
+## Step 4
+
+```python
+for i in range(26):
+```
+
+Visit every frequency.
+
+---
+
+## Step 5
+
+```python
+cost=(i//8)+1
+```
+
+Assign push number.
+
+---
+
+## Step 6
+
+```python
+ans+=freq[i]*cost
+```
+
+If
+
+```
+frequency=12
+
+cost=2
+```
+
+Contribution
+
+```
+24
+```
+
+---
+
+# Full Dry Run
+
+Example
+
+```
+word="aabbccddeeffgghhiiiiii"
+```
+
+---
+
+### Step 1 Frequency
+
+```
+a=2
+b=2
+c=2
+d=2
+e=2
+f=2
+g=2
+h=2
+i=6
+```
+
+Others
+
+```
+0
+```
+
+---
+
+Sorted
+
+```
+6
+2
+2
+2
+2
+2
+2
+2
+2
+0...
+```
+
+---
+
+Now assign.
+
+| Index | Frequency | Cost | Contribution |
+| ----- | --------- | ---- | ------------ |
+| 0     | 6         | 1    | 6            |
+| 1     | 2         | 1    | 2            |
+| 2     | 2         | 1    | 2            |
+| 3     | 2         | 1    | 2            |
+| 4     | 2         | 1    | 2            |
+| 5     | 2         | 1    | 2            |
+| 6     | 2         | 1    | 2            |
+| 7     | 2         | 1    | 2            |
+| 8     | 2         | 2    | 4            |
+| 9     | 0         | 2    | 0            |
+
+Remaining
+
+```
+0
+```
+
+---
+
+Total
+
+```
+6
+
++2+2+2+2+2+2+2
+
++4
+
+=
+
+24
+```
+
+Correct answer.
+
+---
+
+# Another Dry Run
+
+```
+word="xyzxyzxyzxyz"
+```
+
+Frequency
+
+```
+x=4
+
+y=4
+
+z=4
+```
+
+Sorted
+
+```
+4
+
+4
+
+4
+
+0...
+```
+
+Assignments
+
+| Index | Freq | Cost | Contribution |
+| ----- | ---- | ---- | ------------ |
+| 0     | 4    | 1    | 4            |
+| 1     | 4    | 1    | 4            |
+| 2     | 4    | 1    | 4            |
+
+Answer
+
+```
+4+4+4=12
+```
+
+Correct.
+
+---
+
+# Why Sorting Works? (Greedy Proof)
+
+Suppose
+
+```
+Frequency
+
+100
+
+2
+```
+
+Costs
+
+```
+1
+
+3
+```
+
+Current answer
+
+```
+100×1 +2×3
+
+=106
+```
+
+Swap them
+
+```
+100×3 +2×1
+
+=302
+```
+
+Much worse.
+
+Therefore
+
+**larger frequency must always receive smaller cost**.
+
+Sorting descending is always optimal.
+
+---
+
+# Time Complexity
+
+## Brute Force
+
+Generating every mapping
+
+```
+O(8^26)
+```
+
+Impossible.
+
+Space
+
+```
+Huge
+```
+
+---
+
+## Optimal
+
+### Frequency counting
+
+```
+O(n)
+```
+
+where `n` is the length of `word`.
+
+### Sorting
+
+The frequency array has a fixed size of **26**. Sorting it is:
+
+```
+O(26 log 26)
+```
+
+Since 26 is a constant, this is effectively **O(1)**.
+
+### Final loop
+
+```
+O(26)
+```
+
+Also constant.
+
+### Total Time
+
+```
+O(n) + O(1) + O(1)
+
+= O(n)
+```
+
+### Space
+
+The frequency array always has 26 elements:
+
+```
+O(26) = O(1)
+```
+
+---
+
+# Final Takeaways
+
+* We can freely remap letters to keys.
+* The only thing that matters is **how often each letter appears**.
+* There are only **8 first positions**, so at most 8 letters can cost **1 push**.
+* The next 8 letters must cost **2 pushes**, then **3**, then **4**.
+* Sort frequencies in descending order and assign costs using:
+
+```python
+cost = (i // 8) + 1
+```
+
+This greedy assignment is optimal because assigning lower costs to higher frequencies always minimizes the total number of pushes.
