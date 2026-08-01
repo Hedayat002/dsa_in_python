@@ -1,0 +1,964 @@
+# 486. Predict the Winner (LeetCode)
+
+**Difficulty:** Medium
+
+---
+
+# Problem Understanding
+
+We are given an array.
+
+Two players play a game.
+
+* Player 1 starts first.
+* In every turn, a player can pick **only the leftmost or the rightmost element**.
+* The picked number is added to that player's score.
+* Both players play **optimally**, meaning each player always makes the best possible move for themselves.
+
+We need to determine:
+
+> Can Player 1 finish with a score **greater than or equal to** Player 2?
+
+If yes → return **True**
+
+Otherwise → return **False**
+
+---
+
+## Example
+
+```
+nums = [1,5,2]
+```
+
+Initial Array
+
+```
+1   5   2
+L       R
+```
+
+Player1 can choose
+
+* Left = 1
+* Right = 2
+
+After that Player2 also plays perfectly.
+
+Player2 will always choose the move that makes Player1 lose.
+
+So we have to think like **both players are intelligent**.
+
+---
+
+# Important Observation
+
+Many beginners think
+
+> "Player1 should always pick the bigger number."
+
+Wrong.
+
+Example
+
+```
+[8,15,3,7]
+```
+
+If Player1 picks 8 immediately, maybe Player2 gets 15.
+
+Sometimes taking a smaller number now allows taking a huge number later.
+
+So this is **not Greedy.**
+
+This is a **Game Theory + DP (Minimax)** problem.
+
+---
+
+# Brute Force Solution
+
+## Idea
+
+At every turn Player1 has two choices
+
+Take Left
+
+or
+
+Take Right
+
+After Player1 moves,
+
+Player2 also gets two choices.
+
+Since Player2 is also optimal,
+
+Player2 will choose the move that hurts Player1 the most.
+
+So we recursively try every possibility.
+
+---
+
+## Brute Force Logic
+
+Suppose
+
+```
+nums =
+
+1 5 233 7
+```
+
+Player1 has two options
+
+Option 1
+
+Take
+
+```
+1
+```
+
+Remaining
+
+```
+5 233 7
+```
+
+Now Player2 chooses optimally.
+
+---
+
+Option 2
+
+Take
+
+```
+7
+```
+
+Remaining
+
+```
+1 5 233
+```
+
+Again Player2 chooses optimally.
+
+We compute both.
+
+Take the maximum.
+
+---
+
+## Recursive State
+
+```
+solve(left,right)
+```
+
+Meaning
+
+> Maximum score current player can obtain from nums[left...right]
+
+---
+
+## How Player2 is handled?
+
+Suppose Player1 takes left.
+
+```
+nums[left]
+```
+
+Remaining
+
+```
+left+1 ... right
+```
+
+Now Player2's turn.
+
+Player2 has two options
+
+Take left
+
+Remaining
+
+```
+left+2 ... right
+```
+
+Take right
+
+Remaining
+
+```
+left+1 ... right-1
+```
+
+Since Player2 wants Player1 to score as little as possible,
+
+Player2 chooses the minimum outcome for Player1.
+
+Therefore
+
+```
+takeLeft =
+nums[left] +
+min(
+solve(left+2,right),
+solve(left+1,right-1)
+)
+```
+
+Similarly,
+
+```
+takeRight =
+nums[right] +
+min(
+solve(left,right-2),
+solve(left+1,right-1)
+)
+```
+
+Finally
+
+```
+max(takeLeft,takeRight)
+```
+
+because Player1 wants maximum score.
+
+---
+
+# Brute Force Code
+
+```python
+class Solution:
+    def PredictTheWinner(self, nums):
+
+        n = len(nums)
+
+        def solve(l, r):
+
+            if l > r:
+                return 0
+
+            if l == r:
+                return nums[l]
+
+            take_left = nums[l] + min(
+                solve(l + 2, r),
+                solve(l + 1, r - 1)
+            )
+
+            take_right = nums[r] + min(
+                solve(l, r - 2),
+                solve(l + 1, r - 1)
+            )
+
+            return max(take_left, take_right)
+
+        total = sum(nums)
+
+        player1 = solve(0, n - 1)
+        player2 = total - player1
+
+        return player1 >= player2
+```
+
+---
+
+# Code Explanation
+
+```
+solve(l,r)
+```
+
+returns
+
+Maximum score current player can secure.
+
+---
+
+### Base Case
+
+```
+if l>r:
+    return 0
+```
+
+No numbers left.
+
+---
+
+```
+if l==r:
+    return nums[l]
+```
+
+Only one number.
+
+Take it.
+
+---
+
+### Take Left
+
+```
+take_left =
+nums[l]
+```
+
+Current player picks left.
+
+Opponent now plays.
+
+Opponent has two options.
+
+Since opponent is optimal,
+
+he minimizes our future score.
+
+```
+min(
+solve(l+2,r),
+solve(l+1,r-1)
+)
+```
+
+---
+
+### Take Right
+
+Exactly same logic.
+
+---
+
+### Return
+
+```
+max(take_left,take_right)
+```
+
+Choose better option.
+
+---
+
+# Complete Dry Run (Brute Force)
+
+Example
+
+```
+nums = [1,5,2]
+```
+
+Call
+
+```
+solve(0,2)
+```
+
+Current
+
+```
+1 5 2
+```
+
+---
+
+## Choice 1
+
+Take
+
+```
+1
+```
+
+Remaining
+
+```
+5 2
+```
+
+Player2 turn
+
+Player2 picks
+
+Left
+
+Remaining
+
+```
+2
+```
+
+Player1 gets
+
+```
+solve(2,2)=2
+```
+
+or
+
+Player2 picks Right
+
+Remaining
+
+```
+5
+```
+
+Player1 gets
+
+```
+solve(1,1)=5
+```
+
+Opponent minimizes
+
+```
+min(2,5)=2
+```
+
+So
+
+```
+take_left
+
+=1+2
+
+=3
+```
+
+---
+
+## Choice2
+
+Take
+
+```
+2
+```
+
+Remaining
+
+```
+1 5
+```
+
+Player2 chooses
+
+```
+min(
+solve(0,0)=1,
+solve(1,1)=5
+)
+
+=1
+```
+
+Therefore
+
+```
+take_right
+
+=2+1
+
+=3
+```
+
+Return
+
+```
+max(3,3)=3
+```
+
+Player1 score
+
+```
+3
+```
+
+Total
+
+```
+8
+```
+
+Player2
+
+```
+5
+```
+
+Wait!
+
+This seems incorrect because brute-force recurrence is computing assuming optimal structure; for this input the correct optimal Player1 score is actually **3**, so Player2 gets **5**.
+
+```
+3>=5 ?
+
+False
+```
+
+Answer
+
+```
+False
+```
+
+---
+
+# Problem with Brute Force
+
+Many recursive calls repeat.
+
+Example
+
+```
+solve(2,5)
+```
+
+may come from multiple paths.
+
+So lots of repeated work.
+
+---
+
+# Optimal Solution (Recursion + Memoization)
+
+Instead of storing Player1's absolute score, we store the **score difference**.
+
+This is the most elegant solution.
+
+---
+
+# Main Idea
+
+Define
+
+```
+maxDiff(l,r)
+```
+
+as
+
+> Maximum difference
+
+```
+(Current Player Score)
+
+-
+
+(Opponent Score)
+```
+
+from subarray
+
+```
+l...r
+```
+
+---
+
+Suppose
+
+```
+nums
+
+1 5 2
+```
+
+Current player chooses
+
+Left
+
+Gets
+
+```
+1
+```
+
+Remaining
+
+```
+5 2
+```
+
+Now opponent becomes current player.
+
+If opponent can achieve difference
+
+```
+maxDiff(...)
+```
+
+Then our final difference becomes
+
+```
+1-maxDiff(...)
+```
+
+because opponent's advantage reduces ours.
+
+Similarly
+
+Right
+
+```
+2-maxDiff(...)
+```
+
+Take maximum.
+
+---
+
+# Recurrence
+
+```
+takeLeft
+
+=
+
+nums[left]
+
+-
+
+maxDiff(left+1,right)
+```
+
+---
+
+```
+takeRight
+
+=
+
+nums[right]
+
+-
+
+maxDiff(left,right-1)
+```
+
+---
+
+```
+return
+
+max(takeLeft,takeRight)
+```
+
+---
+
+# Memoized Code (Optimal)
+
+```python
+class Solution:
+    def PredictTheWinner(self, nums):
+
+        n = len(nums)
+
+        dp = [[-1] * n for _ in range(n)]
+
+        def maxDiff(l, r):
+
+            if l == r:
+                return nums[l]
+
+            if dp[l][r] != -1:
+                return dp[l][r]
+
+            take_left = nums[l] - maxDiff(l + 1, r)
+
+            take_right = nums[r] - maxDiff(l, r - 1)
+
+            dp[l][r] = max(take_left, take_right)
+
+            return dp[l][r]
+
+        return maxDiff(0, n - 1) >= 0
+```
+
+---
+
+# Code Explanation
+
+### Base Case
+
+```
+if l==r
+```
+
+One element.
+
+Current player takes it.
+
+Difference
+
+```
+nums[l]
+```
+
+---
+
+### Pick Left
+
+Current player gains
+
+```
+nums[l]
+```
+
+Then opponent gets best possible difference
+
+```
+maxDiff(...)
+```
+
+Subtract it
+
+```
+nums[l]-maxDiff(...)
+```
+
+---
+
+### Pick Right
+
+Same.
+
+---
+
+### Return
+
+Maximum difference.
+
+---
+
+# Complete Dry Run (Optimal)
+
+Example
+
+```
+nums=[1,5,2]
+```
+
+Start
+
+```
+maxDiff(0,2)
+```
+
+---
+
+Take Left
+
+```
+1-maxDiff(1,2)
+```
+
+Need
+
+```
+maxDiff(1,2)
+```
+
+---
+
+Take Left
+
+```
+5-maxDiff(2,2)
+
+=5-2
+
+=3
+```
+
+Take Right
+
+```
+2-maxDiff(1,1)
+
+=2-5
+
+=-3
+```
+
+Maximum
+
+```
+3
+```
+
+So
+
+```
+maxDiff(1,2)=3
+```
+
+---
+
+Original
+
+Take Left
+
+```
+1-3=-2
+```
+
+---
+
+Take Right
+
+Need
+
+```
+maxDiff(0,1)
+```
+
+Take Left
+
+```
+1-5=-4
+```
+
+Take Right
+
+```
+5-1=4
+```
+
+Return
+
+```
+4
+```
+
+Therefore
+
+```
+2-4=-2
+```
+
+---
+
+Final
+
+```
+max(-2,-2)
+
+=-2
+```
+
+Difference
+
+```
+Player1-Player2=-2
+```
+
+Negative means
+
+Player2 wins.
+
+Return
+
+```
+False
+```
+
+---
+
+# Why does `difference >= 0` mean Player 1 wins?
+
+Suppose the function returns:
+
+```
+difference = Player1Score - Player2Score
+```
+
+If
+
+```
+difference > 0
+```
+
+then:
+
+```
+Player1Score > Player2Score
+```
+
+Player 1 wins.
+
+If
+
+```
+difference = 0
+```
+
+then:
+
+```
+Player1Score == Player2Score
+```
+
+The problem states that **a tie is considered a win for Player 1**, so we still return `True`.
+
+If
+
+```
+difference < 0
+```
+
+then:
+
+```
+Player1Score < Player2Score
+```
+
+Player 2 wins, so return `False`.
+
+That's why the final check is simply:
+
+```python
+return maxDiff(0, n - 1) >= 0
+```
+
+---
+
+# Time Complexity
+
+## Brute Force
+
+Each state branches into two recursive calls repeatedly.
+
+**Time Complexity:** **O(2ⁿ)**
+
+**Space Complexity:** **O(n)** (recursion stack)
+
+---
+
+## Optimal (Memoization)
+
+There are only `n × n` unique `(l, r)` states, and each state is computed once.
+
+**Time Complexity:** **O(n²)**
+
+**Space Complexity:** **O(n²)** for the DP table + **O(n)** recursion stack.
+
+---
+
+# Key Learning Points
+
+* This is a classic **Game Theory (Minimax)** problem.
+* Greedy does **not** work because the locally larger choice may lead to a worse overall result.
+* Two DP formulations are common:
+
+  1. **Maximum score** the current player can secure (uses `min` to model the opponent's optimal move).
+  2. **Maximum score difference** between the current player and the opponent (uses subtraction and is the cleaner formulation).
+* The score-difference DP is generally preferred because it leads to a simpler recurrence and directly answers whether Player 1 can avoid losing.
