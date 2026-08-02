@@ -1,0 +1,763 @@
+# 877. Stone Game (LeetCode)
+
+## 1. Understand the Problem (Simple Explanation)
+
+Alice and Bob are playing a game.
+
+* There are **even** number of piles.
+* Each pile contains some stones.
+* On every turn, a player can only pick:
+
+  * the **leftmost pile**, or
+  * the **rightmost pile**.
+* Both players play **optimally** (they always make the best move).
+* Whoever collects more stones wins.
+
+We need to determine whether **Alice (first player)** wins.
+
+---
+
+# Brute Force Approach (Pure Recursion)
+
+## Idea
+
+At every turn, the current player has only **2 choices**:
+
+1. Pick the left pile.
+2. Pick the right pile.
+
+But after picking one pile, the opponent also plays optimally.
+
+Instead of tracking Alice's and Bob's scores separately, we keep track of the **score difference**.
+
+Let's define
+
+> **maxDiff(l,r)** = maximum score difference the current player can achieve over the opponent from piles[l...r].
+
+Suppose current player picks the left pile.
+
+Current player gains
+
+```
++piles[l]
+```
+
+Then opponent plays optimally on
+
+```
+(l+1,r)
+```
+
+Suppose opponent can achieve
+
+```
+maxDiff(l+1,r)
+```
+
+That means opponent will be ahead by this much.
+
+So current player's final advantage becomes
+
+```
+piles[l] - maxDiff(l+1,r)
+```
+
+Similarly,
+
+If current player chooses right,
+
+```
+piles[r] - maxDiff(l,r-1)
+```
+
+Take the better choice.
+
+---
+
+## Brute Force Code
+
+```python
+class Solution:
+    def stoneGame(self, piles):
+        n = len(piles)
+
+        def maxDiff(l, r):
+
+            if l == r:
+                return piles[l]
+
+            takeLeft = piles[l] - maxDiff(l + 1, r)
+            takeRight = piles[r] - maxDiff(l, r - 1)
+
+            return max(takeLeft, takeRight)
+
+        return maxDiff(0, n - 1) >= 0
+```
+
+---
+
+## Code Explanation
+
+### Base Case
+
+```python
+if l == r:
+    return piles[l]
+```
+
+Only one pile remains.
+
+Current player takes it.
+
+Difference becomes
+
+```
+current = piles[l]
+opponent = 0
+
+difference = piles[l]
+```
+
+---
+
+### Pick Left
+
+```python
+takeLeft = piles[l] - maxDiff(l + 1, r)
+```
+
+Current player gains
+
+```
++piles[l]
+```
+
+Opponent then gets the best possible difference from remaining piles.
+
+Subtract it.
+
+---
+
+### Pick Right
+
+```python
+takeRight = piles[r] - maxDiff(l, r - 1)
+```
+
+Same logic.
+
+---
+
+### Choose Better
+
+```python
+return max(takeLeft, takeRight)
+```
+
+Current player chooses whichever gives larger difference.
+
+---
+
+# Complete Dry Run
+
+Input
+
+```text
+piles = [5,3,4,5]
+```
+
+Call
+
+```
+maxDiff(0,3)
+```
+
+Available piles
+
+```
+5 3 4 5
+```
+
+---
+
+## Option 1
+
+Take left = 5
+
+Remaining
+
+```
+3 4 5
+```
+
+Need
+
+```
+5 - maxDiff(1,3)
+```
+
+---
+
+### maxDiff(1,3)
+
+Piles
+
+```
+3 4 5
+```
+
+Take 3
+
+```
+3 - maxDiff(2,3)
+```
+
+Take 5
+
+```
+5 - maxDiff(1,2)
+```
+
+Need both.
+
+---
+
+### maxDiff(2,3)
+
+```
+4 5
+```
+
+Take 4
+
+```
+4-5=-1
+```
+
+Take 5
+
+```
+5-4=1
+```
+
+Return
+
+```
+1
+```
+
+---
+
+### maxDiff(1,2)
+
+```
+3 4
+```
+
+Take 3
+
+```
+3-4=-1
+```
+
+Take 4
+
+```
+4-3=1
+```
+
+Return
+
+```
+1
+```
+
+---
+
+Back
+
+```
+maxDiff(1,3)
+```
+
+Take 3
+
+```
+3-1=2
+```
+
+Take 5
+
+```
+5-1=4
+```
+
+Return
+
+```
+4
+```
+
+So first option
+
+```
+5-4=1
+```
+
+---
+
+## Option 2
+
+Take right
+
+```
+5-maxDiff(0,2)
+```
+
+Need
+
+```
+maxDiff(0,2)
+```
+
+---
+
+### maxDiff(0,2)
+
+```
+5 3 4
+```
+
+Take 5
+
+```
+5-maxDiff(1,2)
+=5-1=4
+```
+
+Take 4
+
+```
+4-maxDiff(0,1)
+```
+
+Need
+
+```
+maxDiff(0,1)
+```
+
+---
+
+### maxDiff(0,1)
+
+```
+5 3
+```
+
+Take 5
+
+```
+5-3=2
+```
+
+Take 3
+
+```
+3-5=-2
+```
+
+Return
+
+```
+2
+```
+
+Back
+
+Take 4
+
+```
+4-2=2
+```
+
+Return
+
+```
+max(4,2)=4
+```
+
+So second option
+
+```
+5-4=1
+```
+
+---
+
+Finally
+
+```
+max(1,1)=1
+```
+
+Positive.
+
+Alice wins.
+
+---
+
+## Brute Force Complexity
+
+### Time
+
+Each state branches into two.
+
+```
+O(2^n)
+```
+
+---
+
+### Space
+
+Recursive stack
+
+```
+O(n)
+```
+
+---
+
+# Optimal Approach (Memoization / Top-Down DP)
+
+Your solution.
+
+## Intuition
+
+The recursion solves the same intervals repeatedly.
+
+Example
+
+```
+maxDiff(2,5)
+```
+
+may be called from
+
+```
+maxDiff(1,5)
+```
+
+and
+
+```
+maxDiff(2,6)
+```
+
+Instead of recalculating, store the answer.
+
+There are only
+
+```
+(l,r)
+```
+
+states.
+
+Total states
+
+```
+n × n
+```
+
+Each computed once.
+
+---
+
+## Code
+
+```python
+class Solution:
+    def stoneGame(self, piles):
+        n = len(piles)
+
+        dp = [[-1] * n for _ in range(n)]
+
+        def maxDiff(l, r):
+
+            if l == r:
+                return piles[l]
+
+            if dp[l][r] != -1:
+                return dp[l][r]
+
+            take_left = piles[l] - maxDiff(l + 1, r)
+            take_right = piles[r] - maxDiff(l, r - 1)
+
+            dp[l][r] = max(take_left, take_right)
+
+            return dp[l][r]
+
+        return maxDiff(0, n - 1) >= 0
+```
+
+---
+
+# Code Explanation
+
+### DP Table
+
+```python
+dp[l][r]
+```
+
+Stores
+
+> Maximum score difference current player can obtain from interval **l...r**.
+
+---
+
+### Memoization Check
+
+```python
+if dp[l][r] != -1:
+    return dp[l][r]
+```
+
+Already computed.
+
+Return immediately.
+
+---
+
+### Compute Left Choice
+
+```python
+take_left = piles[l] - maxDiff(l+1,r)
+```
+
+Gain left pile.
+
+Opponent's best difference is subtracted.
+
+---
+
+### Compute Right Choice
+
+```python
+take_right = piles[r] - maxDiff(l,r-1)
+```
+
+Same idea.
+
+---
+
+### Save Answer
+
+```python
+dp[l][r]=max(take_left,take_right)
+```
+
+Store for future calls.
+
+---
+
+# Complete DP Dry Run
+
+For
+
+```
+[5,3,4,5]
+```
+
+Computed states:
+
+```
+dp[3][3]=5
+dp[2][2]=4
+dp[1][1]=3
+dp[0][0]=5
+```
+
+Length 2
+
+```
+dp[2][3]=1
+dp[1][2]=1
+dp[0][1]=2
+```
+
+Length 3
+
+```
+dp[1][3]=4
+dp[0][2]=4
+```
+
+Length 4
+
+```
+dp[0][3]=1
+```
+
+Final
+
+```
+1>=0
+
+True
+```
+
+---
+
+# Why Do We Subtract?
+
+This is the most important idea.
+
+Suppose
+
+```
+Current player picks 7.
+```
+
+Remaining interval lets opponent obtain
+
+```
+difference = 5
+```
+
+That means
+
+```
+Opponent - Current = 5
+```
+
+But current already earned
+
+```
++7
+```
+
+Overall
+
+```
+Current - Opponent
+
+= 7 - 5
+
+= 2
+```
+
+So the formula becomes
+
+```
+current_gain - opponent_best_difference
+```
+
+which is exactly
+
+```python
+take_left = piles[l] - maxDiff(l+1,r)
+```
+
+---
+
+# Time Complexity
+
+There are
+
+```
+n × n
+```
+
+states.
+
+Each state takes constant time.
+
+```
+O(n²)
+```
+
+---
+
+# Space Complexity
+
+DP table
+
+```
+O(n²)
+```
+
+Recursion stack
+
+```
+O(n)
+```
+
+Total auxiliary space:
+
+```
+O(n²)
+```
+
+---
+
+# Common Mistakes
+
+1. **Adding instead of subtracting**
+
+   ```python
+   piles[l] + maxDiff(...)
+   ```
+
+   Wrong. The recursive call represents the opponent's advantage, so it must be subtracted.
+
+2. **Tracking Alice's and Bob's scores separately**
+   This complicates the recursion. Tracking only the **score difference** makes the state much simpler.
+
+3. **Forgetting memoization**
+   The plain recursive solution is exponential and will time out for `n = 500`.
+
+4. **Using `> 0` instead of `>= 0`**
+   In the generic score-difference formulation, `>= 0` means the first player can avoid losing. For this specific problem, the total number of stones is odd, so the result will never actually be `0`.
+
+---
+
+# Interview Insights
+
+* This is a classic **Optimal Game Strategy** problem.
+* The key pattern is **Minimax with DP**, where instead of simulating both players' scores, you model the **maximum score difference** the current player can force.
+* Many problems use this exact recurrence, including:
+
+  * **486. Predict the Winner**
+  * **877. Stone Game**
+  * **Stone Game II, III, V** (with modified state definitions)
+
+---
+
+# Pattern Learned
+
+Whenever you see:
+
+* Two players
+* Both play optimally
+* Pick from the ends (or make alternating optimal moves)
+* Need to determine the winner or maximum advantage
+
+think of the state:
+
+```text
+dp(l, r) = maximum score difference current player can achieve
+```
+
+with the recurrence:
+
+```text
+dp(l, r) = max(
+    value_left  - dp(l+1, r),
+    value_right - dp(l, r-1)
+)
+```
+
+This "score difference DP" is the fundamental pattern behind a large class of two-player game problems.
