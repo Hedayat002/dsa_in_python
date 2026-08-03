@@ -1,0 +1,723 @@
+# 1406. Stone Game III (Hard)
+
+## Pattern
+
+**Game Theory + Minimax + Dynamic Programming**
+
+---
+
+# 1. Problem Explanation (Simple Words)
+
+There is a row of stones.
+
+Each stone has some value (can even be negative).
+
+* Alice starts first.
+* Every turn a player can take **1, 2 or 3 stones** from the beginning.
+* Both players play **optimally**.
+* Whoever gets the larger total score wins.
+
+We need to return
+
+* `"Alice"` if Alice wins
+* `"Bob"` if Bob wins
+* `"Tie"` otherwise.
+
+---
+
+# Brute Force Idea (Recursion)
+
+Instead of calculating Alice's score and Bob's score separately,
+
+Think of
+
+> **Current Player Score − Opponent Score**
+
+Suppose
+
+```
+f(i) = maximum score difference current player can achieve
+starting from index i.
+```
+
+If current player takes
+
+### Take 1 stone
+
+```
+gain = stone[i]
+
+Opponent now plays optimally.
+
+Difference =
+gain - f(i+1)
+```
+
+Why minus?
+
+Because `f(i+1)` is the advantage of the opponent.
+
+---
+
+### Take 2 stones
+
+```
+gain = stone[i] + stone[i+1]
+
+Difference =
+gain - f(i+2)
+```
+
+---
+
+### Take 3 stones
+
+```
+gain = stone[i]+stone[i+1]+stone[i+2]
+
+Difference =
+gain - f(i+3)
+```
+
+Take the maximum.
+
+---
+
+## Recursive Formula
+
+```
+f(i)=max(
+take1-f(i+1),
+take2-f(i+2),
+take3-f(i+3)
+)
+```
+
+Base Case
+
+```
+If i>=n
+
+return 0
+```
+
+because no stones remain.
+
+---
+
+# Brute Force Code (Recursion)
+
+```python
+class Solution:
+    def stoneGameIII(self, stoneValue):
+        n = len(stoneValue)
+
+        def solve(i):
+
+            if i >= n:
+                return 0
+
+            ans = float('-inf')
+            total = 0
+
+            for k in range(3):
+                if i + k < n:
+                    total += stoneValue[i + k]
+                    ans = max(ans, total - solve(i + k + 1))
+
+            return ans
+
+        diff = solve(0)
+
+        if diff > 0:
+            return "Alice"
+        elif diff < 0:
+            return "Bob"
+        return "Tie"
+```
+
+---
+
+## Dry Run
+
+Example
+
+```
+stone=[1,2,3]
+```
+
+```
+solve(2)
+
+Take1
+
+3-0=3
+
+=>3
+```
+
+---
+
+```
+solve(1)
+
+Take1
+
+2-solve(2)
+=2-3=-1
+
+Take2
+
+5-0=5
+
+Answer=5
+```
+
+---
+
+```
+solve(0)
+
+Take1
+
+1-5=-4
+
+Take2
+
+3-3=0
+
+Take3
+
+6-0=6
+
+Answer=6
+```
+
+Positive
+
+Alice wins.
+
+---
+
+## Complexity
+
+Time
+
+```
+O(3^n)
+```
+
+Space
+
+```
+O(n)
+```
+
+Very slow.
+
+---
+
+# Better Approach (Memoization)
+
+Store every state.
+
+Since
+
+```
+solve(i)
+```
+
+depends only on index,
+
+there are only
+
+```
+n
+```
+
+states.
+
+---
+
+## Code
+
+```python
+class Solution:
+    def stoneGameIII(self, stoneValue):
+        n = len(stoneValue)
+        dp = [-1] * n
+
+        def solve(i):
+
+            if i >= n:
+                return 0
+
+            if dp[i] != -1:
+                return dp[i]
+
+            ans = float('-inf')
+            total = 0
+
+            for k in range(3):
+                if i + k < n:
+                    total += stoneValue[i + k]
+                    ans = max(ans, total - solve(i + k + 1))
+
+            dp[i] = ans
+            return ans
+
+        diff = solve(0)
+
+        if diff > 0:
+            return "Alice"
+        elif diff < 0:
+            return "Bob"
+        return "Tie"
+```
+
+---
+
+## Dry Run
+
+Example
+
+```
+[1,2,3,7]
+```
+
+States
+
+```
+solve(4)=0
+
+solve(3)=7
+
+solve(2)=max(
+3-7=-4,
+10
+)=10
+
+solve(1)=max(
+2-10=-8,
+5-7=-2,
+12
+)=12
+
+solve(0)=max(
+1-12=-11,
+3-10=-7,
+6-7=-1
+)
+
+=-1
+```
+
+Negative
+
+Bob wins.
+
+---
+
+## Complexity
+
+Time
+
+```
+O(n)
+```
+
+Space
+
+```
+O(n)
+```
+
+---
+
+# Optimal Approach (Bottom-Up DP)
+
+Instead of recursion,
+
+fill DP from back.
+
+### Meaning
+
+```
+dp[i]
+
+= maximum score difference
+starting from i
+```
+
+Transition
+
+```
+dp[i]=max(
+
+stone[i]-dp[i+1],
+
+stone[i]+stone[i+1]-dp[i+2],
+
+stone[i]+stone[i+1]+stone[i+2]-dp[i+3]
+
+)
+```
+
+---
+
+## Code
+
+```python
+class Solution:
+    def stoneGameIII(self, stoneValue):
+        n = len(stoneValue)
+
+        dp = [0] * (n + 3)
+
+        for i in range(n - 1, -1, -1):
+
+            total = 0
+            dp[i] = float('-inf')
+
+            for k in range(3):
+                if i + k < n:
+                    total += stoneValue[i + k]
+                    dp[i] = max(dp[i], total - dp[i + k + 1])
+
+        if dp[0] > 0:
+            return "Alice"
+        elif dp[0] < 0:
+            return "Bob"
+        return "Tie"
+```
+
+---
+
+## Dry Run
+
+Example
+
+```
+[1,2,3,7]
+```
+
+Initially
+
+```
+dp=[0,0,0,0,0,0,0]
+```
+
+---
+
+i=3
+
+```
+7-0=7
+
+dp[3]=7
+```
+
+---
+
+i=2
+
+```
+Take1
+
+3-7=-4
+
+Take2
+
+10-0=10
+
+dp[2]=10
+```
+
+---
+
+i=1
+
+```
+Take1
+
+2-10=-8
+
+Take2
+
+5-7=-2
+
+Take3
+
+12-0=12
+
+dp[1]=12
+```
+
+---
+
+i=0
+
+```
+Take1
+
+1-12=-11
+
+Take2
+
+3-10=-7
+
+Take3
+
+6-7=-1
+
+dp[0]=-1
+```
+
+Negative
+
+Bob wins.
+
+---
+
+## Complexity
+
+Time
+
+```
+O(n)
+```
+
+Space
+
+```
+O(n)
+```
+
+---
+
+# Space Optimized DP (Most Optimal)
+
+Observe
+
+```
+dp[i]
+
+needs only
+
+dp[i+1]
+dp[i+2]
+dp[i+3]
+```
+
+No need for full DP array.
+
+Maintain only three variables.
+
+```
+a = dp[i+1]
+b = dp[i+2]
+c = dp[i+3]
+```
+
+After computing current answer:
+
+```
+c = b
+b = a
+a = current
+```
+
+---
+
+## Code
+
+```python
+class Solution:
+    def stoneGameIII(self, stoneValue):
+        n = len(stoneValue)
+
+        a = b = c = 0
+
+        for i in range(n - 1, -1, -1):
+            ans = stoneValue[i] - a
+
+            if i + 1 < n:
+                ans = max(ans,
+                          stoneValue[i] + stoneValue[i + 1] - b)
+
+            if i + 2 < n:
+                ans = max(ans,
+                          stoneValue[i] + stoneValue[i + 1] + stoneValue[i + 2] - c)
+
+            c = b
+            b = a
+            a = ans
+
+        if a > 0:
+            return "Alice"
+        elif a < 0:
+            return "Bob"
+        return "Tie"
+```
+
+---
+
+## Dry Run (Space Optimized)
+
+Example
+
+```
+stone=[1,2,3,7]
+```
+
+Initially
+
+```
+a=0
+b=0
+c=0
+```
+
+### i = 3
+
+```
+ans = 7-0 = 7
+
+Shift
+
+c=0
+b=0
+a=7
+```
+
+---
+
+### i = 2
+
+```
+Take1
+
+3-7=-4
+
+Take2
+
+10-0=10
+
+ans=10
+
+Shift
+
+c=0
+b=7
+a=10
+```
+
+---
+
+### i = 1
+
+```
+Take1
+
+2-10=-8
+
+Take2
+
+5-7=-2
+
+Take3
+
+12-0=12
+
+Shift
+
+c=7
+b=10
+a=12
+```
+
+---
+
+### i = 0
+
+```
+Take1
+
+1-12=-11
+
+Take2
+
+3-10=-7
+
+Take3
+
+6-7=-1
+
+Shift
+
+a=-1
+```
+
+Since
+
+```
+a < 0
+```
+
+Return
+
+```
+Bob
+```
+
+---
+
+# Why We Subtract `dp[next]`
+
+Suppose Alice takes stones worth `6`.
+
+The remaining game starts with Bob, and `dp[next] = 4`.
+
+That means **Bob can finish the remaining game 4 points ahead of Alice**.
+
+So Alice's final advantage is:
+
+```
+Current gain − Bob's future advantage
+
+= 6 − 4
+
+= 2
+```
+
+Hence the transition:
+
+```
+dp[i] = current_sum - dp[next]
+```
+
+This is the key idea behind minimax game DP.
+
+---
+
+# Complexity Comparison
+
+| Approach        | Time   | Space |
+| --------------- | ------ | ----- |
+| Recursion       | O(3^n) | O(n)  |
+| Memoization     | O(n)   | O(n)  |
+| Tabulation      | O(n)   | O(n)  |
+| Space Optimized | O(n)   | O(1)  |
+
+---
+
+# Interview Insights
+
+* Think in terms of **score difference**, not separate scores.
+* This converts a two-player minimax game into a **single DP state**.
+* The recurrence is:
+
+  ```
+  dp[i] = max(current_sum - dp[next])
+  ```
+* Since each state only depends on the next three states, the DP can be reduced to **O(1)** extra space.
