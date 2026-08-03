@@ -1,0 +1,127 @@
+Problem: 198. House Robber 
+Platform: Leetcode
+
+## 1. Recursion
+
+```python
+class Solution:
+    def solve(self, nums, index):
+        if index == 0:
+            return nums[index]
+        if index < 0:
+            return 0
+
+        pick = nums[index] + self.solve(nums, index - 2)
+        not_pick = self.solve(nums, index - 1)
+
+        return max(pick, not_pick)
+
+    def rob(self, nums: List[int]) -> int:
+        if not nums:
+            return 0
+
+        return self.solve(nums, len(nums) - 1)
+```
+
+**Time Complexity:** `O(2^N)`
+**Space Complexity:** `O(N)` (Recursion Stack)
+
+---
+
+## 2. Memoization (Top-Down)
+
+```python
+class Solution:
+    def solve(self, nums, index, dp):
+        if index == 0:
+            return nums[index]
+        if index < 0:
+            return 0
+
+        if dp[index] != -1:
+            return dp[index]
+
+        pick = nums[index] + self.solve(nums, index - 2, dp)
+        not_pick = self.solve(nums, index - 1, dp)
+
+        dp[index] = max(pick, not_pick)
+        return dp[index]
+
+    def rob(self, nums: List[int]) -> int:
+        if not nums:
+            return 0
+
+        n = len(nums)
+        dp = [-1] * n
+
+        return self.solve(nums, n - 1, dp)
+```
+
+**Time Complexity:** `O(N)`
+**Space Complexity:** `O(N) + O(N)` (DP + Recursion Stack)
+
+---
+
+## 3. Tabulation (Bottom-Up)
+
+```python
+class Solution:
+    def rob(self, nums: List[int]) -> int:
+        if not nums:
+            return 0
+
+        n = len(nums)
+
+        if n == 1:
+            return nums[0]
+
+        dp = [0] * n
+        dp[0] = nums[0]
+
+        for i in range(1, n):
+            pick = nums[i]
+            if i > 1:
+                pick += dp[i - 2]
+
+            not_pick = dp[i - 1]
+
+            dp[i] = max(pick, not_pick)
+
+        return dp[n - 1]
+```
+
+**Time Complexity:** `O(N)`
+**Space Complexity:** `O(N)`
+
+---
+
+## 4. Space Optimization
+
+```python
+class Solution:
+    def rob(self, nums: List[int]) -> int:
+        if not nums:
+            return 0
+
+        n = len(nums)
+
+        if n == 1:
+            return nums[0]
+
+        prev2 = 0
+        prev1 = nums[0]
+
+        for i in range(1, n):
+            pick = nums[i] + prev2
+            not_pick = prev1
+
+            curr = max(pick, not_pick)
+
+            prev2 = prev1
+            prev1 = curr
+
+        return prev1
+```
+
+**Time Complexity:** `O(N)`
+**Space Complexity:** `O(1)`
