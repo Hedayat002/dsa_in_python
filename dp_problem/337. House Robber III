@@ -1,0 +1,148 @@
+Problem ; 337. House Robber III
+Platform : Leetcode
+
+
+
+
+
+
+## 1. Recursion (Brute Force)
+
+```python
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+
+class Solution:
+
+    def dfs(self, root):
+        if not root:
+            return 0
+
+        # Rob current node
+        rob = root.val
+
+        if root.left:
+            rob += self.dfs(root.left.left)
+            rob += self.dfs(root.left.right)
+
+        if root.right:
+            rob += self.dfs(root.right.left)
+            rob += self.dfs(root.right.right)
+
+        # Don't rob current node
+        not_rob = self.dfs(root.left) + self.dfs(root.right)
+
+        return max(rob, not_rob)
+
+    def rob(self, root):
+        return self.dfs(root)
+```
+
+**Time Complexity:** `O(2^N)` (repeated subproblems)  
+**Space Complexity:** `O(H)` (recursion stack)
+
+---
+
+## 2. Memoization (Top-Down)
+
+```python
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+
+class Solution:
+
+    def __init__(self):
+        self.dp = {}
+
+    def dfs(self, root):
+        if not root:
+            return 0
+
+        if root in self.dp:
+            return self.dp[root]
+
+        rob = root.val
+
+        if root.left:
+            rob += self.dfs(root.left.left)
+            rob += self.dfs(root.left.right)
+
+        if root.right:
+            rob += self.dfs(root.right.left)
+            rob += self.dfs(root.right.right)
+
+        not_rob = self.dfs(root.left) + self.dfs(root.right)
+
+        self.dp[root] = max(rob, not_rob)
+        return self.dp[root]
+
+    def rob(self, root):
+        return self.dfs(root)
+```
+
+**Time Complexity:** `O(N)`  
+**Space Complexity:** `O(N)`
+
+---
+
+## 3. Tabulation (Bottom-Up)
+
+```python
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+
+class Solution:
+
+    def dfs(self, root):
+        if not root:
+            return (0, 0)  # (rob, not_rob)
+
+        left = self.dfs(root.left)
+        right = self.dfs(root.right)
+
+        rob = root.val + left[1] + right[1]
+        not_rob = max(left) + max(right)
+
+        return (rob, not_rob)
+
+    def rob(self, root):
+        return max(self.dfs(root))
+```
+
+**Time Complexity:** `O(N)`  
+**Space Complexity:** `O(H)`
+
+---
+
+## 4. Space Optimization
+
+```python
+# Already space optimized.
+
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+
+class Solution:
+
+    def dfs(self, root):
+        if not root:
+            return (0, 0)
+
+        left_rob, left_not = self.dfs(root.left)
+        right_rob, right_not = self.dfs(root.right)
+
+        rob = root.val + left_not + right_not
+        not_rob = max(left_rob, left_not) + max(right_rob, right_not)
+
+        return (rob, not_rob)
+
+    def rob(self, root):
+        return max(self.dfs(root))
+```
+
+**Time Complexity:** `O(N)`  
+**Space Complexity:** `O(H)` memcite
