@@ -1,0 +1,457 @@
+# 3731. Find Missing Elements
+
+## Problem Understanding (Simple Words)
+
+You are given an array of **unique integers**.
+
+Originally, the array contained **every number between the smallest and largest element**. Some numbers were removed.
+
+Your task is to return **all the missing numbers in sorted order**.
+
+---
+
+### Example
+
+```text
+nums = [1,4,2,5]
+
+Smallest = 1
+Largest  = 5
+
+Original Range:
+1 2 3 4 5
+
+Present:
+1 2 4 5
+
+Missing:
+3
+```
+
+---
+
+# Brute Force Approach
+
+## Idea
+
+1. Sort the array.
+2. Find the smallest and largest numbers.
+3. For every number between them:
+
+   * Check whether it exists in the array using
+
+     ```python
+     if i not in nums
+     ```
+4. If it doesn't exist, add it to the answer.
+
+This is exactly what your code does.
+
+---
+
+## Logic
+
+```
+Sort array
+
+Find smallest and largest
+
+For every number in this range
+
+       Search entire array
+
+           Found?
+           /   \
+         Yes   No
+          |     |
+       Ignore  Add answer
+```
+
+---
+
+## Python Code
+
+```python
+class Solution:
+    def findMissingElements(self, nums: List[int]) -> List[int]:
+        n = len(nums)
+
+        if n == 0:
+            return []
+
+        nums.sort()
+
+        smallest = nums[0]
+        largest = nums[-1]
+
+        missing = []
+
+        for num in range(smallest, largest + 1):
+            if num not in nums:
+                missing.append(num)
+
+        return missing
+```
+
+---
+
+## Code Explanation
+
+```python
+nums.sort()
+```
+
+Sorts the array.
+
+Example
+
+```
+[5,1,4,2]
+
+↓
+
+[1,2,4,5]
+```
+
+---
+
+```python
+smallest = nums[0]
+largest = nums[-1]
+```
+
+Stores the range.
+
+```
+1 .... 5
+```
+
+---
+
+```python
+for num in range(smallest, largest+1):
+```
+
+Visits every possible number.
+
+```
+1
+2
+3
+4
+5
+```
+
+---
+
+```python
+if num not in nums:
+```
+
+Checks the entire array to see whether the number exists.
+
+If absent
+
+```
+missing.append(num)
+```
+
+---
+
+# Dry Run
+
+Input
+
+```python
+nums = [1,4,2,5]
+```
+
+### Step 1
+
+Sort
+
+```
+[1,2,4,5]
+```
+
+---
+
+Smallest
+
+```
+1
+```
+
+Largest
+
+```
+5
+```
+
+Missing =
+
+```
+[]
+```
+
+---
+
+### Loop
+
+#### num = 1
+
+```
+1 in nums ✔
+
+missing = []
+```
+
+---
+
+#### num = 2
+
+```
+2 in nums ✔
+
+missing = []
+```
+
+---
+
+#### num = 3
+
+```
+3 not in nums
+
+missing = [3]
+```
+
+---
+
+#### num = 4
+
+```
+Found
+```
+
+---
+
+#### num = 5
+
+```
+Found
+```
+
+---
+
+Answer
+
+```
+[3]
+```
+
+---
+
+# Complexity Analysis
+
+Let
+
+* **n = length of nums**
+* **R = largest − smallest + 1** (size of the original range)
+
+Sorting takes:
+
+```
+O(n log n)
+```
+
+The outer loop runs:
+
+```
+R times
+```
+
+Each `num not in nums` performs a linear search:
+
+```
+O(n)
+```
+
+So the total complexity is:
+
+**Time Complexity:** `O(n log n + R × n)`
+
+In the worst case (with constraints up to values 1–100), this is acceptable, but generally it simplifies to **O(R × n)** because the membership check dominates.
+
+**Space Complexity:** `O(1)` extra space (excluding the output list).
+
+---
+
+# Optimal Approach
+
+## Intuition
+
+The slow part is:
+
+```python
+if num not in nums
+```
+
+because it searches the entire list every time.
+
+Instead, store every element in a **set**, where lookup is **O(1)** on average.
+
+Then simply iterate through the range and check membership in the set.
+
+---
+
+## Logic
+
+```
+Convert list → set
+
+For every number from smallest to largest
+
+        Present in set?
+        /          \
+      Yes          No
+       |            |
+    Ignore       Add answer
+```
+
+---
+
+## Python Code
+
+```python
+class Solution:
+    def findMissingElements(self, nums: List[int]) -> List[int]:
+        s = set(nums)
+
+        smallest = min(nums)
+        largest = max(nums)
+
+        ans = []
+
+        for num in range(smallest, largest + 1):
+            if num not in s:
+                ans.append(num)
+
+        return ans
+```
+
+---
+
+## Code Explanation
+
+```python
+s = set(nums)
+```
+
+Creates a hash set for constant-time membership checks.
+
+---
+
+```python
+smallest = min(nums)
+largest = max(nums)
+```
+
+Finds the range boundaries.
+
+---
+
+```python
+for num in range(smallest, largest + 1):
+```
+
+Checks every value in the original range.
+
+---
+
+```python
+if num not in s:
+```
+
+Average **O(1)** lookup instead of scanning the entire list.
+
+---
+
+# Dry Run (Optimal)
+
+Input
+
+```python
+nums = [5,1]
+```
+
+Set
+
+```
+{1,5}
+```
+
+Smallest
+
+```
+1
+```
+
+Largest
+
+```
+5
+```
+
+Loop
+
+```
+1 → present
+2 → missing → [2]
+3 → missing → [2,3]
+4 → missing → [2,3,4]
+5 → present
+```
+
+Answer
+
+```
+[2,3,4]
+```
+
+---
+
+# Complexity Comparison
+
+| Approach      | Time                   | Space                   |
+| ------------- | ---------------------- | ----------------------- |
+| Brute Force   | **O(n log n + R × n)** | O(1) (excluding output) |
+| Optimal (Set) | **O(n + R)**           | O(n)                    |
+
+---
+
+# Edge Cases
+
+* `nums = [1,2,3,4]` → `[]`
+* `nums = [5,1]` → `[2,3,4]`
+* Only one missing number.
+* Many consecutive missing numbers.
+* Missing numbers at neither end (smallest and largest are guaranteed present).
+
+---
+
+# Common Interview Mistakes
+
+1. Forgetting to sort before using the first and last elements (in the brute-force approach).
+2. Using `if x not in nums` inside a loop without realizing it is **O(n)** each time.
+3. Forgetting that the range is **inclusive** (`largest + 1`).
+4. Assuming the input is already sorted.
+
+---
+
+# Pattern
+
+* Hashing (Set)
+* Range Traversal
+* Membership Checking
+* Simulation over a Continuous Integer Range
