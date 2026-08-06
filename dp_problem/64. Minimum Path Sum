@@ -1,0 +1,181 @@
+Problem 64. Minimum Path Sum
+Platform: Leetcode
+
+Since you used **`dpp`**, I'll follow your saved DP format. Then, because you specifically provided the **recursion code**, I'll explain that separately afterward.
+
+# 1. Recursion
+
+### Idea
+
+To reach cell `(i, j)`, there are only two possible previous cells:
+
+* From **Top** → `(i-1, j)`
+* From **Left** → `(i, j-1)`
+
+So,
+
+[
+f(i,j)=grid[i][j]+min(f(i-1,j),f(i,j-1))
+]
+
+### Python Code
+
+```python
+class Solution:
+    def solve(self, i, j, grid):
+        # Out of boundary
+        if i < 0 or j < 0:
+            return float('inf')
+
+        # Source reached
+        if i == 0 and j == 0:
+            return grid[i][j]
+
+        up = self.solve(i - 1, j, grid)
+        left = self.solve(i, j - 1, grid)
+
+        return grid[i][j] + min(up, left)
+
+    def minPathSum(self, grid):
+        m = len(grid)
+        n = len(grid[0])
+
+        return self.solve(m - 1, n - 1, grid)
+```
+
+**Time Complexity:** `O(2^(m+n))`
+
+**Space Complexity:** `O(m+n)` (Recursion stack)
+
+---
+
+# 2. Memoization (Top-Down)
+
+### Idea
+
+Store already calculated answers in `dp[i][j]`.
+
+### Python Code
+
+```python
+class Solution:
+    def solve(self, i, j, grid, dp):
+        if i < 0 or j < 0:
+            return float('inf')
+
+        if i == 0 and j == 0:
+            return grid[0][0]
+
+        if dp[i][j] != -1:
+            return dp[i][j]
+
+        up = self.solve(i - 1, j, grid, dp)
+        left = self.solve(i, j - 1, grid, dp)
+
+        dp[i][j] = grid[i][j] + min(up, left)
+        return dp[i][j]
+
+    def minPathSum(self, grid):
+        m = len(grid)
+        n = len(grid[0])
+
+        dp = [[-1] * n for _ in range(m)]
+
+        return self.solve(m - 1, n - 1, grid, dp)
+```
+
+**Time Complexity:** `O(m*n)`
+
+**Space Complexity:** `O(m*n) + O(m+n)`
+
+---
+
+# 3. Tabulation (Bottom-Up)
+
+### Idea
+
+Build the answer from `(0,0)` to `(m-1,n-1)`.
+
+### Python Code
+
+```python
+class Solution:
+    def minPathSum(self, grid):
+        m = len(grid)
+        n = len(grid[0])
+
+        dp = [[0] * n for _ in range(m)]
+
+        dp[0][0] = grid[0][0]
+
+        for i in range(m):
+            for j in range(n):
+                if i == 0 and j == 0:
+                    continue
+
+                up = float('inf')
+                left = float('inf')
+
+                if i > 0:
+                    up = dp[i - 1][j]
+
+                if j > 0:
+                    left = dp[i][j - 1]
+
+                dp[i][j] = grid[i][j] + min(up, left)
+
+        return dp[m - 1][n - 1]
+```
+
+**Time Complexity:** `O(m*n)`
+
+**Space Complexity:** `O(m*n)`
+
+---
+
+# 4. Space Optimization
+
+### Idea
+
+Only the previous row is required.
+
+### Python Code
+
+```python
+class Solution:
+    def minPathSum(self, grid):
+        m = len(grid)
+        n = len(grid[0])
+
+        prev = [0] * n
+
+        for i in range(m):
+            curr = [0] * n
+
+            for j in range(n):
+                if i == 0 and j == 0:
+                    curr[j] = grid[0][0]
+                    continue
+
+                up = float('inf')
+                left = float('inf')
+
+                if i > 0:
+                    up = prev[j]
+
+                if j > 0:
+                    left = curr[j - 1]
+
+                curr[j] = grid[i][j] + min(up, left)
+
+            prev = curr
+
+        return prev[n - 1]
+```
+
+**Time Complexity:** `O(m*n)`
+
+**Space Complexity:** `O(n)`
+
+---
+
