@@ -76,3 +76,34 @@ class Solution:
 **TC:** `O(k × d)`
 
 **SC:** `O(1)`
+
+
+
+                          ......ALOGORITHM>>>>>
+  Start with n
+        │
+        ▼
+Extract every digit
+        │
+        ▼
+Multiply all digits
+        │
+        ▼
+Any digit = 0?
+        │
+   Yes ─────► Return n
+        │
+       No
+        │
+        ▼
+product % t == 0 ?
+        │
+   Yes ─────► Return n
+        │
+       No
+        │
+        ▼
+n = n + 1
+        │
+        ▼
+Repeat
