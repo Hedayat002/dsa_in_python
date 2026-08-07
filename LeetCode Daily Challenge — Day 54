@@ -1,0 +1,174 @@
+## 1. Brute Force / First Possible Solution
+
+### Idea
+
+Generate every number starting from `num`, skip numbers containing `0`, compute the product of digits, and check if it is divisible by `t`.
+
+```python
+class Solution:
+    def smallestNumber(self, num: str, t: int) -> str:
+        x = int(num)
+
+        while True:
+            s = str(x)
+
+            if '0' not in s:
+                prod = 1
+                for ch in s:
+                    prod *= int(ch)
+
+                if prod % t == 0:
+                    return s
+
+            x += 1
+```
+
+**Time Complexity:** Exponential / Unbounded (very slow)
+
+**Space Complexity:** `O(1)`
+
+---
+
+## 2. Better Solution
+
+### Idea
+
+Instead of checking every number:
+
+* Remove satisfied factors using `gcd`.
+* Try modifying digits from **right to left**.
+* Greedily fill the remaining suffix with the smallest possible digits that satisfy the remaining factor.
+* If impossible for the current length, build the smallest valid number with one extra digit.
+
+```python
+from math import gcd
+
+class Solution:
+
+    def freeSlotsFiller(self, required: int, length: int) -> str:
+        res = []
+
+        for digit in range(9, 1, -1):
+            while required % digit == 0:
+                res.append(str(digit))
+                required //= digit
+
+        while len(res) < length:
+            res.append('1')
+
+        res.reverse()
+        return "".join(res)
+
+    def smallestNumber(self, num: str, t: int) -> str:
+        n = len(num)
+
+        temp = t
+        for prime in (2, 3, 5, 7):
+            while temp % prime == 0:
+                temp //= prime
+
+        if temp != 1:
+            return "-1"
+
+        remainingFactor = [0] * (n + 1)
+        remainingFactor[0] = t
+
+        for i in range(n):
+            digit = int(num[i])
+
+            if digit == 0:
+                break
+
+            remainingFactor[i + 1] = (
+                remainingFactor[i] //
+                gcd(remainingFactor[i], digit)
+            )
+
+        if remainingFactor[n] == 1:
+            return num
+
+        zeroPos = num.find('0')
+        zeroIdx = n - 1 if zeroPos == -1 else zeroPos
+
+        for i in range(zeroIdx, -1, -1):
+            required = remainingFactor[i]
+            freeSlots = n - 1 - i
+
+            for digit in range(int(num[i]) + 1, 10):
+                furtherRequired = required // gcd(required, digit)
+                suffix = self.freeSlotsFiller(
+                    furtherRequired,
+                    freeSlots
+                )
+
+                if len(suffix) == freeSlots:
+                    return (
+                        num[:i]
+                        + str(digit)
+                        + suffix
+                    )
+
+        return self.freeSlotsFiller(t, n + 1)
+```
+
+**Time Complexity:** `O(n * log(t))`
+
+**Space Complexity:** `O(n)`
+
+---
+
+## 3. Optimal Solution
+
+The above greedy solution is the **optimal** approach accepted for this problem.
+
+**Time Complexity:** `O(n * log(t))`
+
+**Space Complexity:** `O(n)`
+
+---
+
+## 4. Algorithm Flow
+
+```text
+                  Start
+                    |
+                    v
+          Factorize t using 2,3,5,7
+                    |
+          Remaining prime exists?
+             /               \
+           Yes               No
+           |                  |
+        Return -1      Compute remainingFactor[]
+                             |
+                Already divisible?
+                    /      \
+                  Yes      No
+                  |         |
+              Return num    |
+                             v
+          Traverse digits from right → left
+                             |
+                 Try larger digit (d+1...9)
+                             |
+          Remove factor using gcd(required,digit)
+                             |
+          Fill remaining suffix greedily
+                             |
+                Valid suffix found?
+                  /        \
+                Yes        No
+                |           |
+        Return answer    Continue
+                             |
+                All positions exhausted?
+                      /           \
+                    No            Yes
+                    |              |
+                 Continue   Build smallest
+                            valid number
+                            of length n+1
+                                   |
+                                   v
+                                Return Answer
+```
