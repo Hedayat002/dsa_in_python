@@ -1,0 +1,562 @@
+Your approach is **very close**, and for the given input
+
+```text
+word1 = "bacdc"
+word2 = "abc"
+```
+
+the correct answer is:
+
+```text
+[1, 2, 4]
+```
+
+Your code actually produces this correctly. The key is understanding the `last` array and the mismatch condition.
+
+## Case 1 — Brute Force
+
+**Idea:** Try every possible subsequence of length `m`. For each sequence, count mismatches with `word2`. Keep the lexicographically smallest valid sequence.
+
+```python
+class Solution:
+    def validSequence(self, word1: str, word2: str) -> list[int]:
+        n = len(word1)
+        m = len(word2)
+        ans = []
+
+        def dfs(i, path, mismatches):
+            nonlocal ans
+
+            if len(path) == m:
+                if mismatches <= 1 and (not ans or path < ans):
+                    ans = path[:]
+                return
+
+            if n - i < m - len(path):
+                return
+
+            for j in range(i, n):
+                new_mismatches = mismatches + (word1[j] != word2[len(path)])
+
+                if new_mismatches <= 1:
+                    path.append(j)
+                    dfs(j + 1, path, new_mismatches)
+                    path.pop()
+
+        dfs(0, [], 0)
+        return ans
+```
+
+**TC:** `O(C(n,m) * m)`
+**SC:** `O(m)`
+
+### Logic Flow
+
+```text
+Start
+  |
+  v
+Choose index j
+  |
+  v
+Compare word1[j] with word2[k]
+  |
+  +---- same ----> mismatches unchanged
+  |
+  +---- different -> mismatches + 1
+  |
+  v
+mismatches <= 1 ?
+  |
+  +---- No ---> Backtrack
+  |
+  +---- Yes
+          |
+          v
+     Continue choosing
+          |
+          v
+       length m?
+          |
+          +---- Yes ---> Check valid + lexicographically smallest
+```
+
+This is only useful conceptually because `n <= 3 * 10^5`, so brute force is impossible.
+
+---
+
+# Case 2 — Better Solution
+
+We can greedily choose the smallest possible index, but we need to know:
+
+> If I use this index as the one mismatch, can the remaining characters of `word2` still be matched exactly?
+
+For that, build a suffix array `last`.
+
+```python
+class Solution:
+    def validSequence(self, word1: str, word2: str) -> list[int]:
+        n = len(word1)
+        m = len(word2)
+
+        last = [-1] * m
+
+        i = n - 1
+        j = m - 1
+
+        while i >= 0 and j >= 0:
+            if word1[i] == word2[j]:
+                last[j] = i
+                j -= 1
+            i -= 1
+
+        ans = []
+        used_mismatch = False
+        j = 0
+
+        for i, c in enumerate(word1):
+            if j == m:
+                break
+
+            if c == word2[j]:
+                ans.append(i)
+                j += 1
+
+            elif not used_mismatch:
+                if j == m - 1 or i < last[j + 1]:
+                    ans.append(i)
+                    used_mismatch = True
+                    j += 1
+
+        return ans if j == m else []
+```
+
+**TC:** `O(n + m)`
+**SC:** `O(m)`
+
+### Logic Flow
+
+```text
+Build last[]
+     |
+     v
+last[j] = earliest index
+where word2[j] can be matched
+from the suffix
+     |
+     v
+Scan word1 left -> right
+     |
+     +---- Exact match?
+     |       |
+     |       Yes
+     |       |
+     |       v
+     |    Take index
+     |
+     +---- Mismatch?
+             |
+             v
+       Mismatch available?
+             |
+          Yes
+             |
+             v
+   Can remaining word2
+   be matched exactly?
+             |
+        +----+----+
+        |         |
+       Yes        No
+        |         |
+        v         v
+      Take      Skip
+      index
+```
+
+---
+
+# Case 3 — Your Input: `bacdc` / `abc`
+
+Let's dry run **your exact solution**.
+
+```text
+word1 = b a c d c
+index    0 1 2 3 4
+
+word2 = a b c
+index    0 1 2
+```
+
+First we build `last`.
+
+### Reverse scan
+
+For `word2[2] = 'c'`:
+
+```text
+word1[4] = 'c'
+```
+
+So:
+
+```text
+last[2] = 4
+```
+
+For `word2[1] = 'b'`:
+
+```text
+word1[0] = 'b'
+```
+
+So:
+
+```text
+last[1] = 0
+```
+
+For `word2[0] = 'a'`:
+
+```text
+word1[1] = 'a'
+```
+
+So:
+
+```text
+last[0] = 1
+```
+
+Therefore:
+
+```text
+last = [1, 0, 4]
+```
+
+Now scan from left to right.
+
+### i = 0
+
+```text
+word1[0] = 'b'
+word2[0] = 'a'
+```
+
+Mismatch.
+
+Can we use index `0` as the mismatch?
+
+We need the remaining:
+
+```text
+word2[1:] = "bc"
+```
+
+to be matched exactly after index `0`.
+
+Check:
+
+```python
+i < last[j + 1]
+0 < last[1]
+0 < 0
+```
+
+False.
+
+Therefore **we cannot use index 0**.
+
+This is important. If we did:
+
+```text
+index 0 -> b  [mismatch with a]
+index 1 -> a  [mismatch with b]
+```
+
+we would already have **2 mismatches**.
+
+So skip index `0`.
+
+---
+
+### i = 1
+
+```text
+word1[1] = 'a'
+word2[0] = 'a'
+```
+
+Exact match.
+
+Take it:
+
+```text
+ans = [1]
+j = 1
+```
+
+---
+
+### i = 2
+
+```text
+word1[2] = 'c'
+word2[1] = 'b'
+```
+
+Mismatch.
+
+We have not used our mismatch yet.
+
+Check:
+
+```python
+i < last[j + 1]
+2 < last[2]
+2 < 4
+```
+
+True.
+
+Therefore take index `2` as the **one allowed mismatch**.
+
+```text
+ans = [1, 2]
+used_mismatch = True
+j = 2
+```
+
+---
+
+### i = 3
+
+```text
+word1[3] = 'd'
+word2[2] = 'c'
+```
+
+Mismatch, but the mismatch has already been used.
+
+Skip.
+
+---
+
+### i = 4
+
+```text
+word1[4] = 'c'
+word2[2] = 'c'
+```
+
+Exact match.
+
+Take it:
+
+```text
+ans = [1, 2, 4]
+```
+
+Final:
+
+```text
+[1, 2, 4]
+```
+
+The resulting string is:
+
+```text
+word1[1] + word1[2] + word1[4]
+= "a" + "c" + "c"
+= "acc"
+```
+
+Compare:
+
+```text
+acc
+abc
+ ^
+```
+
+Only the second character differs, so it is valid.
+
+---
+
+# Case 4 — Why `[0,1,2]` is NOT valid
+
+This is the important part of your confusion.
+
+For:
+
+```text
+word1 = "bacdc"
+word2 = "abc"
+```
+
+consider:
+
+```text
+[0, 1, 2]
+```
+
+It creates:
+
+```text
+"bac"
+```
+
+Compare:
+
+```text
+word1 subsequence = b a c
+word2             = a b c
+                    ^ ^
+```
+
+There are **2 mismatches**:
+
+```text
+b != a
+a != b
+c == c
+```
+
+But we are allowed to change **at most one character**.
+
+Therefore:
+
+```text
+[0,1,2] ❌
+```
+
+The correct answer is:
+
+```text
+[1,2,4] ✅
+```
+
+because:
+
+```text
+"acc"
+"abc"
+```
+
+has exactly one mismatch.
+
+---
+
+# Optimal Solution
+
+Your solution is already the optimal `O(n + m)` approach. I would make only a small naming improvement:
+
+```python
+class Solution:
+    def validSequence(self, word1: str, word2: str) -> list[int]:
+        n = len(word1)
+        m = len(word2)
+
+        # last[j] = earliest index in word1
+        # from which word2[j:] can be matched exactly
+        last = [-1] * m
+
+        i = n - 1
+        j = m - 1
+
+        while i >= 0 and j >= 0:
+            if word1[i] == word2[j]:
+                last[j] = i
+                j -= 1
+            i -= 1
+
+        ans = []
+        used_mismatch = False
+        j = 0
+
+        for i in range(n):
+            if j == m:
+                break
+
+            # Case 1: exact match
+            if word1[i] == word2[j]:
+                ans.append(i)
+                j += 1
+
+            # Case 2: use the one allowed mismatch
+            elif not used_mismatch:
+                # After taking i, word2[j+1:] must
+                # still be exactly matchable.
+                if j == m - 1 or i < last[j + 1]:
+                    ans.append(i)
+                    used_mismatch = True
+                    j += 1
+
+        return ans if j == m else []
+```
+
+**TC:** `O(n + m)`
+**SC:** `O(m)`
+
+### Optimal Logic
+
+```text
+              Build last[]
+                   |
+                   v
+        Scan word1 from left
+                   |
+                   v
+        ┌──────────────────┐
+        │ word1[i]==word2[j]? │
+        └────────┬─────────┘
+                 |
+          +------+------+
+          |             |
+         YES            NO
+          |             |
+          v             v
+       Take i      mismatch unused?
+       j += 1           |
+                    +----+----+
+                    |         |
+                   NO        YES
+                    |         |
+                   Skip       Check
+                              i < last[j+1]
+                              |
+                         +----+----+
+                         |         |
+                        NO        YES
+                         |         |
+                        Skip      Take i
+                                  mismatch used
+```
+
+### Why `i < last[j+1]`?
+
+Suppose we want to use `i` as the mismatch.
+
+After taking `i`, we still need:
+
+```text
+word2[j+1:]
+```
+
+to match **exactly**.
+
+`last[j+1]` tells us the earliest position where the next required character can be taken while preserving the whole suffix.
+
+So:
+
+```python
+i < last[j + 1]
+```
+
+means:
+
+> There is still enough room after `i` to construct the remaining exact subsequence.
+
+That condition is what makes the greedy choice safe.
+
+**Final verdict:** Your submitted solution is **correct and optimal**. For `word1 = "bacdc"` and `word2 = "abc"`, it returns **`[1,2,4]`**, not `[]`. If your local run is returning `[]`, the issue is likely that the code being executed differs slightly from the code pasted here.
