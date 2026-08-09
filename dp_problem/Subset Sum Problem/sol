@@ -1,0 +1,116 @@
+1. Recursion
+class Solution:
+    def solve(self, index, total, arr):
+        if total == 0:
+            return True
+
+        if index == 0:
+            return arr[0] == total
+
+        if arr[index] > total:
+            pick = False
+        else:
+            pick = self.solve(index - 1, total - arr[index], arr)
+
+        not_pick = self.solve(index - 1, total, arr)
+
+        return pick or not_pick
+
+    def isSubsetSum(self, arr: list[int], sum: int) -> bool:
+        n = len(arr)
+        return self.solve(n - 1, sum, arr)
+
+TC: O(2^n)
+SC: O(n)
+
+
+2. Memoization (Top-Down)
+
+class Solution:
+    def solve(self,index,total,arr,dp):
+        if total ==0:
+            return True
+        if index ==0:
+            if arr[0] == total:
+                return True
+            return False
+        # Use memoized result if available
+        if dp[index][total] != -1:
+            return dp[index][total]
+        
+        if arr[index] > total:
+            pick = False
+            
+        else:
+            pick = self.solve(index-1,total- arr[index],arr,dp)
+        not_pick = self.solve(index-1,total,arr,dp)
+        
+        dp[index][total] = pick or not_pick
+        return dp[index][total]
+    def isSubsetSum(self, arr: list[int], sum: int) -> bool:
+        # code here
+        n = len(arr)
+        dp = [[-1 for _ in range(sum + 1)] for _ in range(n)]
+        return self.solve(n-1,sum,arr,dp)
+  TC: O(n × sum)
+  SC: O(n × sum) + O(n)
+
+
+
+  3. Tabulation (Bottom-Up)
+
+  
+  class Solution:
+    def isSubsetSum(self, arr: list[int], sum: int) -> bool:
+        # code here
+        n = len(arr)
+        dp = [[False] * (sum + 1) for _ in range(n)]
+        
+        for index in range(n):
+            dp[index][0] = True
+
+        if arr[0] <= sum:
+            dp[0][arr[0]] = True
+            
+        for i in range(1, n):
+            for total in range(1, sum + 1):
+
+                if arr[i] > total:
+                    pick = False
+                    
+                else:
+                    pick = dp[i-1][total- arr[i]]
+                not_pick = dp[i-1][total]
+                dp[i][total] = pick or not_pick
+                
+        return dp[n-1][sum]   
+  TC: O(n × sum)
+SC: O(n × sum)
+
+4. Space Optimization
+
+
+class Solution:
+    def isSubsetSum(self, arr, sum):
+        n = len(arr)
+        # prev[t] -> achievable with elements up to previous index
+        prev = [False for _ in range(sum + 1)]
+        prev = True  # sum 0 is always achievable
+        if arr <= sum:
+            prev[arr] = True
+        # Iterate elements
+        for index in range(1, n):
+            curr = [False for _ in range(sum + 1)]
+            for target in range(0, sum + 1):
+                if arr[index] > target:
+                    pick = False
+                else:
+                    pick = prev[target - arr[index]]
+                not_pick = prev[target]
+                curr[target] = pick or not_pick
+            # Move window
+            prev = curr
+        return prev[sum]
+
+        Time and Space Complexity
+Precise: Time O(n * sum), Space O(sum).
