@@ -1,0 +1,86 @@
+## 1. Recursion
+
+```python
+class Solution:
+    def solve(self, n):
+        for k in range(1, int(n ** 0.5) + 1):
+            if self.solve(n - k * k) == False:
+                return True
+
+        return False
+
+    def winnerSquareGame(self, n):
+        return self.solve(n)
+```
+
+**TC:** O((√n)^n)
+**SC:** O(n)
+
+---
+
+## 2. Memoization (Top-Down)
+
+```python
+class Solution:
+    def solve(self, n, dp):
+        if dp[n] != -1:
+            return dp[n]
+
+        for k in range(1, int(n ** 0.5) + 1):
+            if self.solve(n - k * k, dp) == False:
+                dp[n] = True
+                return True
+
+        dp[n] = False
+        return False
+
+    def winnerSquareGame(self, n):
+        dp = [-1] * (n + 1)
+        dp[0] = False
+        return self.solve(n, dp)
+```
+
+**TC:** O(n√n)
+**SC:** O(n)
+
+---
+
+## 3. Tabulation (Bottom-Up)
+
+```python
+class Solution:
+    def winnerSquareGame(self, n):
+        dp = [False] * (n + 1)
+
+        for i in range(1, n + 1):
+            for k in range(1, int(i ** 0.5) + 1):
+                if dp[i - k * k] == False:
+                    dp[i] = True
+                    break
+
+        return dp[n]
+```
+
+**TC:** O(n√n)
+**SC:** O(n)
+
+---
+
+## 4. Space Optimization
+
+```python
+class Solution:
+    def winnerSquareGame(self, n):
+        dp = [False] * (n + 1)
+
+        for i in range(1, n + 1):
+            for k in range(1, int(i ** 0.5) + 1):
+                if not dp[i - k * k]:
+                    dp[i] = True
+                    break
+
+        return dp[n]
+```
+
+**TC:** O(n√n)
+**SC:** O(n)
