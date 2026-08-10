@@ -66,21 +66,3 @@ class Solution:
 
 ---
 
-## 4. Space Optimization
-
-```python
-class Solution:
-    def winnerSquareGame(self, n):
-        dp = [False] * (n + 1)
-
-        for i in range(1, n + 1):
-            for k in range(1, int(i ** 0.5) + 1):
-                if not dp[i - k * k]:
-                    dp[i] = True
-                    break
-
-        return dp[n]
-```
-
-**TC:** O(n√n)
-**SC:** O(n)
