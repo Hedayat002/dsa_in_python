@@ -1,0 +1,133 @@
+Problem: 416. Partition Equal Subset Sum
+Platform: Leetcode
+
+1.Recurssion 
+
+class Solution:
+    def solve(self, nums, i, x):
+        if x == 0:
+            return True
+
+        if i >= len(nums):
+            return False
+
+        take = self.solve(nums, i + 1, x - nums[i])
+        not_take = self.solve(nums, i + 1, x)
+
+        return take or not_take
+    def canPartition(self, nums: List[int]) -> bool:
+        total = sum(nums)
+
+        if total % 2 != 0:
+            return False
+
+        target = total // 2
+
+        return self.solve(nums, 0, target)
+TC: O(2^n)
+SC: O(n)
+
+2.Memization 
+class Solution:
+    def solve(self, nums, i, x,dp):
+        if x == 0:
+            return True
+
+        if i >= len(nums):
+            return False
+        
+        if dp[i][x] != -1:
+            return dp[i][x] 
+        
+
+        take = self.solve(nums, i + 1, x - nums[i],dp)
+        not_take = self.solve(nums, i + 1, x,dp)
+
+        dp[i][x] =  take or not_take
+
+        return dp[i][x] 
+    def canPartition(self, nums: List[int]) -> bool:
+        n = len(nums)
+        total = sum(nums)
+
+        if total % 2 != 0:
+            return False
+
+        target = total // 2
+        dp = [[-1] * (target + 1) for _ in range(n)]
+
+        return self.solve(nums, 0, target,dp)
+TC: O(n × target)
+SC: O(n × target) + O(n)
+
+3.Tabulation 
+class Solution:
+
+    def canPartition(self, nums: List[int]) -> bool:
+        n = len(nums)
+        total = sum(nums)
+
+        if total % 2 != 0:
+            return False
+
+        target = total // 2
+
+        dp = [[False] * (target + 1) for _ in range(n+1)]
+        for i in range(n + 1):
+            dp[i][0] = True
+
+        for i in range(1, n + 1):
+            for j in range(1, target + 1):
+                not_take = dp[i - 1][j]
+                take = False
+
+                if nums[i - 1] <= j:
+                    take = dp[i - 1][j - nums[i - 1]]
+
+                dp[i][j] = take or not_take
+        return dp[n][target]
+  TC: O(n × target)
+SC: O(n × target)
+
+        
+4. Tabulation(Space Optimization)
+
+class Solution:
+    def canPartition(self, nums: List[int]) -> bool:
+        total = sum(nums)
+
+        # Total sum must be even
+        if total % 2 == 1:
+            return False
+
+        k = total // 2
+
+        prev = [False] * (k + 1)
+        prev[0] = True
+
+        # First element
+        if nums[0] <= k:
+            prev[nums[0]] = True
+
+        for index in range(1, len(nums)):
+            curr = [False] * (k + 1)
+
+            for target in range(k + 1):
+
+                # Not pick
+                not_pick = prev[target]
+
+                # Pick
+                if nums[index] <= target:
+                    pick = prev[target - nums[index]]
+                else:
+                    pick = False
+
+                curr[target] = pick or not_pick
+
+            prev = curr
+
+TC: O(n × target)
+SC: O(target)
+
+        return prev[k]
