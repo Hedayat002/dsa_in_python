@@ -127,7 +127,9 @@ class Solution:
 
             prev = curr
 
-TC: O(n × target)
-SC: O(target)
+
 
         return prev[k]
+
+TC: O(n × target)
+SC: O(target)
