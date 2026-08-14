@@ -1,0 +1,106 @@
+## Brute Force
+
+```python
+class Solution:
+    def maximumLengthSubstring(self, s: str) -> int:
+        n = len(s)
+        ans = 0
+
+        for left in range(n):
+            freq = {}
+
+            for right in range(left, n):
+                freq[s[right]] = freq.get(s[right], 0) + 1
+
+                if freq[s[right]] > 2:
+                    break
+
+                ans = max(ans, right - left + 1)
+
+        return ans
+```
+
+**TC:** O(n²)
+**SC:** O(1)
+
+---
+
+## Better
+
+```python
+class Solution:
+    def maximumLengthSubstring(self, s: str) -> int:
+        n = len(s)
+        ans = 0
+
+        for left in range(n):
+            freq = [0] * 26
+
+            for right in range(left, n):
+                idx = ord(s[right]) - ord('a')
+                freq[idx] += 1
+
+                if freq[idx] > 2:
+                    break
+
+                ans = max(ans, right - left + 1)
+
+        return ans
+```
+
+**TC:** O(n²)
+**SC:** O(1)
+
+---
+
+## Optimal
+
+```python
+class Solution:
+    def maximumLengthSubstring(self, s: str) -> int:
+        n = len(s)
+        freq = {}
+        left = 0
+        ans = 0
+
+        for right in range(n):
+            freq[s[right]] = freq.get(s[right], 0) + 1
+
+            while freq[s[right]] > 2:
+                freq[s[left]] -= 1
+                left += 1
+
+            ans = max(ans, right - left + 1)
+
+        return ans
+```
+
+**TC:** O(n)
+**SC:** O(1)
+
+---
+
+### ASCII Algorithm
+
+```text
+Start
+  ↓
+Initialize left = 0, ans = 0, freq = {}
+  ↓
+Expand right
+  ↓
+freq[s[right]]++
+  ↓
+freq[s[right]] > 2 ?
+  ├── Yes → Remove s[left] → left++
+  │          ↓
+  │        Check again
+  │
+  └── No
+       ↓
+ans = max(ans, right - left + 1)
+       ↓
+Move right
+       ↓
+End → return ans
+```
