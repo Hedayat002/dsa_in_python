@@ -1,0 +1,70 @@
+## Brute Force — DFS
+
+```python
+class Solution:
+    def longestSubsequence(self, nums: List[int]) -> int:
+        n = len(nums)
+        ans = 0
+
+        def dfs(i, length, xor):
+            nonlocal ans
+
+            if i == n:
+                if xor != 0:
+                    ans = max(ans, length)
+                return
+
+            dfs(i + 1, length + 1, xor ^ nums[i])
+            dfs(i + 1, length, xor)
+
+        dfs(0, 0, 0)
+        return ans
+```
+
+**TC:** `O(2^n)`
+**SC:** `O(n)`
+
+---
+
+## Optimal
+
+```python
+class Solution:
+    def longestSubsequence(self, nums: List[int]) -> int:
+        total = 0
+        nonzero = False
+
+        for num in nums:
+            total ^= num
+            if num != 0:
+                nonzero = True
+
+        if total != 0:
+            return len(nums)
+
+        if nonzero:
+            return len(nums) - 1
+
+        return 0
+```
+
+**TC:** `O(n)`
+**SC:** `O(1)`
+
+---
+
+### Algorithm
+
+```text
+Start
+  ↓
+Compute XOR of all elements
+  ↓
+Is total XOR != 0?
+  ├── Yes → return n
+  └── No
+       ↓
+   Is any element non-zero?
+       ├── Yes → return n - 1
+       └── No  → return 0
+```
