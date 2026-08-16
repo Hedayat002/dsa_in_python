@@ -1,0 +1,74 @@
+Yes. **Both codes are functionally correct**, but the difference is in **space usage**, not time complexity.
+
+### 1. Your Brute Force
+
+```python
+class Solution:
+    def xorOperation(self, n: int, start: int) -> int:
+        nums = []
+        total = 0
+
+        for i in range(n):
+            nums.append(start + 2 * i)
+            total ^= nums[i]
+
+        return total
+```
+
+* **Time Complexity:** `O(n)`
+* **Space Complexity:** `O(n)` → because you store all elements in `nums`.
+
+Example:
+
+`n = 5, start = 0`
+
+```text
+nums = [0, 2, 4, 6, 8]
+
+total:
+0
+0 ^ 2 = 2
+2 ^ 4 = 6
+6 ^ 6 = 0
+0 ^ 8 = 8
+```
+
+Answer = `8`
+
+---
+
+### 2. Your "Optimal" Code
+
+```python
+class Solution:
+    def xorOperation(self, n: int, start: int) -> int:
+        total = 0
+
+        for i in range(n):
+            total ^= start + 2 * i
+
+        return total
+```
+
+Here, you **don't need the `nums` array at all**. You can directly generate each value and XOR it.
+
+* **Time Complexity:** `O(n)`
+* **Space Complexity:** `O(1)` ✅
+
+### Key difference
+
+```text
+Brute Force:
+Generate → Store → XOR
+            ↓
+          O(n) space
+
+Optimal:
+Generate → XOR directly
+            ↓
+          O(1) space
+```
+
+So your second solution is the **space-optimized solution**.
+
+**Important:** It is not asymptotically faster—both are `O(n)` time. The improvement is **O(n) → O(1) auxiliary space**.
