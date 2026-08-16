@@ -1,0 +1,265 @@
+## 1. What is the problem asking?
+
+You have stones with values. On every turn:
+
+* Alice goes first.
+* A player removes **one stone**.
+* Keep the sum of all removed stones.
+* If after your move the sum becomes divisible by `3`, **you lose immediately**.
+* If all stones are removed without anyone making the sum divisible by `3`, **Bob wins automatically**.
+
+We need to determine whether **Alice can force a win** with optimal play.
+
+### Key observation
+
+Only the remainder of each stone matters:
+
+```text
+stone % 3
+
+0 → does not change the current sum % 3
+1 → increases sum remainder by 1
+2 → increases sum remainder by 2 (= -1 mod 3)
+```
+
+So instead of actual values, we only care about:
+
+```text
+cnt0 = number of stones % 3 == 0
+cnt1 = number of stones % 3 == 1
+cnt2 = number of stones % 3 == 2
+```
+
+---
+
+# 2. Brute Force
+
+For every turn, try removing **every remaining stone**.
+
+The state needs:
+
+```text
+remaining stones
+current sum % 3
+whose turn
+```
+
+If choosing a stone makes the sum `% 3 == 0`, that player loses, so that move is bad.
+
+Otherwise, recursively check whether the opponent can be forced to lose.
+
+### Brute Force Code
+
+```python
+class Solution:
+    def stoneGameIX(self, stones):
+        n = len(stones)
+
+        def dfs(mask, rem, alice_turn):
+            if mask == (1 << n) - 1:
+                return False
+
+            for i in range(n):
+                if not (mask >> i) & 1:
+                    new_rem = (rem + stones[i]) % 3
+
+                    if new_rem == 0:
+                        return alice_turn
+
+                    opponent_wins = dfs(mask | (1 << i), new_rem, not alice_turn)
+
+                    if not opponent_wins:
+                        return alice_turn
+
+            return not alice_turn
+
+        return dfs(0, 0, True)
+```
+
+### TC
+
+```text
+O(n · 2^n)
+```
+
+### SC
+
+```text
+O(2^n)
+```
+
+This is obviously impossible for `n = 10^5`.
+
+---
+
+# 3. Optimal Thought Process
+
+We only need:
+
+```text
+cnt0, cnt1, cnt2
+```
+
+### What does a `0` stone do?
+
+Suppose current sum remainder is:
+
+```text
+1
+```
+
+Removing a `0` keeps it:
+
+```text
+1 → 1
+```
+
+Similarly:
+
+```text
+2 → 2
+```
+
+Therefore, `0` stones don't affect the modulo game.
+
+But they **do consume turns**.
+
+So `0` stones essentially change **who gets the next meaningful move**.
+
+That's why only whether `cnt0` is **even or odd** matters.
+
+---
+
+## Case 1: `cnt0` is even
+
+```text
+cnt0 % 2 == 0
+```
+
+The zero stones can effectively be paired between the players, so they don't give either player a permanent advantage.
+
+For Alice to win, she needs **both types of non-zero stones**:
+
+```text
+cnt1 >= 1
+cnt2 >= 1
+```
+
+Why?
+
+If only `1`s exist:
+
+```text
+Alice: 1 → remainder 1
+Bob:   1 → remainder 2
+Alice: 1 → remainder 0 → loses
+```
+
+Similarly, if only `2`s exist, Alice eventually loses.
+
+Therefore:
+
+```python
+cnt1 >= 1 and cnt2 >= 1
+```
+
+---
+
+# Case 2: `cnt0` is odd
+
+Now there is one extra `0` stone.
+
+That extra zero changes the turn advantage.
+
+Alice wins only when the numbers of `1` and `2` stones are sufficiently unbalanced:
+
+```text
+abs(cnt1 - cnt2) > 2
+```
+
+For example:
+
+```text
+cnt1 = 5
+cnt2 = 1
+
+abs(5 - 1) = 4 > 2
+```
+
+Alice can force a win.
+
+But:
+
+```text
+cnt1 = 3
+cnt2 = 2
+
+abs(3 - 2) = 1
+```
+
+Bob can respond appropriately and win.
+
+---
+
+# 4. Optimal Solution
+
+```python
+class Solution:
+    def stoneGameIX(self, stones):
+        cnt0 = cnt1 = cnt2 = 0
+
+        for x in stones:
+            x %= 3
+
+            if x == 0:
+                cnt0 += 1
+            elif x == 1:
+                cnt1 += 1
+            else:
+                cnt2 += 1
+
+        if cnt0 % 2 == 0:
+            return cnt1 >= 1 and cnt2 >= 1
+
+        return abs(cnt1 - cnt2) > 2
+```
+
+### TC
+
+```text
+O(n)
+```
+
+### SC
+
+```text
+O(1)
+```
+
+---
+
+## Quick formula to remember
+
+```text
+             Count remainders
+                    │
+          ┌─────────┼─────────┐
+          ↓         ↓         ↓
+        cnt0       cnt1      cnt2
+          │
+          ↓
+     cnt0 is even?
+       /       \
+     YES       NO
+      │         │
+      ↓         ↓
+ cnt1 >= 1   |cnt1-cnt2| > 2
+ AND
+ cnt2 >= 1
+```
+
+### Final intuition
+
+> **`0` stones only affect turn parity; `1` and `2` stones control the modulo-3 game.**
+
+So the entire `10^5`-stone game reduces to counting three categories.
