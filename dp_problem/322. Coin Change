@@ -1,0 +1,143 @@
+Problem: 322. Coin Change
+Platform: Leetcode
+
+1.Recurssion
+class Solution:
+    def solve(self, index, target, coins):
+        if target == 0:
+            return 0
+
+        if index < 0:
+            return float('inf')
+
+        not_take = self.solve(index - 1, target, coins)
+
+        take = float('inf')
+
+        if coins[index] <= target:
+            take = 1 + self.solve(index, target - coins[index], coins)
+
+        return min(take, not_take)
+
+    def coinChange(self, coins: List[int], amount: int) -> int:
+        n = len(coins)
+
+        ans = self.solve(n - 1, amount, coins)
+
+        return -1 if ans == float('inf') else ans
+
+TC: O(2^amount)
+SC: O(amount + n)
+
+2.MemoIzation Top Dow
+
+class Solution:
+    def solve(self,index,target,coins,dp):
+        # Target achieved
+        if target == 0:
+            return 0
+
+        # No coins left
+        if index < 0:
+            return float('inf')
+        
+        if dp[index][target] != -1:
+            return dp[index][target]
+
+
+
+         # Not take current coin
+        not_take = self.solve(index - 1, target, coins,dp)
+
+        # Take current coin
+        take = float('inf')
+
+        if coins[index] <= target:
+            take = 1 + self.solve(index, target - coins[index], coins,dp)
+
+
+        dp[index][target] = min(take, not_take)
+
+        return dp[index][target]
+
+
+    def coinChange(self, coins: List[int], amount: int) -> int:
+        n = len(coins)
+        dp = [[-1] *(amount+1) for _ in range(n)]
+
+        ans = self.solve(n - 1, amount, coins,dp)
+        
+
+        if ans == float('inf'):
+            return -1
+
+        return ans
+
+
+TC: O(n × amount)
+SC: O(n × amount + n + amount)
+
+3.Tablulation Bootom Up
+
+class Solution:
+    def coinChange(self, coins: List[int], amount: int) -> int:
+        n = len(coins)
+        dp = [[float('inf')]*(amount+1) for _ in range(n)]
+
+
+        for i in range(n):
+            dp[i][0] = 0
+
+        for index in range(n):
+            for target in range(1, amount + 1):
+                # Not take
+                not_take = float('inf')
+                if index > 0:
+                    not_take = dp[index - 1][target]
+
+                # Take
+                take = float('inf')
+                if coins[index] <= target:
+                    take = 1 + dp[index][target - coins[index]]
+
+                dp[index][target] = min(take, not_take)
+        if dp[n - 1][amount] == float('inf'):
+            return -1
+
+        return dp[n - 1][amount]
+TC: O(n × amount)
+SC: O(n × amount)
+
+4,Tabulation of Space optimization 
+class Solution:
+    def coinChange(self, coins: List[int], amount: int) -> int:
+        n = len(coins)
+        prev = [float('inf')] * (amount + 1)
+        prev[0] = 0
+
+        for index in range(n):
+            curr =[float('inf')] * (amount + 1)
+            curr[0] = 0
+            for target in range(1, amount + 1):
+                # Not take
+                not_take = prev[target]
+
+                # Take
+                take = float('inf')
+
+                if coins[index] <= target:
+                    take = 1 + curr[target - coins[index]]
+
+                curr[target] = min(take, not_take)
+
+            prev = curr
+
+        if prev[amount] == float('inf'):
+            return -1
+
+        return prev[amount]
+
+Time Complexity:  O(n × amount)
+Space Complexity: O(amount)
+
+
