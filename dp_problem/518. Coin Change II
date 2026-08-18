@@ -1,0 +1,134 @@
+Problem : 518. Coin Change II
+Platform: Leetcode 
+
+## 1. Recursion
+
+```python
+class Solution:
+    def solve(self, index, target, coins):
+
+        if target == 0:
+            return 1
+
+        if index < 0:
+            return 0
+
+        not_take = self.solve(index - 1, target, coins)
+
+        take = 0
+
+        if coins[index] <= target:
+            take = self.solve(index, target - coins[index], coins)
+
+        return take + not_take
+
+    def change(self, amount: int, coins: List[int]) -> int:
+        return self.solve(len(coins) - 1, amount, coins)
+```
+
+**TC:** `O(2^(n + amount))`
+**SC:** `O(n + amount)`
+
+## 2. Memoization (Top-Down)
+
+```python
+class Solution:
+    def solve(self, index, target, coins, dp):
+
+        if target == 0:
+            return 1
+
+        if index < 0:
+            return 0
+
+        if dp[index][target] != -1:
+            return dp[index][target]
+
+        not_take = self.solve(index - 1, target, coins, dp)
+
+        take = 0
+
+        if coins[index] <= target:
+            take = self.solve(index, target - coins[index], coins, dp)
+
+        dp[index][target] = take + not_take
+
+        return dp[index][target]
+
+    def change(self, amount: int, coins: List[int]) -> int:
+        n = len(coins)
+
+        dp = [[-1] * (amount + 1) for _ in range(n)]
+
+        return self.solve(n - 1, amount, coins, dp)
+```
+
+**TC:** `O(n × amount)`
+**SC:** `O(n × amount) + O(n + amount)`
+
+## 3. Tabulation (Bottom-Up)
+
+```python
+class Solution:
+    def change(self, amount: int, coins: List[int]) -> int:
+        n = len(coins)
+
+        dp = [[0] * (amount + 1) for _ in range(n)]
+
+        for i in range(n):
+            dp[i][0] = 1
+
+        for i in range(n):
+            for target in range(1, amount + 1):
+
+                not_take = 0
+                if i > 0:
+                    not_take = dp[i - 1][target]
+
+                take = 0
+                if coins[i] <= target:
+                    take = dp[i][target - coins[i]]
+
+                dp[i][target] = take + not_take
+
+        return dp[n - 1][amount]
+```
+
+**TC:** `O(n × amount)`
+**SC:** `O(n × amount)`
+
+## 4. Space Optimization
+
+```python
+class Solution:
+    def change(self, amount: int, coins: List[int]) -> int:
+        n = len(coins)
+
+        prev = [0] * (amount + 1)
+        prev[0] = 1
+
+        for index in range(n):
+
+            curr = [0] * (amount + 1)
+            curr[0] = 1
+
+            for target in range(1, amount + 1):
+
+                # Not take
+                not_take = prev[target]
+
+                # Take
+                take = 0
+
+                if coins[index] <= target:
+                    take = curr[target - coins[index]]
+
+                curr[target] = take + not_take
+
+            prev = curr
+
+        return prev[amount]
+```
+
+**TC:** `O(n × amount)`
+**SC:** `O(amount)`
