@@ -1,0 +1,147 @@
+Problem :Count Subsets with Sum
+Platform: GFG
+
+
+recursion 1
+class Solution:
+    def solve(self,index,total,arr):
+        if index == 0:
+            if total == 0 and arr[0] == 0:
+                return 2
+            if total == 0 or arr[0] == total:
+                return 1
+            return 0
+        
+        if arr [index] > total:
+            pick = 0
+        else:
+            pick = self.solve(index-1,total-arr[index],arr)
+            
+        not_pick = self.solve(index-1, total,arr )
+        return pick + not_pick
+        
+    
+	def perfectSum(self, arr, target):
+		# code here
+		n = len(arr)
+		
+		return self.solve(n-1,target,arr)
+
+
+TC: O(2^n)
+SC: O(n)
+
+2,memoization top to bottom 
+
+class Solution:
+    def solve(self,index,total,arr,dp,):
+        if index == 0:
+            if total == 0 and arr[0] == 0:
+                return 2
+            if total == 0 or arr[0] == total:
+                return 1
+            return 0
+        
+        if dp[index][total] != -1:
+            dp[index][total]
+            
+        if arr [index] > total:
+            pick = 0
+        else:
+            pick = self.solve(index-1,total-arr[index],arr,dp)
+            
+        not_pick = self.solve(index-1, total,arr ,dp)
+        
+        dp[index][total] = pick + not_pick
+        return dp[index][total]
+        
+    
+	def perfectSum(self, arr, target):
+		# code here
+		n = len(arr)
+		dp = [[-1] * (target + 1) for _ in range(n)]
+		
+		return self.solve(n-1,target,arr,dp)
+
+TC: O(n * target)
+SC: O(n * target + n)
+		
+		
+		
+		
+3.Tabulation 
+
+class Solution:
+     
+	def perfectSum(self, arr, target):
+		# code here
+		n = len(arr)
+		dp = [[0] * (target + 1) for _ in range(n)]
+		if arr[0] == 0:
+           dp[0][0] = 2
+        else:
+            dp[0][0] = 1
+            
+            if arr[0] <= target:
+                dp[0][arr[0]] = 1
+        for index in range(1, n):
+            for total in range(0,target + 1):
+                             
+                if arr [index] > total:
+                    pick = 0
+                else:
+                    pick = dp[index-1][total-arr[index]]
+                    
+                not_pick = dp[index-1][total]
+                
+                dp[index][total] = pick + not_pick
+                
+        return dp[n-1][target]
+
+TC: O(n * target)
+SC: O(n * target)
+                        
+                
+    		
+		
+tabulation space optimization 
+
+class Solution:
+     
+	def perfectSum(self, arr, target):
+		# code here
+		n = len(arr)
+		prev = [0] * (target + 1)
+		if arr[0] == 0:
+           prev[0] = 2
+        else:
+            prev[0]= 1
+            
+            if arr[0] <= target:
+                prev[arr[0]] = 1
+        for index in range(1, n):
+            curr = [0] * (target + 1)
+            for total in range(0,target + 1):
+                             
+                if arr [index] > total:
+                    pick = 0
+                else:
+                    pick = prev[total-arr[index]]
+                    
+                not_pick = prev[total]
+                
+                curr[total] = pick + not_pick
+            prev = curr
+                
+        return prev[target]
+
+TC: O(n × target)
+SC: O(target)
+                
+                        
+                
+    		
+		
+		
+		
+		
