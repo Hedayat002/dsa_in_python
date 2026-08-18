@@ -1,0 +1,136 @@
+Problem: Coin Change (Count Ways)
+Platform : GFG
+
+## 1. Recursion
+
+```python
+class Solution:
+    def solve(self, index, target, coins):
+
+        if target == 0:
+            return 1
+
+        if index < 0:
+            return 0
+
+        not_take = self.solve(index - 1, target, coins)
+
+        take = 0
+
+        if coins[index] <= target:
+            take = self.solve(index, target - coins[index], coins)
+
+        return take + not_take
+
+    def count(self, coins, sum):
+        n = len(coins)
+
+        return self.solve(n - 1, sum, coins)
+```
+
+**TC:** `O(2^(n + sum))`
+**SC:** `O(n + sum)`
+
+## 2. Memoization (Top-Down)
+
+```python
+class Solution:
+    def solve(self, index, target, coins, dp):
+
+        if target == 0:
+            return 1
+
+        if index < 0:
+            return 0
+
+        if dp[index][target] != -1:
+            return dp[index][target]
+
+        not_take = self.solve(index - 1, target, coins, dp)
+
+        take = 0
+
+        if coins[index] <= target:
+            take = self.solve(index, target - coins[index], coins, dp)
+
+        dp[index][target] = take + not_take
+
+        return dp[index][target]
+
+    def count(self, coins, sum):
+        n = len(coins)
+
+        dp = [[-1] * (sum + 1) for _ in range(n)]
+
+        return self.solve(n - 1, sum, coins, dp)
+```
+
+**TC:** `O(n × sum)`
+**SC:** `O(n × sum) + O(n + sum)`
+
+## 3. Tabulation (Bottom-Up)
+
+```python
+class Solution:
+    def count(self, coins, sum):
+        n = len(coins)
+
+        dp = [[0] * (sum + 1) for _ in range(n)]
+
+        for index in range(n):
+            dp[index][0] = 1
+
+        for index in range(n):
+            for target in range(1, sum + 1):
+
+                not_take = 0
+
+                if index > 0:
+                    not_take = dp[index - 1][target]
+
+                take = 0
+
+                if coins[index] <= target:
+                    take = dp[index][target - coins[index]]
+
+                dp[index][target] = take + not_take
+
+        return dp[n - 1][sum]
+```
+
+**TC:** `O(n × sum)`
+**SC:** `O(n × sum)`
+
+## 4. Space Optimization
+
+```python
+class Solution:
+    def count(self, coins, sum):
+        n = len(coins)
+
+        prev = [0] * (sum + 1)
+        prev[0] = 1
+
+        for index in range(n):
+
+            curr = [0] * (sum + 1)
+            curr[0] = 1
+
+            for target in range(1, sum + 1):
+
+                not_take = prev[target]
+
+                take = 0
+
+                if coins[index] <= target:
+                    take = curr[target - coins[index]]
+
+                curr[target] = take + not_take
+
+            prev = curr
+
+        return prev[sum]
+```
+
+**TC:** `O(n × sum)`
+**SC:** `O(sum)`
