@@ -1,0 +1,93 @@
+Problem  :268. Missing Number
+Platform: Leetcode 
+
+## 1. Brute Force — Set
+
+```python
+class Solution:
+    def missingNumber(self, nums: List[int]) -> int:
+        n = len(nums)
+        s = set(nums)
+
+        for i in range(n + 1):
+            if i not in s:
+                return i
+```
+
+**TC:** O(n)
+**SC:** O(n)
+
+---
+
+## 2. Better — Sum Formula
+
+```python
+class Solution:
+    def missingNumber(self, nums: List[int]) -> int:
+        n = len(nums)
+
+        expected = n * (n + 1) // 2
+        actual = sum(nums)
+
+        return expected - actual
+```
+
+**TC:** O(n)
+**SC:** O(1)
+
+---
+
+## 3. Optimal — XOR
+
+```python
+class Solution:
+    def missingNumber(self, nums: List[int]) -> int:
+        n = len(nums)
+        ans = n
+
+        for i in range(n):
+            ans ^= i
+            ans ^= nums[i]
+
+        return ans
+```
+
+**TC:** O(n)
+**SC:** O(1)
+
+### ASCII Algorithm / Flowchart
+
+```text
+Start
+  |
+  v
+n = len(nums)
+  |
+  v
+ans = n
+  |
+  v
+For i = 0 to n-1
+  |
+  +--> ans ^= i
+  |
+  +--> ans ^= nums[i]
+  |
+  v
+After loop
+  |
+  v
+Return ans
+  |
+  v
+End
+```
+
+**XOR rules:**
+
+```text
+x ^ 0 = x
+x ^ x = 0
+```
+
+So every number appearing in both `0...n` and `nums` cancels out, leaving only the missing number.
