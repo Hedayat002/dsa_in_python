@@ -1,0 +1,113 @@
+Problem: Knapsack with Duplicate Items
+Platform: GFG
+
+1.Recurssion 
+
+class Solution:
+    def solve(self, index, capacity, val, capacityt):
+        if index == 0:
+            return (capacity // wt[0]) * val[0]
+    
+        if capacityt[index] <= capacity:
+            pick = val[index] + self.solve(index, capacity - capacityt[index], val, capacityt)
+        else:
+            pick = 0
+    
+        not_pick = self.solve(index - 1, capacity, val, capacityt)
+    
+        return max(pick, not_pick)
+    def knapSack(self, val, capacityt, capacity):
+        # code here
+        n = len(capacityt)
+        return self.solve(n - 1, capacity, val, capacityt)
+TC: O(2ⁿ)
+SC: O(n)
+2. Memoization (Top-Down)
+class Solution:
+    def solve(self, index, capacity, val, wt,dp):
+        if index == 0:
+            return (capacity // wt[0]) * val[0]
+            
+            
+            
+        if dp[index][capacity] != -1:
+            return dp[index][capacity]
+            
+        
+    
+        if wt[index] <= capacity:
+            pick = val[index] + self.solve(index, capacity - wt[index], val, wt,dp)
+        else:
+            pick = 0
+    
+        not_pick = self.solve(index - 1, capacity, val, wt,dp)
+        
+        dp[index][capacity] = max(pick, not_pick)
+    
+        return dp[index][capacity]
+    def knapSack(self, val, wt, capacity):
+        # code here
+        n = len(wt)
+        dp = [[-1] * (capacity + 1) for _ in range(n)]
+        return self.solve(n - 1, capacity, val, wt,dp)
+        
+TC: O(n × capacity)
+SC: O(n × capacity) + O(n)
+
+3. Tabulation (Bottom-Up)
+class Solution:
+    def knapSack(self, val, wt, capacity):
+        # code here
+        n = len(wt)
+        dp = [[0] * (capacity + 1) for _ in range(n)]
+        for c in range(capacity + 1):
+            dp[0][c] = (c // wt[0]) * val[0]
+            
+        
+        for index in range(1, n):
+            for c in range(capacity + 1):
+                if wt[index] <= c:
+                    pick = val[index] + dp[index][c - wt[index]]
+                else:
+                    pick = 0
+        
+                not_pick = dp[index-1][c]
+            
+                dp[index][c] = max(pick, not_pick)
+        return  dp[n - 1][capacity]
+
+TC: O(n × capacity)
+SC: O(n × capacity)
+
+4. Space Optimization
+
+class Solution:
+    def knapSack(self, val, wt, capacity):
+        # code here
+        n = len(wt)
+        prev = [0] * (capacity + 1)
+        for c in range(capacity + 1):
+            prev[c] = (c // wt[0]) * val[0]
+            
+        
+        for index in range(1, n):
+            curr = [0] * (capacity + 1)
+            for c in range(capacity + 1):
+                if wt[index] <= c:
+                    pick = val[index] + curr[c - wt[index]]
+                else:
+                    pick = 0
+        
+                not_pick = prev[c]
+            
+                curr[c] = max(pick, not_pick)
+            prev = curr
+        return  prev[capacity]
+        
+                    
+        
+TC: O(n × capacity)
+SC: O(2capacity)
+
+TC: O(n × capacity)
+SC: O(capacity)
