@@ -123,4 +123,117 @@ count(X) >= k ?
 left == right
   ↓
 Return answer
+
+
+
+
 ```
+
+
+class Solution:
+     # Count how many numbers <= mid are divisible by
+    # at least one of the given coins.
+    #
+    # We use Inclusion-Exclusion Principle:
+    #   Odd number of selected coins  -> ADD
+    #   Even number of selected coins -> SUBTRACT
+    def countSmaller(self, mid, coins):
+
+        correctedCount = 0
+        n = len(coins)
+
+        # There are 2^n - 1 non-empty subsets.
+        # Each subset represents a combination of coins.
+        for expressions in range(1, (1 << n)):
+
+            lcm = 0
+            order = 0
+
+            # Find LCM of all coins present in this subset
+            for i in range(n):
+
+                # Check whether ith coin is included
+                if expressions & (1 << i):
+
+                    order += 1
+
+                    # First selected coin
+                    if lcm == 0:
+                        lcm = coins[i]
+
+                    # LCM(a,b) = a*b / GCD(a,b)
+                    else:
+                        lcm = lcm * coins[i] // self.gcd(lcm, coins[i])
+
+            # Number of multiples of LCM <= mid
+            count = mid // lcm
+
+            # Inclusion-Exclusion:
+            # Odd-sized subset -> Add
+            # Even-sized subset -> Subtract
+            if order % 2 == 0:
+                correctedCount -= count
+            else:
+                correctedCount += count
+
+        return correctedCount
+
+    # Calculate GCD using Euclidean Algorithm
+    def gcd(self, a, b):
+
+        while b:
+            a, b = b, a % b
+
+        return a
+    def findKthSmallest(self, coins: List[int], k: int) -> int:
+        # The answer will be between 1 and
+        # max(coins) * k.
+        left = 1
+        right = max(coins) * k
+
+        result = -1
+
+        # Binary Search
+        while left <= right:
+
+            mid = left + (right - left) // 2
+
+            # countSmaller(mid) tells us:
+            # how many valid amounts are <= mid.
+            count = self.countSmaller(mid, coins)
+
+            # If at least k amounts exist <= mid,
+            # mid can be our answer.
+            #
+            # Try to find a smaller answer.
+            if count >= k:
+
+                result = mid
+                right = mid - 1
+
+            # Fewer than k amounts exist <= mid,
+            # so answer must be on the right side.
+            else:
+                left = mid + 1
+
+        return result
+Core logic
+Coins
+  ↓
+Generate every non-empty subset
+  ↓
+Find LCM of selected coins
+  ↓
+mid // LCM
+  ↓
+Inclusion-Exclusion
+  ↓
+How many valid amounts ≤ mid?
+  ↓
+Binary Search on answer
+  ↓
+k-th smallest amount
+
+Time Complexity: O(log(maxCoin × k) × 2^n × n × log(maxCoin))
+
+Space Complexity: O(1) excluding Python's integer/object overhead
