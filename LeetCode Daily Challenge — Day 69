@@ -1,0 +1,83 @@
+Brute Force
+class Solution:
+    def checkDivisibility(self, n: int) -> bool:
+        s = str(n)
+
+        digit_sum = sum(int(d) for d in s)
+
+        digit_product = 1
+        for d in s:
+            digit_product *= int(d)
+
+        total = digit_sum + digit_product
+
+        return n % total == 0
+
+TC: O(log n)
+SC: O(log n)
+
+### Optimal Solution
+
+Your logic is **correct**. The only thing to note is that the problem asks for:
+
+**digit sum + digit product → check `n % total == 0`**
+
+```python
+class Solution:
+    def checkDivisibility(self, n: int) -> bool:
+        temp = n
+        digit_sum = 0
+        digit_product = 1
+
+        while temp > 0:
+            digit = temp % 10
+
+            digit_sum += digit
+            digit_product *= digit
+
+            temp //= 10
+
+        total = digit_sum + digit_product
+
+        return n % total == 0
+```
+
+**Time Complexity:** `O(log n)`
+**Space Complexity:** `O(1)`
+
+### ASCII Pattern
+
+```text
+Start
+  ↓
+temp = n
+  ↓
+digit = temp % 10
+  ↓
+sum += digit
+product *= digit
+  ↓
+temp //= 10
+  ↓
+temp > 0 ?
+ ├── Yes → repeat
+ └── No
+       ↓
+total = sum + product
+       ↓
+n % total == 0 ?
+ ├── Yes → True
+ └── No  → False
+```
+
+For `n = 99`:
+
+```text
+digits:       9, 9
+digit_sum:    9 + 9 = 18
+digit_product: 9 × 9 = 81
+
+total = 18 + 81 = 99
+
+99 % 99 == 0 → True
+```
