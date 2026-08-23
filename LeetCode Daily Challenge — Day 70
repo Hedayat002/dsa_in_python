@@ -1,0 +1,194 @@
+Brute Force
+class Solution:
+    def sumGame(self, num: str) -> bool:
+        n = len(num)
+        q = [i for i in range(n) if num[i] == '?']
+
+        def dfs(pos, left, right, turn):
+            if pos == len(q):
+                return left != right
+
+            idx = q[pos]
+
+            if turn == 0:  # Alice: wants unequal
+                for d in range(10):
+                    if idx < n // 2:
+                        if dfs(pos + 1, left + d, right, 1):
+                            return True
+                    else:
+                        if dfs(pos + 1, left, right + d, 1):
+                            return True
+                return False
+
+            else:  # Bob: wants equal
+                for d in range(10):
+                    if idx < n // 2:
+                        if not dfs(pos + 1, left + d, right, 0):
+                            return False
+                    else:
+                        if not dfs(pos + 1, left, right + d, 0):
+                            return False
+                return True
+
+        left = right = 0
+
+        for i in range(n // 2):
+            if num[i] != '?':
+                left += int(num[i])
+
+        for i in range(n // 2, n):
+            if num[i] != '?':
+                right += int(num[i])
+
+        return dfs(0, left, right, 0)
+
+TC: O(10^q) where q = number of '?'
+SC: O(q) recursion stack
+
+ASCII Algorithm
+Start
+  |
+  v
+Find all '?'
+  |
+  v
+Alice's turn?
+ /        \
+Yes       No
+ |         |
+Try 0-9   Try 0-9
+ |         |
+Any move  Any move
+makes     makes
+unequal?  unequal?
+ |         |
+Yes       No
+ |         |
+Alice     Bob
+wins      wins
+  \       /
+   v     v
+     End
+
+Yes — this is the true brute-force/minimax solution, while the code you provided is the optimal O(n) mathematical solution.
+
+
+optimal solution :
+class Solution:
+    def sumGame(self, num: str) -> bool:
+        ls = 0
+        rs = 0
+        lb = 0
+        rb = 0
+
+        n = len(num)
+
+        # Left half
+        for i in range(n // 2):
+            if num[i] != '?':
+                ls += int(num[i])
+            else:
+                lb += 1
+
+        # Right half
+        for i in range(n // 2, n):
+            if num[i] != '?':
+                rs += int(num[i])
+            else:
+                rb += 1
+
+        # Total number of '?' is odd
+        if (lb + rb) % 2 == 1:
+            return True
+
+        # No '?' remaining
+        if lb + rb == 0:
+            return ls != rs
+
+        mini = min(lb, rb)
+
+        lb -= mini
+        rb -= mini
+
+        if lb > 0:
+            if ls > rs:
+                return True
+
+            if 9 * (lb // 2) == rs - ls:
+                return False
+            else:
+                return True
+
+        else:
+            if rs > ls:
+                return True
+
+            if 9 * (rb // 2) == ls - rs:
+                return False
+            else:
+                return True
+
+
+16. The entire logic as a flowchart
+                  Start
+                    |
+                    v
+          Calculate ls, rs
+          Calculate lb, rb
+                    |
+                    v
+       Is (lb + rb) odd?
+             /          \
+           Yes           No
+            |             |
+         return True      v
+                    Is lb + rb == 0?
+                       /       \
+                     Yes        No
+                      |          |
+               return ls != rs   v
+                            mini = min(lb, rb)
+                            lb -= mini
+                            rb -= mini
+                                  |
+                                  v
+                             Is lb > 0?
+                            /          \
+                          Yes           No
+                           |             |
+                      ls > rs?        rs > ls?
+                      /    \           /    \
+                    Yes    No        Yes    No
+                     |      |          |      |
+                  True      v        True     v
+                       9*(lb//2)          9*(rb//2)
+                       == rs-ls?          == ls-rs?
+                       /      \            /      \
+                     Yes      No         Yes      No
+                      |        |           |        |
+                    False     True        False    True
+17. The key formula to remember
+
+After removing equal numbers of ? from both sides:
+
+Extra ? on left
+if ls > rs:
+    return True
+
+return 9 * (lb // 2) != rs - ls
+Extra ? on right
+if rs > ls:
+    return True
+
+return 9 * (rb // 2) != ls - rs
+
+So the whole problem boils down to:
+
+Can the side with fewer fixed-sum points be exactly balanced by the maximum possible contribution of the remaining ? characters?
+
+If exactly balanced → False
+Otherwise → True.
+
+Complexity
+Time:  O(n)
+Space: O(1)
