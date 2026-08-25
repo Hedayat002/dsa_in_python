@@ -1,0 +1,73 @@
+Yes — **your logic is correct and optimal** for this problem. Since you used `temppro`, here are the three approaches in the required format.
+
+### Brute Force
+
+```python
+class Solution:
+    def smallestMissingMultiple(self, nums: List[int], k: int) -> int:
+        multiple = k
+
+        while True:
+            if multiple not in nums:
+                return multiple
+            multiple += k
+```
+
+**TC:** O(n × m)
+**SC:** O(1)
+
+---
+
+### Better — Hash Set
+
+```python
+class Solution:
+    def smallestMissingMultiple(self, nums: List[int], k: int) -> int:
+        s = set(nums)
+
+        multiple = k
+
+        while multiple in s:
+            multiple += k
+
+        return multiple
+```
+
+**TC:** O(n + m)
+**SC:** O(n)
+
+---
+
+### Optimal
+
+```python
+class Solution:
+    def smallestMissingMultiple(self, nums: List[int], k: int) -> int:
+        s = set(nums)
+
+        multiple = k
+
+        while multiple in s:
+            multiple += k
+
+        return multiple
+```
+
+**TC:** O(n)
+**SC:** O(n)
+
+### ASCII Algorithm
+
+```text
+Start
+  ↓
+nums → Hash Set
+  ↓
+multiple = k
+  ↓
+Is multiple in set?
+  ├── Yes → multiple += k → check again
+  └── No  → return multiple
+```
+
+Your solution is the **best practical solution** here.
