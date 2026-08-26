@@ -1,0 +1,139 @@
+## Brute Force
+
+```python
+class Solution:
+    def shortestBeautifulSubstring(self, s: str, k: int) -> str:
+        n = len(s)
+        min_len = float('inf')
+        ans = ""
+
+        for i in range(n):
+            count = 0
+
+            for j in range(i, n):
+                if s[j] == '1':
+                    count += 1
+
+                if count == k:
+                    curr = s[i:j + 1]
+
+                    if len(curr) < min_len:
+                        min_len = len(curr)
+                        ans = curr
+                    elif len(curr) == min_len and curr < ans:
+                        ans = curr
+
+                    break
+
+        return ans
+```
+
+**TC:** O(n²)
+**SC:** O(n)
+
+---
+
+## Better
+
+```python
+class Solution:
+    def shortestBeautifulSubstring(self, s: str, k: int) -> str:
+        ones = [i for i, ch in enumerate(s) if ch == '1']
+
+        if len(ones) < k:
+            return ""
+
+        min_len = float('inf')
+        ans = ""
+
+        for i in range(len(ones) - k + 1):
+            left = ones[i]
+            right = ones[i + k - 1]
+
+            curr = s[left:right + 1]
+
+            if len(curr) < min_len:
+                min_len = len(curr)
+                ans = curr
+            elif len(curr) == min_len and curr < ans:
+                ans = curr
+
+        return ans
+```
+
+**TC:** O(n²)
+**SC:** O(n)
+
+---
+
+## Optimal
+
+```python
+class Solution:
+    def shortestBeautifulSubstring(self, s: str, k: int) -> str:
+        left = 0
+        count = 0
+        min_len = float('inf')
+        ans = ""
+
+        for right in range(len(s)):
+            if s[right] == '1':
+                count += 1
+
+            while count == k:
+                while left <= right and s[left] == '0':
+                    left += 1
+
+                curr_len = right - left + 1
+                curr = s[left:right + 1]
+
+                if curr_len < min_len:
+                    min_len = curr_len
+                    ans = curr
+                elif curr_len == min_len and curr < ans:
+                    ans = curr
+
+                if s[left] == '1':
+                    count -= 1
+
+                left += 1
+
+        return ans
+```
+
+**TC:** O(n²)
+**SC:** O(1)
+
+### Algorithm Pattern
+
+```text
+Start
+  ↓
+Sliding Window
+  ↓
+Expand right
+  ↓
+Count 1s
+  ↓
+count == k ?
+  ├── No → continue
+  └── Yes
+       ↓
+   Remove leading 0s
+       ↓
+   Calculate length
+       ↓
+   Shorter?
+   ├── Yes → update answer
+   └── Same → lexicographically smaller?
+                    ↓
+                 update
+       ↓
+   Remove leftmost 1
+       ↓
+     Continue
+       ↓
+     Return ans
+```
+
+**Note:** The optimal solution's total complexity is **O(n²)** because creating `curr = s[left:right + 1]` and comparing candidate strings can take O(n) per window. The sliding-window pointer movement itself is O(n).
