@@ -1,0 +1,185 @@
+## ASCII Algorithm
+
+```text
+Start
+  ↓
+Count characters in s
+  ↓
+More than 1 odd frequency?
+  ├── Yes → return ""
+  └── No
+       ↓
+Build half-frequency
+       ↓
+Construct smallest left half > target's left half
+       ↓
+Mirror left half + middle + reverse(left)
+       ↓
+Answer
+```
+
+### 1. Brute Force
+
+```python
+class Solution:
+    def __init__(self):
+        self.result = ""
+        self.midChar = '$'
+        self.half = 0
+
+    def solve(self, curr, count, target, i, greater):
+        if i == self.half:
+            left = ''.join(curr)
+
+            candidate = left
+            if self.midChar != '$':
+                candidate += self.midChar
+            candidate += left[::-1]
+
+            if candidate > target:
+                self.result = candidate
+                return True
+
+            return False
+
+        for ch in range(26):
+            if count[ch] == 0:
+                continue
+
+            char = chr(ord('a') + ch)
+
+            if not greater and char < target[i]:
+                continue
+
+            curr.append(char)
+            count[ch] -= 1
+
+            isGreater = greater or char > target[i]
+
+            if self.solve(curr, count, target, i + 1, isGreater):
+                return True
+
+            curr.pop()
+            count[ch] += 1
+
+        return False
+
+    def lexPalindromicPermutation(self, s: str, target: str) -> str:
+        self.result = ""
+        self.midChar = '$'
+
+        n = len(s)
+        count = [0] * 26
+
+        for ch in s:
+            count[ord(ch) - ord('a')] += 1
+
+        oddCount = 0
+
+        for c in range(26):
+            if count[c] % 2:
+                oddCount += 1
+                self.midChar = chr(ord('a') + c)
+
+        if oddCount > 1:
+            return ""
+
+        halfCount = [x // 2 for x in count]
+        self.half = n // 2
+
+        self.solve([], halfCount, target, 0, False)
+
+        return self.result
+```
+
+**TC:** `O(26^(n/2) * n)` worst case
+**SC:** `O(n)`
+
+---
+
+### 2. Optimal
+
+```python
+class Solution:
+    def lexPalindromicPermutation(self, s: str, target: str) -> str:
+        n = len(s)
+
+        freq = [0] * 26
+
+        for ch in s:
+            freq[ord(ch) - ord('a')] += 1
+
+        odd_char = -1
+        odd_count = 0
+
+        for i in range(26):
+            if freq[i] % 2:
+                odd_count += 1
+                odd_char = i
+
+        if odd_count > 1:
+            return ""
+
+        half_freq = [x // 2 for x in freq]
+        half_len = n // 2
+        target_left = target[:half_len]
+
+        remaining = half_freq[:]
+        equal_prefix = []
+
+        for i in range(half_len):
+            idx = ord(target_left[i]) - ord('a')
+
+            if remaining[idx] == 0:
+                break
+
+            equal_prefix.append(target_left[i])
+            remaining[idx] -= 1
+        else:
+            left = ''.join(equal_prefix)
+
+            middle = ""
+            if odd_count == 1:
+                middle = chr(ord('a') + odd_char)
+
+            candidate = left + middle + left[::-1]
+
+            if candidate > target:
+                return candidate
+
+        remaining = half_freq[:]
+
+        for i in range(len(equal_prefix)):
+            idx = ord(target_left[i]) - ord('a')
+            remaining[idx] -= 1
+
+        for i in range(len(equal_prefix) - 1, -1, -1):
+            idx = ord(target_left[i]) - ord('a')
+            remaining[idx] += 1
+
+            for c in range(idx + 1, 26):
+                if remaining[c] == 0:
+                    continue
+
+                remaining[c] -= 1
+
+                suffix = []
+                for x in range(26):
+                    if remaining[x]:
+                        suffix.extend(
+                            [chr(ord('a') + x)] * remaining[x]
+                        )
+
+                left = target_left[:i] + chr(ord('a') + c) + ''.join(suffix)
+
+                middle = ""
+                if odd_count == 1:
+                    middle = chr(ord('a') + odd_char)
+
+                return left + middle + left[::-1]
+
+        return ""
+```
+
+**TC:** `O(n + 26n)` = `O(26n)`
+**SC:** `O(n)`
