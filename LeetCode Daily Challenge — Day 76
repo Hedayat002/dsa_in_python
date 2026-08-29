@@ -1,0 +1,80 @@
+Sure. Here are both C++ approaches converted directly into **Python**, keeping the same logic and complexity.
+
+### Approach 1 — Brute Force
+
+```python
+class Solution:
+    def lexicographicallySmallestArray(self, nums, limit):
+        n = len(nums)
+
+        for i in range(n):
+
+            while True:
+                smallValue = nums[i]
+                idx = -1
+
+                for j in range(i + 1, n):
+                    if abs(nums[i] - nums[j]) <= limit:
+                        if nums[j] < smallValue:
+                            smallValue = nums[j]
+                            idx = j
+
+                if idx != -1:
+                    nums[i], nums[idx] = nums[idx], nums[i]
+                else:
+                    break
+
+        return nums
+```
+
+**T.C:** `O(n³)`
+**S.C:** `O(1)`
+
+---
+
+### Approach 2 — Sorting + Grouping
+
+Python's `deque` is the equivalent of C++'s `list` here because we need efficient `popleft()`.
+
+```python
+from collections import deque
+
+class Solution:
+    def lexicographicallySmallestArray(self, nums, limit):
+        n = len(nums)
+
+        vec = sorted(nums)
+
+        groupNum = 0
+
+        numToGroup = {}
+        groupToList = {}
+
+        numToGroup[vec[0]] = groupNum
+        groupToList[groupNum] = deque([vec[0]])
+
+        for i in range(1, n):
+            if abs(vec[i] - vec[i - 1]) > limit:
+                groupNum += 1
+                groupToList[groupNum] = deque()
+
+            numToGroup[vec[i]] = groupNum
+            groupToList[groupNum].append(vec[i])
+
+        # Build the answer
+        result = [0] * n
+
+        for i in range(n):
+            num = nums[i]
+            group = numToGroup[num]
+
+            # Smallest available number in this group
+            result[i] = groupToList[group].popleft()
+
+        return result
+```
+
+**T.C:** `O(n log n)`
+**S.C:** `O(n)`
+
+> **Important:** Approach 2 uses a dictionary keyed by the number itself, just like your C++ `unordered_map<int, int>`. This is fine because equal values belong to the same group.
