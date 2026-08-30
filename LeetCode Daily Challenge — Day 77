@@ -1,0 +1,105 @@
+## Brute Force
+
+```python
+class Solution:
+    def minimumDeletions(self, nums: List[int]) -> int:
+        n = len(nums)
+
+        min_idx = nums.index(min(nums))
+        max_idx = nums.index(max(nums))
+
+        ans = float('inf')
+
+        for left in range(n + 1):
+            for right in range(n + 1):
+                if left + right > n:
+                    continue
+
+                if min_idx < left and max_idx < left:
+                    ans = min(ans, left)
+
+                elif min_idx >= n - right and max_idx >= n - right:
+                    ans = min(ans, right)
+
+                elif (min_idx < left and max_idx >= n - right) or \
+                     (max_idx < left and min_idx >= n - right):
+                    ans = min(ans, left + right)
+
+        return ans
+```
+
+**TC:** `O(n²)`
+**SC:** `O(1)`
+
+---
+
+## Better
+
+```python
+class Solution:
+    def minimumDeletions(self, nums: List[int]) -> int:
+        n = len(nums)
+
+        min_idx = nums.index(min(nums))
+        max_idx = nums.index(max(nums))
+
+        left = min(min_idx, max_idx)
+        right = max(min_idx, max_idx)
+
+        return min(
+            left + 1 + n - right,  # left from front, right from back
+            right + 1,             # both from front
+            n - left               # both from back
+        )
+```
+
+**TC:** `O(n)`
+**SC:** `O(1)`
+
+---
+
+## Optimal
+
+```python
+class Solution:
+    def minimumDeletions(self, nums: List[int]) -> int:
+        n = len(nums)
+
+        min_idx = nums.index(min(nums))
+        max_idx = nums.index(max(nums))
+
+        left = min(min_idx, max_idx)
+        right = max(min_idx, max_idx)
+
+        return min(
+            left + 1 + n - right,
+            right + 1,
+            n - left
+        )
+```
+
+**TC:** `O(n)`
+**SC:** `O(1)`
+
+### ASCII Algorithm
+
+```text
+Start
+  |
+Find index of MIN and MAX
+  |
+left = min(min_idx, max_idx)
+right = max(min_idx, max_idx)
+  |
+  +-------------------+-------------------+
+  |                   |                   |
+Both from front   Both from back     One each side
+  |                   |                   |
+right + 1          n - left       left + 1 + n - right
+  |                   |                   |
+  +-------------------+-------------------+
+                      |
+                    MIN
+                      |
+                    Answer
+```
