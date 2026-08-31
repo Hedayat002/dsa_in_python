@@ -1,0 +1,143 @@
+## Brute Force
+
+```python
+class Solution:
+    def nodesBetweenCriticalPoints(self, head: Optional[ListNode]) -> List[int]:
+        points = []
+        prev = head
+        curr = head.next
+        index = 1
+
+        while curr.next:
+            if ((curr.val > prev.val and curr.val > curr.next.val) or
+                (curr.val < prev.val and curr.val < curr.next.val)):
+                points.append(index)
+
+            prev = curr
+            curr = curr.next
+            index += 1
+
+        if len(points) < 2:
+            return [-1, -1]
+
+        minDist = float('inf')
+        maxDist = points[-1] - points[0]
+
+        for i in range(1, len(points)):
+            minDist = min(minDist, points[i] - points[i - 1])
+
+        return [minDist, maxDist]
+```
+
+**TC:** O(n)
+**SC:** O(n)
+
+---
+
+## Better
+
+```python
+class Solution:
+    def nodesBetweenCriticalPoints(self, head: Optional[ListNode]) -> List[int]:
+        points = []
+
+        prev = head
+        curr = head.next
+        index = 1
+
+        while curr.next:
+            if ((curr.val > prev.val and curr.val > curr.next.val) or
+                (curr.val < prev.val and curr.val < curr.next.val)):
+                points.append(index)
+
+            prev = curr
+            curr = curr.next
+            index += 1
+
+        if len(points) < 2:
+            return [-1, -1]
+
+        minDist = min(
+            points[i] - points[i - 1]
+            for i in range(1, len(points))
+        )
+
+        maxDist = points[-1] - points[0]
+
+        return [minDist, maxDist]
+```
+
+**TC:** O(n)
+**SC:** O(n)
+
+---
+
+## Optimal
+
+```python
+class Solution:
+    def nodesBetweenCriticalPoints(self, head: Optional[ListNode]) -> List[int]:
+        prev = head
+        curr = head.next
+        index = 1
+
+        first = -1
+        last = -1
+        minDist = float('inf')
+
+        while curr.next:
+            if ((curr.val > prev.val and curr.val > curr.next.val) or
+                (curr.val < prev.val and curr.val < curr.next.val)):
+
+                if first == -1:
+                    first = index
+                else:
+                    minDist = min(minDist, index - last)
+
+                last = index
+
+            prev = curr
+            curr = curr.next
+            index += 1
+
+        if first == -1 or first == last:
+            return [-1, -1]
+
+        return [minDist, last - first]
+```
+
+**TC:** O(n)
+**SC:** O(1)
+
+---
+
+### ASCII Algorithm
+
+```text
+Start
+  ↓
+prev = head, curr = head.next
+  ↓
+Traverse while curr.next exists
+  ↓
+Is curr a critical point?
+  ├── No → Move forward
+  │
+  └── Yes
+       ↓
+   First critical?
+   ├── Yes → first = index
+   └── No  → minDist = min(minDist, index - last)
+       ↓
+     last = index
+       ↓
+Move prev, curr, index
+  ↓
+Are there < 2 critical points?
+  ├── Yes → [-1, -1]
+  └── No
+       ↓
+[max distance = last - first]
+       ↓
+Return [minDist, maxDist]
+```
