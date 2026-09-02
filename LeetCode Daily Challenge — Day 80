@@ -1,0 +1,55 @@
+### Optimal Solution
+
+Your main issues are:
+
+* `nums2 = []` cannot be assigned with `nums2[i]`.
+* `nums1[i] // 2 == 0` does **not** check whether a number is even. Use `nums1[i] % 2 == 0`.
+* You don't need to actually construct `nums2`.
+* The key observation: if there is **at least one even and one odd**, we can make everything even or everything odd.
+
+```python
+class Solution:
+    def uniformArray(self, nums1: list[int]) -> bool:
+        has_even = False
+        has_odd = False
+
+        for num in nums1:
+            if num % 2 == 0:
+                has_even = True
+            else:
+                has_odd = True
+
+        if has_even and has_odd:
+            return True
+
+        return True
+```
+
+Actually, because `nums1` itself can already be used when all elements have the same parity, and when mixed parity exists we can adjust the parity using subtraction, **the answer is always `True`**.
+
+So the truly optimal solution is simply:
+
+```python
+class Solution:
+    def uniformArray(self, nums1: list[int]) -> bool:
+        return True
+```
+
+**TC:** `O(1)`
+**SC:** `O(1)`
+
+**Pattern:**
+
+```text
+Start
+  ↓
+Can nums1 already have uniform parity?
+  ↓
+Yes → use nums1
+  ↓
+No → mixed odd/even
+  ↓
+Use subtraction to adjust parity
+  ↓
+True
+```
