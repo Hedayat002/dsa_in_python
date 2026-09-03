@@ -1,0 +1,146 @@
+## Brute Force
+
+```python
+class Solution:
+    def uniformArray(self, nums1: list[int]) -> bool:
+        n = len(nums1)
+
+        # Try making all elements even
+        possible_even = True
+
+        for i in range(n):
+            if nums1[i] % 2 == 1:
+                found = False
+
+                for j in range(n):
+                    if i != j and nums1[i] - nums1[j] >= 1:
+                        if (nums1[i] - nums1[j]) % 2 == 0:
+                            found = True
+                            break
+
+                if not found:
+                    possible_even = False
+                    break
+
+        # Try making all elements odd
+        possible_odd = True
+
+        for i in range(n):
+            if nums1[i] % 2 == 0:
+                found = False
+
+                for j in range(n):
+                    if i != j and nums1[i] - nums1[j] >= 1:
+                        if (nums1[i] - nums1[j]) % 2 == 1:
+                            found = True
+                            break
+
+                if not found:
+                    possible_odd = False
+                    break
+
+        return possible_even or possible_odd
+```
+
+**TC:** `O(n²)`
+**SC:** `O(1)`
+
+---
+
+## Better — Sorting
+
+```python
+class Solution:
+    def uniformArray(self, nums1: list[int]) -> bool:
+        nums1.sort()
+
+        min_even = float('inf')
+        min_odd = float('inf')
+
+        for x in nums1:
+            if x % 2 == 0:
+                min_even = min(min_even, x)
+            else:
+                min_odd = min(min_odd, x)
+
+        for x in nums1:
+            if x % 2 == 1 and min_even >= x:
+                return False
+
+        possible_even = True
+
+        for x in nums1:
+            if x % 2 == 0 and min_odd >= x:
+                possible_even = False
+                break
+
+        return possible_even or all(
+            x % 2 == 1 or min_odd < x
+            for x in nums1
+        )
+```
+
+**TC:** `O(n log n)`
+**SC:** `O(1)` *(excluding sorting implementation space)*
+
+---
+
+## Optimal — Minimum Even / Minimum Odd
+
+```python
+class Solution:
+    def uniformArray(self, nums1: list[int]) -> bool:
+        min_even = float('inf')
+        min_odd = float('inf')
+
+        for x in nums1:
+            if x % 2 == 0:
+                min_even = min(min_even, x)
+            else:
+                min_odd = min(min_odd, x)
+
+        can_all_even = True
+        can_all_odd = True
+
+        for x in nums1:
+            if x % 2 == 1 and min_even >= x:
+                can_all_even = False
+
+            if x % 2 == 0 and min_odd >= x:
+                can_all_odd = False
+
+        return can_all_even or can_all_odd
+```
+
+**TC:** `O(n)`
+**SC:** `O(1)`
+
+### ASCII Algorithm
+
+```text
+                 Start
+                   |
+          Find minimum even
+          Find minimum odd
+                   |
+          +--------+--------+
+          |                 |
+     Try all EVEN       Try all ODD
+          |                 |
+ odd x needs          even x needs
+ smaller even        smaller odd
+          |                 |
+     min_even < x?      min_odd < x?
+          |                 |
+     +----+----+        +----+----+
+    No         Yes      No         Yes
+    |           |       |           |
+ False       continue  False      continue
+          \             /
+           \           /
+            +---------+
+                |
+             OR them
+                |
+              Return
+```
