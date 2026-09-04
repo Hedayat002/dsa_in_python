@@ -1,0 +1,46 @@
+Brute Force — O(n²) Time, O(1) Space
+class Solution:
+    def firstStableIndex(self, nums: list[int], k: int) -> int:
+        n = len(nums)
+
+        for i in range(n):
+            max_El = float('-inf')
+            min_El = float('inf')
+
+            # max(nums[0...i])
+            for j in range(0, i + 1):
+                max_El = max(max_El, nums[j])
+
+            # min(nums[i...n-1])
+            for j in range(i, n):
+                min_El = min(min_El, nums[j])
+
+            if max_El - min_El <= k:
+                return i
+
+        return -1
+
+Optimal solution:
+class Solution:
+    def firstStableIndex(self, nums, k):
+        n = len(nums)
+
+        minFromIndex = [0] * n
+        minEl = float('inf')
+
+        for i in range(n - 1, -1, -1):
+            minEl = min(minEl, nums[i])
+            minFromIndex[i] = minEl
+
+        maxEl = 0
+
+        for i in range(n):
+            maxEl = max(maxEl, nums[i])
+
+            if maxEl - minFromIndex[i] <= k:
+                return i
+
+        return -1
+
+T.C: O(n)
+S.C: O(n)
