@@ -1,0 +1,114 @@
+Problem: 940. Distinct Subsequences II
+Platform: Leetcode  
+
+1. Recursion
+MOD = 10**9 + 7
+
+def solve(s, i, last):
+    if i < 0:
+        return 1
+
+    ans = solve(s, i - 1, last)
+
+    if s[i] != last:
+        ans += solve(s, i - 1, s[i])
+
+    return ans % MOD
+
+
+class Solution:
+    def distinctSubseqII(self, s: str) -> int:
+        n = len(s)
+        return (solve(s, n - 1, '') - 1) % MOD
+
+TC: O(2ⁿ)
+SC: O(n)
+
+
+2. Memoization (Top-Down)
+class Solution:
+    MOD = 10**9 + 7
+
+    def solve(self, i, last, s, dp):
+        if i < 0:
+            return 1
+
+        if dp[i][last] != -1:
+            return dp[i][last]
+
+        ans = self.solve(i - 1, last, s, dp)
+
+        ch = ord(s[i]) - ord('a')
+
+        if ch != last:
+            ans += self.solve(i - 1, ch, s, dp)
+
+        dp[i][last] = ans % self.MOD
+        return dp[i][last]
+    def distinctSubseqII(self, s: str) -> int:
+        n = len(s)
+        dp = [[-1] * 27 for _ in range(n)]
+
+        return (self.solve(n - 1, 26, s, dp) - 1) % self.MOD
+TC: O(26n) = O(n)
+SC: O(26n + n) = O(n)
+
+3. Tabulation (Bottom-Up)
+
+class Solution:
+    MOD = 10**9 + 7
+
+    def distinctSubseqII(self, s: str) -> int:
+        n = len(s)
+        dp = [[0] * 27 for _ in range(n+1)]
+        for last in range(27):
+            dp[0][last] = 1
+        
+        for i in range(1, n + 1):
+            ch = ord(s[i - 1]) - ord('a')
+
+            for last in range(27):
+                dp[i][last] = dp[i - 1][last]
+
+                if ch != last:
+                    dp[i][last] += dp[i - 1][ch]
+
+                dp[i][last] %= self.MOD
+
+        return (dp[n][26] - 1) % self.MOD
+
+        
+         
+
+TC: O(26n) = O(n)
+SC: O(26n) = O(n)
+
+4. Space Optimization
+
+class Solution:
+    MOD = 10**9 + 7
+
+    def distinctSubseqII(self, s: str) -> int:
+        n = len(s)
+        prev = [1] * 27
+        
+        
+        for i in range(1, n + 1):
+            curr = [0] * 27 
+            ch = ord(s[i - 1]) - ord('a')
+
+            for last in range(27):
+                curr[last] = prev[last]
+
+                if ch != last:
+                    curr[last] += prev[ch]
+
+                curr[last] %= self.MOD
+
+            prev = curr
+
+        return (prev[26] - 1) % self.MOD
+
+        
+         TC: O(26n) = O(n)
+SC: O(26) = O(1)
