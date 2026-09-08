@@ -1,0 +1,72 @@
+## 1. Brute Force
+
+```python
+class Solution:
+    def countCommas(self, n: int) -> int:
+        cnt = 0
+
+        for i in range(1, n + 1):
+            cnt += (len(str(i)) - 1) // 3
+
+        return cnt
+```
+
+**TC:** O(n log n)
+**SC:** O(log n)
+
+---
+
+## 2. Better
+
+```python
+class Solution:
+    def countCommas(self, n: int) -> int:
+        cnt = 0
+
+        if n < 1000:
+            return 0
+    
+        for i in range(1000,n+1):
+            cnt +=1
+        return cnt
+
+```
+
+**TC:** O(1)
+**SC:** O(1)
+
+---
+3. Better
+class Solution:
+    def countCommas(self, n: int) -> int:
+        if n < 1000:
+            return 0
+
+        return n - 999
+
+TC: O(1)
+SC: O(1)
+## 4. Optimal
+
+```python
+class Solution:
+    def countCommas(self, n: int) -> int:
+        return max(0, n - 999)
+```
+
+**TC:** O(1)
+**SC:** O(1)
+
+### Algorithm
+
+```text
+Start
+  ↓
+n < 1000 ?
+ ├── Yes → return 0
+ └── No
+       ↓
+   n - 999
+       ↓
+     End
+```
