@@ -1,0 +1,40 @@
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    def dfs(self, node, count):
+        # Base case
+        if node is None:
+            return 0, 0, count
+
+        # Get sum and count from left subtree
+        left_sum, left_count, count = self.dfs(node.left, count)
+
+        # Get sum and count from right subtree
+        right_sum, right_count, count = self.dfs(node.right, count)
+
+        # Include current node
+        total_sum = left_sum + right_sum + node.val
+        total_count = left_count + right_count + 1
+
+        # Check average of current subtree
+        average = total_sum // total_count
+
+        if node.val == average:
+            count += 1
+
+        # Return sum, number of nodes, and answer count
+        return total_sum, total_count, count
+
+    def averageOfSubtree(self, root: TreeNode) -> int:
+        count = 0
+
+        total_sum, total_count, count = self.dfs(root, count)
+
+        return count
+
+Time: O(n)
+Space: O(h) recursion stack, where h is tree height
