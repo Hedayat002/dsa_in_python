@@ -71,5 +71,5 @@ class Solution:
 
         return len(result)
 
-TC: O(n), because we first build the frequency array in O(n), followed by a constant number of digit combinations.
-SC: O(1) auxiliary space, excluding the output array.
+TC: O(1) because the input contains at most 9 digits, and we check only 9 × 10 × 5 = 450 possible combinations.
+SC: O(1) because the frequency array always contains exactly 10 elements, excluding the output.
