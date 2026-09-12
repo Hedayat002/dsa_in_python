@@ -1,0 +1,247 @@
+1. Recursion
+class Solution:
+    def find_next(self, intervals, r, n):
+        low = 0
+        high = n - 1
+        result = n
+
+        while low <= high:
+            mid = low + (high - low) // 2
+
+            if intervals[mid][0] > r:
+                result = mid
+                high = mid - 1
+            else:
+                low = mid + 1
+
+        return result
+
+    def solve(self, intervals, nextIdx, i, k, n):
+
+        # Base case
+        if k == 0 or i >= n:
+            return (0, [])
+
+        weight = intervals[i][2]
+        idx = intervals[i][3]
+
+        j = nextIdx[i]
+
+        # --------------------------------
+        # 1. Skip current interval
+        # --------------------------------
+        skip_score, skip_idxs = self.solve(intervals,nextIdx,i + 1,k,n)
+
+        # --------------------------------
+        # 2. Take current interval
+        # --------------------------------
+        temp_score, temp_idxs = self.solve(intervals,nextIdx,j,k - 1,
+            n)
+
+        take_score = temp_score + weight
+
+        take_idxs = temp_idxs + [idx]
+
+        # Same as C++ sort()
+        take_idxs.sort()
+
+        # --------------------------------
+        # 3. Choose better result
+        # --------------------------------
+        if skip_score > take_score:
+            return (skip_score, skip_idxs)
+
+        elif skip_score < take_score:
+            return (take_score, take_idxs)
+
+        else:
+            # Same score → lexicographically smaller indices
+            if skip_idxs < take_idxs:
+                return (skip_score, skip_idxs)
+            else:
+                return (take_score, take_idxs)
+    def maximumWeight(self, intervals: List[List[int]]) -> List[int]:
+        n = len(intervals)
+
+        # Store original index
+        for i in range(n):
+            intervals[i].append(i)
+        # Sort by:
+        # start, end, weight, original_index
+        intervals.sort()
+        # Find next non-overlapping interval
+        nextIdx = [0] * n
+        for i in range(n):
+            r = intervals[i][1]
+            nextIdx[i] = self.find_next(intervals,r,n )
+
+        # Maximum 4 intervals
+        K = 4
+        # Plain recursion
+        score, idxs = self.solve(intervals,nextIdx,0,K,n )
+
+        return idxs
+
+TC: O(2^n · K) approximately
+SC: O(n + K) recursion stack/result storage
+2. Memoization — Top Down
+class Solution:
+    def find_next(self, intervals, r, n):
+        low = 0
+        high = n - 1
+        result = n
+
+        while low <= high:
+            mid = low + (high - low) // 2
+
+            if intervals[mid][0] > r:
+                result = mid
+                high = mid - 1
+            else:
+                low = mid + 1
+
+        return result
+
+    def solve(self, intervals, nextIdx, i, k, n,dp):
+
+        # Base case
+        if k == 0 or i >= n:
+            return (0, [])
+
+        weight = intervals[i][2]
+        idx = intervals[i][3]
+
+        j = nextIdx[i]
+
+        if dp[i][k] != -1:
+            return dp[i][k]
+
+        # --------------------------------
+        # 1. Skip current interval
+        # --------------------------------
+        skip_score, skip_idxs = self.solve(intervals,nextIdx,i + 1,k,n,dp)
+
+        # --------------------------------
+        # 2. Take current interval
+        # --------------------------------
+        temp_score, temp_idxs = self.solve(intervals,nextIdx,j,k - 1,
+            n,dp)
+
+        take_score = temp_score + weight
+
+        take_idxs = temp_idxs + [idx]
+
+        # Same as C++ sort()
+        take_idxs.sort()
+
+        # --------------------------------
+        # 3. Choose better result
+        # --------------------------------
+        if skip_score > take_score:
+            ans = (skip_score, skip_idxs)
+
+        elif skip_score < take_score:
+            ans = (take_score, take_idxs)
+
+        else:
+            if skip_idxs < take_idxs:
+                ans = (skip_score, skip_idxs)
+            else:
+                ans = (take_score, take_idxs)
+
+        dp[i][k] = ans
+
+        return ans
+    def maximumWeight(self, intervals: List[List[int]]) -> List[int]:
+        n = len(intervals)
+
+        # Store original index
+        for i in range(n):
+            intervals[i].append(i)
+        # Sort by:
+        # start, end, weight, original_index
+        intervals.sort()
+        # Find next non-overlapping interval
+        nextIdx = [0] * n
+        for i in range(n):
+            r = intervals[i][1]
+            nextIdx[i] = self.find_next(intervals,r,n )
+
+        # Maximum 4 intervals
+        K = 4
+        # Plain recursion
+        dp = [[-1] * 5 for _ in range(n)]
+        score, idxs = self.solve(intervals,nextIdx,0,K,n,dp )
+
+        return idxs
+
+  Overall TC: O(n log n)
+Overall SC: O(nK) ≈ O(n)
+3. Tabulation — Bottom Up
+class Solution:
+    def find_next(self, intervals, r, n):
+        low = 0
+        high = n - 1
+        result = n
+
+        while low <= high:
+            mid = low + (high - low) // 2
+
+            if intervals[mid][0] > r:
+                result = mid
+                high = mid - 1
+            else:
+                low = mid + 1
+
+        return result
+
+    def maximumWeight(self, intervals: List[List[int]]) -> List[int]:
+        n = len(intervals)
+
+        # Store original index
+        for i in range(n):
+            intervals[i].append(i)
+        # Sort by:
+        # start, end, weight, original_index
+        intervals.sort()
+        # Find next non-overlapping interval
+        nextIdx = [0] * n
+        for i in range(n):
+            r = intervals[i][1]
+            nextIdx[i] = self.find_next(intervals,r,n )
+
+        # Maximum 4 intervals
+        K = 4
+        # Plain recursion
+        dp = [[(0, []) for _ in range(5)] for _ in range(n + 1)]
+        for i in range(n - 1, -1, -1):
+            for k in range(1, K + 1):
+                # 1. Skip current interval
+                # --------------------------------
+               # Skip
+                skip_score, skip_idxs = dp[i + 1][k]
+
+                # Take
+                j = nextIdx[i]
+
+                take_score = intervals[i][2] + dp[j][k - 1][0]
+
+                take_idxs = dp[j][k - 1][1] + [intervals[i][3]]
+                take_idxs.sort()
+
+                # Choose best
+                if skip_score > take_score:
+                    dp[i][k] = (skip_score, skip_idxs)
+
+                elif skip_score < take_score:
+                    dp[i][k] = (take_score, take_idxs)
+
+                else:
+                    if skip_idxs < take_idxs:
+                        dp[i][k] = (skip_score, skip_idxs)
+                    else:
+                        dp[i][k] = (take_score, take_idxs)
+
+        return dp[0][4][1]
+TC = O(n log n)
+SC = O(n)
