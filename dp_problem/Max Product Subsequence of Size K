@@ -1,0 +1,146 @@
+Problem: Max Product Subsequence of Size K
+Platform: GFG
+
+1. Recursion
+class Solution:
+    def solve(self, arr, n, k):
+
+       # Exactly k elements selected
+       if k == 0:
+           return 1, 1
+
+       # Not enough elements available
+       if n < k:
+           return float('-inf'), float('inf')
+
+       # TAKE arr[n - 1]
+       take_max, take_min = self.solve(arr,n - 1,k - 1)
+
+       take1 = arr[n - 1] * take_max
+       take2 = arr[n - 1] * take_min
+
+       current_take_max = max(take1, take2)
+       current_take_min = min(take1, take2)
+
+       # SKIP arr[n - 1]
+       skip_max, skip_min = self.solve(arr,n - 1,k)
+
+       # Combine TAKE and SKIP
+       maximum = max(current_take_max,skip_max)
+
+       minimum = min(current_take_min,skip_min)
+
+       return maximum, minimum
+    def maxProduct(self, arr: list[int], k: int) -> int:
+        # code here
+        max_product, min_product = self.solve(arr,len(arr),
+k)
+
+        return max_product
+TC: O(2^n)
+
+SC: O(n) recursion stack
+
+2. Memoization — Top Down
+
+class Solution:
+    def solve(self, arr, i, k,dp):
+
+       # Exactly k elements selected
+       if k == 0:
+           return 1, 1
+
+       # Not enough elements available
+       if i < k:
+           return float('-inf'), float('inf')
+           
+       if dp[i][k] != -1:
+            return dp[i][k]
+
+       # TAKE arr[n - 1]
+       take_max, take_min = self.solve(arr,i - 1,k - 1,dp)
+
+       take1 = arr[i - 1] * take_max
+       take2 = arr[i - 1] * take_min
+
+       current_take_max = max(take1, take2)
+       current_take_min = min(take1, take2)
+
+       # SKIP arr[n - 1]
+       skip_max, skip_min = self.solve(arr,i - 1,k,dp)
+
+       # Combine TAKE and SKIP
+       maximum = max(current_take_max,skip_max)
+
+       minimum = min(current_take_min,skip_min)
+       
+       dp[i][k] = maximum, minimum
+
+       return dp[i][k]
+    def maxProduct(self, arr: list[int], k: int) -> int:
+        # code here
+        n = len(arr)
+        dp = [[-1] * (k + 1)for _ in range(n + 1)]
+        max_product, min_product = self.solve(arr,n,k,dp)
+
+        return max_product
+TC: O(nk)
+SC: O(nk)
+
+3. Tabulation — Bottom Up
+class Solution:
+    def maxProduct(self, arr: list[int], k: int) -> int:
+        # code here
+           n = len(arr)
+           neg_inf = float('-inf')
+           pos_inf = float('inf')
+
+           dp_max = [[neg_inf] * (k + 1) for _ in range(n + 1)]
+           dp_min = [[pos_inf] * (k + 1) for _ in range(n + 1)]
+
+           for i in range(n + 1):
+               dp_max[i][0] = 1
+               dp_min[i][0] = 1
+
+           for i in range(1, n + 1):
+               for j in range(1, min(i, k) + 1):
+                   x = arr[i - 1]
+
+                   a = x * dp_max[i - 1][j - 1]
+                   b = x * dp_min[i - 1][j - 1]
+
+                   dp_max[i][j] = max(a, b, dp_max[i - 1][j])
+                   dp_min[i][j] = min(a, b, dp_min[i - 1][j])
+
+           return dp_max[n][k]
+TC: O(nk)
+SC: O(nk)
+
+4. Tabulation (Space Optimization)
+
+class Solution:
+    def maxProduct(self, arr: list[int], k: int) -> int:
+        # code here
+        neg_inf = float('-inf')
+        pos_inf = float('inf')
+
+        dp_max = [neg_inf] * (k + 1)
+        dp_min = [pos_inf] * (k + 1)
+
+        dp_max[0] = dp_min[0] = 1
+
+        for x in arr:
+            for j in range(k, 0, -1):
+                if dp_max[j - 1] == neg_inf:
+                    continue
+
+                a = x * dp_max[j - 1]
+                b = x * dp_min[j - 1]
+
+                dp_max[j] = max(dp_max[j], a, b)
+                dp_min[j] = min(dp_min[j], a, b)
+
+        return dp_max[k]
+
+TC: O(n × k)
+SC: O(k)
