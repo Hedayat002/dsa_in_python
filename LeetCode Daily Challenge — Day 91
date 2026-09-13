@@ -1,0 +1,112 @@
+## Brute Force Solution
+
+```python
+class Solution:
+    def countOverlaps(self, A, B, rowOff, colOff):
+        n = len(A)
+        count = 0
+
+        for row in range(n):
+            for col in range(n):
+                nr = row + rowOff
+                nc = col + colOff
+
+                if 0 <= nr < n and 0 <= nc < n:
+                    count += A[row][col] * B[nr][nc]
+
+        return count
+
+    def largestOverlap(self, img1, img2):
+        n = len(img1)
+        maxOverlap = 0
+
+        for rowOff in range(-n + 1, n):
+            for colOff in range(-n + 1, n):
+                maxOverlap = max(
+                    maxOverlap,
+                    self.countOverlaps(img1, img2, rowOff, colOff)
+                )
+
+        return maxOverlap
+```
+
+**TC:** `O(n^4)`
+**SC:** `O(1)`
+
+**Flowchart:**
+`Start → Try every row/column shift → Check overlapping cells → Count 1&1 matches → Update maximum → Repeat/End`
+
+---
+
+## Better Solution
+
+```python
+class Solution:
+    def largestOverlap(self, img1, img2):
+        n = len(img1)
+        ones1 = []
+        ones2 = []
+
+        for r in range(n):
+            for c in range(n):
+                if img1[r][c]:
+                    ones1.append((r, c))
+                if img2[r][c]:
+                    ones2.append((r, c))
+
+        shifts = {}
+        ans = 0
+
+        for r1, c1 in ones1:
+            for r2, c2 in ones2:
+                shift = (r2 - r1, c2 - c1)
+                shifts[shift] = shifts.get(shift, 0) + 1
+                ans = max(ans, shifts[shift])
+
+        return ans
+```
+
+**TC:** `O(k₁ × k₂ + n²)`
+**SC:** `O(k₁ × k₂)`
+where `k₁` and `k₂` are the numbers of `1`s in the two images.
+
+**Flowchart:**
+`Start → Store coordinates of 1s → Pair every 1 from both images → Calculate required shift → Count identical shifts → Maximum frequency = overlap → End`
+
+---
+
+## Optimal Solution
+
+```python
+class Solution:
+    def largestOverlap(self, img1: list[list[int]], img2: list[list[int]]) -> int:
+        n = len(img1)
+        ones1 = []
+        ones2 = []
+
+        for r in range(n):
+            for c in range(n):
+                if img1[r][c]:
+                    ones1.append((r, c))
+                if img2[r][c]:
+                    ones2.append((r, c))
+
+        shift_count = {}
+        ans = 0
+
+        for r1, c1 in ones1:
+            for r2, c2 in ones2:
+                dr = r2 - r1
+                dc = c2 - c1
+
+                shift_count[(dr, dc)] = shift_count.get((dr, dc), 0) + 1
+                ans = max(ans, shift_count[(dr, dc)])
+
+        return ans
+```
+
+**TC:** `O(n² + k₁ × k₂)`
+**SC:** `O(k₁ × k₂)`
+
+**Flowchart:**
+`Start → Extract all 1-bit coordinates → Generate pairwise displacement → Frequency-map each displacement → Highest frequency → Return maximum overlap → End`
