@@ -1,0 +1,200 @@
+Problem: 1312. Minimum Insertion Steps to Make a String Palindrome
+Platform: Leetcode
+
+1. Recursion
+
+class Solution:
+    
+    def solve(self, s, i, j):
+
+        # Base case:
+        # One character or no characters left
+        if i >= j:
+            return 0
+
+        # Characters are already equal
+        if s[i] == s[j]:
+            return self.solve(s, i + 1, j - 1)
+
+        # Characters are different
+        # Option 1: Insert character matching s[i]
+        left = self.solve(s, i, j - 1)
+
+        # Option 2: Insert character matching s[j]
+        right = self.solve(s, i + 1, j)
+
+        return 1 + min(left, right)
+    def minInsertions(self, s: str) -> int:
+        n = len(s)
+        return self.solve(s, 0, n - 1)
+TC: O(2ⁿ)
+SC: O(n)
+
+2. Memoization (Top-Down)
+class Solution:
+    
+    def solve(self, s, i, j,dp):
+
+        # Base case:
+        # One character or no characters left
+        if i >= j:
+            return 0
+
+        if dp[i][j] != -1:
+            return dp[i][j]
+
+        # Characters are already equal
+        if s[i] == s[j]:
+            return self.solve(s, i + 1, j - 1,dp)
+
+        # Characters are different
+        # Option 1: Insert character matching s[i]
+        left = self.solve(s, i, j - 1,dp)
+
+        # Option 2: Insert character matching s[j]
+        right = self.solve(s, i + 1, j,dp) 
+        dp[i][j] = 1 + min(left, right)
+
+        return dp[i][j]
+    def minInsertions(self, s: str) -> int:
+        n = len(s)
+        dp = [[-1] * n for _ in range(n)]
+        return self.solve(s, 0, n - 1,dp)
+
+TC: O(n²)
+SC: O(n²)+O(n)
+
+3. Tabulation (Bottom-Up)
+class Solution:
+    
+    def solve(self, s, i, j,dp):
+
+        # Base case:
+        # One character or no characters left
+        if i >= j:
+            return 0
+
+        if dp[i][j] != -1:
+            return dp[i][j]
+
+        # Characters are already equal
+        if s[i] == s[j]:
+            return self.solve(s, i + 1, j - 1,dp)
+
+        # Characters are different
+        # Option 1: Insert character matching s[i]
+        left = self.solve(s, i, j - 1,dp)
+
+        # Option 2: Insert character matching s[j]
+        right = self.solve(s, i + 1, j,dp) 
+        dp[i][j] = 1 + min(left, right)
+
+        return dp[i][j]
+    def minInsertions(self, s: str) -> int:
+        n = len(s)
+        dp = [[0] * n for _ in range(n)]
+
+        for i in range(n - 2, -1, -1):
+            for j in range(i + 1, n):
+                if s[i] == s[j]:
+                    dp[i][j] = dp[i + 1][j - 1]
+                else:
+                    left = dp[i][j - 1]
+                    right = dp[i + 1][j]
+
+                    dp[i][j] = 1 + min(left, right)
+
+        return dp[0][n - 1]
+TC: O(n²)
+SC: O(n²)
+
+4.Space Optimization
+class Solution:
+    
+    def solve(self, s, i, j,dp):
+
+        # Base case:
+        # One character or no characters left
+        if i >= j:
+            return 0
+
+        if dp[i][j] != -1:
+            return dp[i][j]
+
+        # Characters are already equal
+        if s[i] == s[j]:
+            return self.solve(s, i + 1, j - 1,dp)
+
+        # Characters are different
+        # Option 1: Insert character matching s[i]
+        left = self.solve(s, i, j - 1,dp)
+
+        # Option 2: Insert character matching s[j]
+        right = self.solve(s, i + 1, j,dp) 
+        dp[i][j] = 1 + min(left, right)
+
+        return dp[i][j]
+    def minInsertions(self, s: str) -> int:
+        n = len(s)
+        prev = [0] * n 
+
+        for i in range(n - 2, -1, -1):
+            curr = [0] * n 
+            for j in range(i + 1, n):
+                if s[i] == s[j]:
+                    curr[j] = prev[j - 1]
+                else:
+                    left = curr[j - 1]
+                    right = prev[j]
+
+                    curr[j] = 1 + min(left, right)
+
+            prev = curr
+
+        return prev[n - 1]
+
+             j-1        j
+          ┌─────────┬─────────
+i         │ curr[j-1]│ curr[j]   ← current row
+          ├─────────┼─────────
+i+1       │ prev[j-1]│ prev[j]   ← previous row
+          └─────────┴─────────
+
+TC: O(n²)
+SC: O(n)
+
+
+                         solve(0,4)
+                       "mbadm"
+                    m == m
+                        |
+                        v
+                     solve(1,3)
+                       "bad"
+                    b != d
+                   /       \
+                  /         \
+                 v           v
+           solve(1,2)    solve(2,3)
+              "ba"          "ad"
+             b != a         a != d
+             /   \          /   \
+            v     v        v     v
+       solve(1,1) solve(2,2) solve(2,2) solve(3,3)
+          0          0          0          0
+            \       /            \       /
+             \     /              \     /
+              1 + min(0,0)         1 + min(0,0)
+                    |                    |
+                    v                    v
+              solve(1,2)=1        solve(2,3)=1
+                    \                    /
+                     \                  /
+                      \                /
+                       1 + min(1,1)
+                              |
+                              v
+                        solve(1,3)=2
+                              |
+                              v
+                        solve(0,4)=2
