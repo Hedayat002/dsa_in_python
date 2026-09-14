@@ -1,0 +1,62 @@
+## Brute Force Solution
+
+```python
+class Solution:
+    def isRectangleOverlap(self, rec1, rec2):
+        for x in range(max(rec1[0], rec2[0]), min(rec1[2], rec2[2])):
+            for y in range(max(rec1[1], rec2[1]), min(rec1[3], rec2[3])):
+                return True
+
+        return False
+```
+
+**Algorithm / Logic Flowchart**
+
+`Start → Find common X range → Find common Y range → Check any common point → True/False → End`
+
+**TC:** O(W × H)
+**SC:** O(1)
+
+---
+
+## Better Solution
+
+```python
+class Solution:
+    def isRectangleOverlap(self, rec1, rec2):
+        left = max(rec1[0], rec2[0])
+        right = min(rec1[2], rec2[2])
+        bottom = max(rec1[1], rec2[1])
+        top = min(rec1[3], rec2[3])
+
+        return left < right and bottom < top
+```
+
+**Algorithm / Logic Flowchart**
+
+`Start → Calculate common X range → Calculate common Y range → Both widths/heights positive? → True/False → End`
+
+**TC:** O(1)
+**SC:** O(1)
+
+---
+
+## Optimal Solution
+
+```python
+class Solution:
+    def isRectangleOverlap(self, rec1, rec2):
+        return (
+            rec1[0] < rec2[2] and
+            rec2[0] < rec1[2] and
+            rec1[1] < rec2[3] and
+            rec2[1] < rec1[3]
+        )
+```
+
+**Algorithm / Logic Flowchart**
+
+`Start → Check horizontal overlap → Check vertical overlap → Both overlap positively? → True/False → End`
+
+**TC:** O(1)
+**SC:** O(1)
