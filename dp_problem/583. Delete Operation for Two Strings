@@ -1,0 +1,108 @@
+Problem : 583. Delete Operation for Two Strings
+Platform: Leetcode 
+
+1. Recursion
+class Solution:
+    def solve(self, i, j, w1, w2):
+        if i == len(w1):
+            return len(w2) - j
+
+        if j == len(w2):
+            return len(w1) - i
+
+        if w1[i] == w2[j]:
+            return self.solve(i + 1, j + 1, w1, w2)
+
+        return 1 + min(
+            self.solve(i + 1, j, w1, w2),
+            self.solve(i, j + 1, w1, w2)
+        )
+
+    def minDistance(self, word1: str, word2: str) -> int:
+        return self.solve(0, 0, word1, word2)
+
+TC: O(2^(m+n))
+SC: O(m+n)
+
+2. Memoization (Top-Down)
+class Solution:
+    def solve(self,i, j,w1,w2,dp):
+            if i == len(w1):
+                return len(w2) - j
+
+            if j == len(w2):
+                return len(w1) - i
+
+            if dp[i][j] != -1:
+                return dp[i][j]
+
+            if w1[i] == w2[j]:
+                ans =  self.solve(i + 1, j + 1,w1,w2,dp)
+
+            else: 
+                ans = 1 + min(
+                self.solve(i + 1, j,w1,w2,dp),
+                self.solve(i, j + 1,w1,w2,dp)
+            )
+            dp[i][j] = ans
+            return dp[i][j]
+    def minDistance(self, word1: str, word2: str) -> int:
+        m, n = len(word1), len(word2)
+        dp = [[-1] * n for _ in range(m)]
+        return self.solve(0, 0,word1,word2,dp)
+TC: O(m × n)
+SC: O(m × n) +O(n) Stack space 
+
+3. Tabulation (Bottom-Up)
+class Solution:
+    def minDistance(self, word1: str, word2: str) -> int:
+        n, m = len(word1), len(word2)
+        dp = [[0] * (m+1) for _ in range(n+1)]
+
+        for i in range(n + 1):
+            dp[i][m] = n - i
+
+        for j in range(m + 1):
+            dp[n][j] = m - j
+
+        for i in range(n - 1, -1, -1):
+            for j in range(m - 1, -1, -1):
+                if word1[i] == word2[j]:
+                    ans =  dp[i+1][j+1]
+
+                else: 
+                    ans = 1 + min(
+                    dp[i+1][j],
+                    dp[i][j+1]
+                )
+                dp[i][j] = ans
+        return dp[0][0]
+TC: O(n*m)
+SC: O(n*m)
+
+4. Tabulation (Space Optimization)
+class Solution:
+    def minDistance(self, word1: str, word2: str) -> int:
+        n, m = len(word1), len(word2)
+
+        prev = [m - j for j in range(m + 1)]
+
+        for i in range(n - 1, -1, -1):
+            curr = [0] * (m + 1)
+            curr[m] = n - i
+
+            for j in range(m - 1, -1, -1):
+                if word1[i] == word2[j]:
+                    curr[j] = prev[j + 1]
+                else:
+                    curr[j] = 1 + min(
+                        prev[j],
+                        curr[j + 1]
+                    )
+
+            prev = curr
+
+        return prev[0]
+
+TC: O(n*m)
+SC: O(m)
