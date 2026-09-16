@@ -1,0 +1,96 @@
+1. Recursion
+class Solution:
+    MOD = 10**9 + 7
+
+    def solve(self, n, k, i):
+        if k == 0:
+            return i
+        if i < 0:
+            return 0
+
+        skip = self.solve(n, k, i - 1)
+
+        take = 0
+        for j in range(i - 1, n - 1):
+            take += self.solve(n, k - 1, j)
+
+        return (skip + take) % self.MOD
+
+    def numberOfSets(self, n: int, k: int) -> int:
+        return self.solve(n, k, n - 1)
+
+TC: O(n^k)
+SC: O(k)
+
+2. Memoization (Top-Down)
+class Solution:
+    MOD = 10**9 + 7
+
+    def solve(self, n, k, i, dp):
+        if k == 0:
+            return 1
+        if i <= 0:
+            return 0
+
+        if dp[i][k] != -1:
+            return dp[i][k]
+
+        skip = self.solve(n, k, i - 1, dp)
+
+        take = 0
+        for j in range(i):
+            take += self.solve(n, k - 1, j, dp)
+
+        dp[i][k] = (skip + take) % self.MOD
+        return dp[i][k]
+
+    def numberOfSets(self, n: int, k: int) -> int:
+        dp = [[-1] * (k + 1) for _ in range(n + 1)]
+        return self.solve(n, k, n - 1, dp)
+TC: O(n²k)
+SC: O(nk)+O(n)
+
+3. Tabulation (Bottom-Up)
+class Solution:
+    MOD = 10**9 + 7
+
+    def numberOfSets(self, n: int, k: int) -> int:
+        dp = [[0] * (k + 1) for _ in range(n )]
+
+        for i in range(n):
+            dp[i][0] = 1
+
+        
+        for i in range(1, n):
+            for s in range(1, min(k, i) + 1):
+                skip = dp[i-1][s]
+
+                take = 0
+                for j in range(i):
+                    take += dp[j][s-1]
+
+                dp[i][s] = (skip + take) % self.MOD
+        return dp[n - 1][k]
+TC: O(n²k)
+SC: O(nk)
+4. Tabulation (Space Optimization)
+
+class Solution:
+    MOD = 10**9 + 7
+
+    def numberOfSets(self, n: int, k: int) -> int:
+        prev = [1] * n
+
+        for s in range(1, k + 1):
+            curr = [0] * n
+            total = 0
+
+            for i in range(1, n):
+                total = (total + prev[i - 1]) % self.MOD
+                curr[i] = (curr[i - 1] + total) % self.MOD
+
+            prev = curr
+
+        return prev[n - 1]
+TC: O(n × k)
+SC: O(n)
