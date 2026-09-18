@@ -1,0 +1,159 @@
+## Brute Force Solution
+
+```python
+class Solution:
+    def maxNumOfSubstrings(self, s: str):
+        n = len(s)
+        ans = []
+
+        for i in range(n):
+            for j in range(i, n):
+                sub = s[i:j + 1]
+                ok = True
+
+                for c in set(sub):
+                    if s.find(c) < i or s.rfind(c) > j:
+                        ok = False
+                        break
+
+                if ok:
+                    ans.append((i, j))
+
+        ans.sort(key=lambda x: (x[1] - x[0] + 1, x[0]))
+
+        selected = []
+        end = -1
+
+        for l, r in sorted(ans, key=lambda x: x[1]):
+            if l > end:
+                selected.append(s[l:r + 1])
+                end = r
+
+        return selected
+```
+
+**TC:** `O(n^3)`
+**SC:** `O(n)`
+
+**Flowchart:**
+`Start → Generate all substrings → Check all character occurrences → Store valid substrings → Sort by ending index → Select non-overlapping → End`
+
+---
+
+## Better Solution
+
+```python
+class Solution:
+    def maxNumOfSubstrings(self, s: str):
+        n = len(s)
+        first = [n] * 26
+        last = [-1] * 26
+
+        for i, ch in enumerate(s):
+            x = ord(ch) - ord('a')
+            first[x] = min(first[x], i)
+            last[x] = i
+
+        intervals = []
+
+        for c in range(26):
+            if first[c] == n:
+                continue
+
+            l, r = first[c], last[c]
+            i = l
+            valid = True
+
+            while i <= r:
+                x = ord(s[i]) - ord('a')
+
+                if first[x] < l:
+                    valid = False
+                    break
+
+                r = max(r, last[x])
+                i += 1
+
+            if valid:
+                intervals.append((l, r))
+
+        intervals.sort(key=lambda x: x[1])
+
+        ans = []
+        end = -1
+
+        for l, r in intervals:
+            if l > end:
+                ans.append(s[l:r + 1])
+                end = r
+
+        return ans
+```
+
+**TC:** `O(26 × n)` → `O(n)`
+**SC:** `O(26)` → `O(1)`
+
+**Flowchart:**
+`Start → Find first/last occurrence → Expand interval to include every occurrence → Reject invalid interval → Sort valid intervals by end → Greedily select non-overlapping → End`
+
+---
+
+## Optimal Solution
+
+class Solution:
+    def maxNumOfSubstrings(self, s: str) -> list[str]:
+        n = len(s)
+
+        start = [-1] * 26
+        end = [0] * 26
+        isValid = [True] * 26
+
+        result = []
+
+        # Step 1: Find first and last occurrence
+        for i in range(n):
+            idx = ord(s[i]) - ord('a')
+
+            if start[idx] == -1:
+                start[idx] = i
+
+            end[idx] = i
+
+        # Step 2: Find valid intervals
+        for c in range(26):
+            if start[c] == -1:
+                continue
+
+            i = start[c]
+
+            while i <= end[c]:
+                idx = ord(s[i]) - ord('a')
+
+                if start[idx] < start[c]:
+                    isValid[c] = False
+                    break
+
+                end[c] = max(end[c], end[idx])
+
+                i += 1
+
+        # Step 3: Select maximum number of non-overlapping intervals
+        lastTakenStart = float('inf')
+
+        for i in range(n - 1, -1, -1):
+            c = ord(s[i]) - ord('a')
+
+            if not isValid[c]:
+                continue
+
+            if i == start[c] and end[c] < lastTakenStart:
+                result.append(s[i:end[c] + 1])
+                lastTakenStart = i
+
+        # We traversed right -> left,
+        # so reverse to get left -> right order.
+        result.reverse()
+
+        return result
+//T.C : O(n)
+//S.C : O(26)
