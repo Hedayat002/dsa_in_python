@@ -1,0 +1,33 @@
+### Brute Force Solution
+
+```python
+class Solution:
+    def reverseDegree(self, s: str) -> int:
+        ans = 0
+
+        for i in range(len(s)):
+            value = 26 - (ord(s[i]) - ord('a'))
+            ans += value * (i + 1)
+
+        return ans
+```
+
+**TC:** O(n)
+**SC:** O(1)
+
+**Flowchart:**
+`Start → Traverse string → Calculate reversed alphabet value → Multiply by position → Add to result → Repeat → Return result`
+
+### Optimal Solution
+
+```python
+class Solution:
+    def reverseDegree(self, s: str) -> int:
+        return sum((26 - (ord(ch) - ord('a'))) * i for i, ch in enumerate(s, 1))
+```
+
+**TC:** O(n)
+**SC:** O(1)
+
+**Flowchart:**
+`Start → Enumerate characters with 1-based index → Calculate reversed alphabet value → Multiply and sum → Repeat → Return result`
