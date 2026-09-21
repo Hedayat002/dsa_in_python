@@ -1,0 +1,106 @@
+Problem: 3524. Find X Value of Array I
+Platform: Leetcode 
+
+
+1. Recursion
+class Solution:
+    def generate(self, nums, left, product, k, result):
+        if left < 0:
+            return
+
+        product = (nums[left] % k) * product % k
+        result[product] += 1
+
+        self.generate(nums, left - 1, product, k, result)
+
+    def solve(self, nums, right, k, result):
+        if right < 0:
+            return
+
+        self.generate(nums, right, 1, k, result)
+        self.solve(nums, right - 1, k, result)
+    def resultArray(self, nums: List[int], k: int) -> List[int]:
+        n = len(nums)
+        result = [0] * k
+        self.solve(nums, n - 1, k, result)
+        return result
+TC: O(n²)
+SC: O(n)
+2. Memoization (Top-Down)
+class Solution:
+
+    def solve(self, nums, i, k, result,dp):
+        if i < 0:
+            return
+
+        if dp[i] != -1:
+            for r in range(k):
+                result[r] += dp[i][r]
+            return
+
+        dp[i] = [0] * k
+        product = 1
+
+        for j in range(i, -1, -1):
+            product = (nums[j] % k) * product % k
+            dp[i][product] += 1
+
+        for r in range(k):
+            result[r] += dp[i][r]
+
+        self.solve(nums, i - 1, k,  result,dp)
+    def resultArray(self, nums: List[int], k: int) -> List[int]:
+        n = len(nums)
+        result = [0] * k
+        dp = [-1] * n
+        self.solve(nums, n - 1, k, result,dp)
+        return result
+
+
+TC: O(n²)
+SC: O(nk)
+
+3. Tabulation (Bottom-Up)
+class Solution:
+    def resultArray(self, nums: List[int], k: int) -> List[int]:
+        n = len(nums)
+        dp = [[0] * k for _ in range(n)]
+        result = [0] * k
+
+        for i in range(n):
+            product = nums[i] % k
+            dp[i][product] += 1
+
+            for r in range(k):
+                dp[i][(r * (nums[i] % k)) % k] += dp[i - 1][r] if i > 0 else 0
+
+            for r in range(k):
+                result[r] += dp[i][r]
+
+        return result
+TC: O(nk)
+SC: O(nk)
+4. Tabulation (Space Optimization)
+class Solution:
+    def findXValue(self, nums, k):
+        prev = [0] * k
+        result = [0] * k
+
+        for num in nums:
+            x = num % k
+            curr = [0] * k
+
+            curr[x] += 1
+
+            for r in range(k):
+                curr[(r * x) % k] += prev[r]
+
+            for r in range(k):
+                result[r] += curr[r]
+
+            prev = curr
+
+        return result
+
+TC: O(nk)
+SC: O(k)
