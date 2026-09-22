@@ -1,0 +1,150 @@
+class Node:
+    def __init__(self, k):
+        self.cnt = [0] * k
+        self.prod = 0
+
+
+class SegmentTree:
+    def __init__(self, nums, k):
+        self.n = len(nums)
+        self.k = k
+        self.segTree = [Node(k) for _ in range(4 * self.n)]
+
+        self.build(0, 0, self.n - 1, nums)
+
+    def leafNode(self, i, value):
+        remainder = value % self.k
+
+        self.segTree[i].cnt = [0] * self.k
+        self.segTree[i].cnt[remainder] = 1
+        self.segTree[i].prod = remainder
+
+    def mergeNodes(self, left, right):
+        result = Node(self.k)
+
+        # Product of the complete segment
+        result.prod = (left.prod * right.prod) % self.k
+
+        # Subarrays lying completely in the left part
+        for x in range(self.k):
+            result.cnt[x] = left.cnt[x]
+
+        # Subarrays that extend into the right part
+        for x in range(self.k):
+            newRem = (left.prod * x) % self.k
+            result.cnt[newRem] += right.cnt[x]
+
+        return result
+
+    def build(self, i, l, r, nums):
+        if l == r:
+            self.leafNode(i, nums[l])
+            return
+
+        mid = l + (r - l) // 2
+
+        self.build(2 * i + 1, l, mid, nums)
+        self.build(2 * i + 2, mid + 1, r, nums)
+
+        self.segTree[i] = self.mergeNodes(
+            self.segTree[2 * i + 1],
+            self.segTree[2 * i + 2]
+        )
+
+    def segTreeUpdate(self, i, l, r, index, value):
+        if l == r:
+            self.leafNode(i, value)
+            return
+
+        mid = l + (r - l) // 2
+
+        if index <= mid:
+            self.segTreeUpdate(
+                2 * i + 1, l, mid, index, value
+            )
+        else:
+            self.segTreeUpdate(
+                2 * i + 2, mid + 1, r, index, value
+            )
+
+        self.segTree[i] = self.mergeNodes(
+            self.segTree[2 * i + 1],
+            self.segTree[2 * i + 2]
+        )
+
+    def update(self, index, value):
+        self.segTreeUpdate(
+            0, 0, self.n - 1, index, value
+        )
+
+    def segTreeQuery(self, start, end, i, l, r):
+        # Complete segment is inside query range
+        if l >= start and r <= end:
+            return self.segTree[i]
+
+        mid = l + (r - l) // 2
+
+        # Query lies completely in left child
+        if end <= mid:
+            return self.segTreeQuery(
+                start, end,
+                2 * i + 1, l, mid
+            )
+
+        # Query lies completely in right child
+        if start > mid:
+            return self.segTreeQuery(
+                start, end,
+                2 * i + 2, mid + 1, r
+            )
+
+        # Query overlaps both children
+        left = self.segTreeQuery(
+            start, end,
+            2 * i + 1, l, mid
+        )
+
+        right = self.segTreeQuery(
+            start, end,
+            2 * i + 2, mid + 1, r
+        )
+
+        return self.mergeNodes(left, right)
+
+    def query(self, start, end):
+        return self.segTreeQuery(
+            start, end,
+            0, 0, self.n - 1
+        )
+
+class Solution:
+    def resultArray(self, nums: List[int], k: int, queries: List[List[int]]) -> List[int]:
+        n = len(nums)
+
+        segTree = SegmentTree(nums, k)
+
+        result = []
+
+        for q in queries:
+            index = q[0]
+            value = q[1]
+            start = q[2]
+            x = q[3]
+
+            # Point update
+            segTree.update(index, value)
+
+            # Query [start, n-1]
+            node = segTree.query(start, n - 1)
+
+            # Number of subarrays whose product % k == x
+            result.append(node.cnt[x])
+
+        return result
+
+TC: O(nk + qk log n)
+SC: O(nk)
+
+Since k <= 5:
+TC: O(n + q log n)
+SC: O(n)
