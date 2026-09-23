@@ -1,0 +1,157 @@
+Problem: Pyramid Array with Reduce Operations
+Platform: GFG
+
+## 1. Recursion
+
+```python
+class Solution:
+    def left_height(self, arr, i):
+        if i == 0:
+            return min(arr[i], 1)
+        return min(arr[i], self.left_height(arr, i - 1) + 1)
+
+    def right_height(self, arr, i):
+        if i == len(arr) - 1:
+            return min(arr[i], 1)
+        return min(arr[i], self.right_height(arr, i + 1) + 1)
+
+    def maxSum(self, arr):
+        n = len(arr)
+        left = [0] * n
+        right = [0] * n
+
+        for i in range(n):
+            left[i] = self.left_height(arr, i)
+
+        for i in range(n):
+            right[i] = self.right_height(arr, i)
+
+        total = sum(arr)
+        best = 0
+
+        for i in range(n):
+            h = min(left[i], right[i])
+            best = max(best, h * h)
+
+        return total - best
+```
+
+**TC:** O(n²)
+**SC:** O(n)
+
+---
+
+## 2. Memoization (Top-Down)
+
+```python
+class Solution:
+    def left_height(self, arr, i, dp):
+        if i == 0:
+            return min(arr[i], 1)
+
+        if dp[i] != -1:
+            return dp[i]
+
+        dp[i] = min(arr[i], self.left_height(arr, i - 1, dp) + 1)
+        return dp[i]
+
+    def right_height(self, arr, i, dp):
+        if i == len(arr) - 1:
+            return min(arr[i], 1)
+
+        if dp[i] != -1:
+            return dp[i]
+
+        dp[i] = min(arr[i], self.right_height(arr, i + 1, dp) + 1)
+        return dp[i]
+
+    def maxSum(self, arr):
+        n = len(arr)
+        left = [-1] * n
+        right = [-1] * n
+
+        for i in range(n):
+            self.left_height(arr, i, left)
+
+        for i in range(n):
+            self.right_height(arr, i, right)
+
+        total = sum(arr)
+        best = 0
+
+        for i in range(n):
+            h = min(left[i], right[i])
+            best = max(best, h * h)
+
+        return total - best
+```
+
+**TC:** O(n)
+**SC:** O(n)
+
+---
+
+## 3. Tabulation (Bottom-Up)
+
+```python
+class Solution:
+    def maxSum(self, arr):
+        n = len(arr)
+
+        left = [0] * n
+        right = [0] * n
+
+        left[0] = min(arr[0], 1)
+
+        for i in range(1, n):
+            left[i] = min(arr[i], left[i - 1] + 1)
+
+        right[n - 1] = min(arr[n - 1], 1)
+
+        for i in range(n - 2, -1, -1):
+            right[i] = min(arr[i], right[i + 1] + 1)
+
+        total = sum(arr)
+        best = 0
+
+        for i in range(n):
+            h = min(left[i], right[i])
+            best = max(best, h * h)
+
+        return total - best
+```
+
+**TC:** O(n)
+**SC:** O(n)
+
+---
+
+## 4. Tabulation (Space Optimization)
+
+```python
+class Solution:
+    def maxSum(self, arr):
+        n = len(arr)
+
+        left = [0] * n
+        left[0] = min(arr[0], 1)
+
+        for i in range(1, n):
+            left[i] = min(arr[i], left[i - 1] + 1)
+
+        total = sum(arr)
+        best = 0
+        right = min(arr[-1], 1)
+
+        best = max(best, min(left[-1], right) ** 2)
+
+        for i in range(n - 2, -1, -1):
+            right = min(arr[i], right + 1)
+            h = min(left[i], right)
+            best = max(best, h * h)
+
+        return total - best
+```
+
+**TC:** O(n)
+**SC:** O(n)
