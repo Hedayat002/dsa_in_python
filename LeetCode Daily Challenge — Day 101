@@ -1,0 +1,158 @@
+## Brute Force Solution
+
+```python
+class Solution:
+    def minOperations(self, nums: list[int], x: int) -> int:
+        n = len(nums)
+        ans = n + 1
+
+        for left in range(n + 1):
+            curr = 0
+
+            for i in range(left):
+                curr += nums[i]
+
+            if curr > x:
+                continue
+
+            if curr == x:
+                ans = min(ans, left)
+
+            right_sum = 0
+
+            for right in range(n - 1, left - 1, -1):
+                right_sum += nums[right]
+
+                if curr + right_sum == x:
+                    ans = min(ans, left + (n - right))
+                elif curr + right_sum > x:
+                    break
+
+        return -1 if ans == n + 1 else ans
+```
+
+**TC:** O(n²)
+**SC:** O(1)
+
+**Flowchart:**
+`Start → Choose left removals → Choose right removals → Sum removed elements → Sum == x? → Update minimum → Repeat → End`
+
+---
+
+## Better Solution — Hash Table
+
+```python
+class Solution:
+    def minOperations(self, nums: list[int], x: int) -> int:
+        n = len(nums)
+        total = sum(nums)
+        target = total - x
+
+        if target < 0:
+            return -1
+
+        if target == 0:
+            return n
+
+        prefix = {0: -1}
+        curr = 0
+        max_len = -1
+
+        for i, num in enumerate(nums):
+            curr += num
+
+            if curr - target in prefix:
+                max_len = max(max_len, i - prefix[curr - target])
+
+            if curr not in prefix:
+                prefix[curr] = i
+
+        return -1 if max_len == -1 else n - max_len
+```
+
+**TC:** O(n)
+**SC:** O(n)
+
+**Flowchart:**
+`Start → total - x = target → Build prefix sums → target prefix found? → Maximize kept subarray → Repeat → Return n - max_len`
+
+---
+
+## Better Solution — Binary Search
+
+```python
+from bisect import bisect_left
+
+class Solution:
+    def minOperations(self, nums: list[int], x: int) -> int:
+        n = len(nums)
+        total = sum(nums)
+        target = total - x
+
+        if target < 0:
+            return -1
+
+        if target == 0:
+            return n
+
+        prefix = [0]
+
+        for num in nums:
+            prefix.append(prefix[-1] + num)
+
+        max_len = -1
+
+        for i in range(n):
+            desired = prefix[i] + target
+            j = bisect_left(prefix, desired, i + 1)
+
+            if j <= n and prefix[j] == desired:
+                max_len = max(max_len, j - i)
+
+        return -1 if max_len == -1 else n - max_len
+```
+
+**TC:** O(n log n)
+**SC:** O(n)
+
+**Flowchart:**
+`Start → total - x = target → Build prefix sums → Binary search target prefix → Update longest kept subarray → Repeat → Return n - max_len`
+
+---
+
+## Optimal Solution
+
+```python
+class Solution:
+    def minOperations(self, nums: list[int], x: int) -> int:
+        n = len(nums)
+        target = sum(nums) - x
+
+        if target < 0:
+            return -1
+
+        if target == 0:
+            return n
+
+        left = 0
+        curr_sum = 0
+        max_len = -1
+
+        for right in range(n):
+            curr_sum += nums[right]
+
+            while curr_sum > target:
+                curr_sum -= nums[left]
+                left += 1
+
+            if curr_sum == target:
+                max_len = max(max_len, right - left + 1)
+
+        return -1 if max_len == -1 else n - max_len
+```
+
+**TC:** O(n)
+**SC:** O(1)
+
+**Flowchart:**
+`Start → target = total - x → Expand window → Sum > target? → Shrink left → Sum == target? → Update max length → Repeat → Return n - max_len`
