@@ -81,8 +81,6 @@ class Solution:
 ## Better Solution — Binary Search
 
 ```python
-from bisect import bisect_left
-
 class Solution:
     def minOperations(self, nums: list[int], x: int) -> int:
         n = len(nums)
@@ -104,10 +102,20 @@ class Solution:
 
         for i in range(n):
             desired = prefix[i] + target
-            j = bisect_left(prefix, desired, i + 1)
 
-            if j <= n and prefix[j] == desired:
-                max_len = max(max_len, j - i)
+            left = i + 1
+            right = n
+
+            while left <= right:
+                mid = (left + right) // 2
+
+                if prefix[mid] == desired:
+                    max_len = max(max_len, mid - i)
+                    break
+                elif prefix[mid] < desired:
+                    left = mid + 1
+                else:
+                    right = mid - 1
 
         return -1 if max_len == -1 else n - max_len
 ```
