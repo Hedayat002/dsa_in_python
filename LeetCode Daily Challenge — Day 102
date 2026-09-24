@@ -1,0 +1,23 @@
+Optimal Solution
+class Solution:
+    def smallestIndex(self, nums: List[int]) -> int:
+        n = len(nums)
+
+        for i in range(n):
+            num = nums[i]
+            digit_sum = 0
+
+            while num > 0:
+                digit_sum += num % 10
+                num //= 10
+
+            if digit_sum == i:
+                return i
+
+        return -1
+
+TC: O(n × d)
+SC: O(1)
+
+Flowchart:
+Start → n = len(nums) → Traverse i → Calculate digit sum → digit_sum == i? → Return i / Continue → End → Return -1
