@@ -1,0 +1,125 @@
+Yes. Comparing the **two solutions you provided**:
+
+### Solution 1 — `solve() + split_union() + expand()`
+
+```text
+Expression
+   ↓
+Find top-level commas
+   ↓
+Split into independent parts
+   ↓
+Recursively expand each part
+   ↓
+Cartesian product for concatenation
+   ↓
+Union all results
+   ↓
+Sort
+```
+
+### Solution 2 — `getUnit() + performConcat() + performUnion()`
+
+```text
+Expression
+   ↓
+performUnion()
+   ↓
+performConcat()
+   ↓
+getUnit()
+   ↓
+Recursive parsing of {...}
+   ↓
+Cartesian product
+   ↓
+Union
+   ↓
+Sort
+```
+
+| Aspect                   | Solution 1                       | Solution 2                 |
+| ------------------------ | -------------------------------- | -------------------------- |
+| Parsing                  | Repeatedly scans strings         | Single index-based parser  |
+| Top-level comma handling | Explicit `split_union()`         | Handled directly by parser |
+| Concatenation            | List comprehension               | Nested loops               |
+| Recursion                | Higher-level recursive splitting | Recursive-descent          |
+| TC                       | `O(E × L)`                       | `O(E × L)`                 |
+| SC                       | `O(E × L + N)`                   | `O(E × L + N)`             |
+| Implementation           | More code / string slicing       | Cleaner parser structure   |
+| Intermediate strings     | More                             | Fewer                      |
+| Practical performance    | Generally slower                 | Generally faster           |
+| Approach                 | Divide expression into pieces    | Parse grammar directly     |
+
+### Time Complexity
+
+Both ultimately **must generate the answer**, so neither can avoid the potentially exponential output size.
+
+If:
+
+* `E` = number of generated intermediate combinations
+* `L` = maximum generated word length
+* `W` = number of final distinct words
+
+Then approximately:
+
+```text
+Solution 1: O(E × L + W log W)
+Solution 2: O(E × L + W log W)
+```
+
+The `W log W` comes from:
+
+```python
+sorted(result)
+```
+
+### Space Complexity
+
+Both need to store generated strings:
+
+```text
+Solution 1: O(E × L + N)
+Solution 2: O(E × L + N)
+```
+
+However, **Solution 1 can have more temporary string/list overhead** because it explicitly splits substrings and creates intermediate lists.
+
+Solution 2 uses an index:
+
+```python
+idx = [0]
+```
+
+and directly parses the original expression.
+
+### Which one should you use?
+
+For **LeetCode 1096**, I would use **Solution 2 (`getUnit → performConcat → performUnion`)**.
+
+Not because its asymptotic TC/SC is better—they are essentially the same—but because it maps directly to the grammar:
+
+```text
+Union
+  ↓
+Concatenation
+  ↓
+Unit
+  ↓
+Character / {Union}
+```
+
+So the key comparison is:
+
+```text
+                 Solution 1        Solution 2
+                 ──────────        ──────────
+TC               O(E × L)         O(E × L)
+SC               O(E × L + N)     O(E × L + N)
+Parsing          Split-based       Recursive-descent
+Extra overhead   Higher            Lower
+Code structure   Moderate          Cleaner
+Practical        Good              Better
+```
+
+**Bottom line:** **Solution 2 is the cleaner and more efficient implementation in practice, while their asymptotic complexity is essentially the same.**
