@@ -1,0 +1,107 @@
+## Brute Force Solution
+
+```python
+class Solution:
+    def evaluate(self, s, knowledge):
+        result = []
+        i = 0
+
+        while i < len(s):
+            if s[i] == '(':
+                i += 1
+                key = []
+
+                while s[i] != ')':
+                    key.append(s[i])
+                    i += 1
+
+                key = ''.join(key)
+                value = "?"
+
+                for k, v in knowledge:
+                    if k == key:
+                        value = v
+                        break
+
+                result.append(value)
+            else:
+                result.append(s[i])
+
+            i += 1
+
+        return ''.join(result)
+```
+
+**TC:** `O(n × k)`
+**SC:** `O(n + k)`
+
+**Flowchart:**
+`Start → Scan string → Find '(' → Extract key → Search knowledge → Found? → Value / "?" → Append → Repeat → End`
+
+---
+
+## Better Solution
+
+```python
+class Solution:
+    def evaluate(self, s, knowledge):
+        mp = dict(knowledge)
+        result = []
+        temp = []
+        bracket_opened = False
+
+        for ch in s:
+            if ch == '(':
+                bracket_opened = True
+            elif ch == ')':
+                key = ''.join(temp)
+                result.append(mp.get(key, "?"))
+                temp = []
+                bracket_opened = False
+            elif bracket_opened:
+                temp.append(ch)
+            else:
+                result.append(ch)
+
+        return ''.join(result)
+```
+
+**TC:** `O(n + m)`
+**SC:** `O(n + m)`
+
+**Flowchart:**
+`Start → Build hashmap → Scan string → '('? → Collect key → ')' ? → Lookup hashmap → Append value/"?" → Repeat → End`
+
+---
+
+## Optimal Solution
+
+```python
+class Solution:
+    def evaluate(self, s, knowledge):
+        mp = dict(knowledge)
+        result = []
+        i = 0
+
+        while i < len(s):
+            if s[i] == '(':
+                j = i + 1
+
+                while s[j] != ')':
+                    j += 1
+
+                key = s[i + 1:j]
+                result.append(mp.get(key, "?"))
+                i = j + 1
+            else:
+                result.append(s[i])
+                i += 1
+
+        return ''.join(result)
+```
+
+**TC:** `O(n + m)`
+**SC:** `O(n + m)`
+
+**Flowchart:**
+`Start → Build hashmap → Scan string → '('? → Find ')' → Extract key → Hashmap lookup → Append value/"?" → Continue after ')' → Repeat → End`
