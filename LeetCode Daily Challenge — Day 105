@@ -1,0 +1,90 @@
+## Brute Force Solution
+
+```python
+class Solution:
+    def reverseParentheses(self, s: str) -> str:
+        while '(' in s:
+            close = s.index(')')
+            open_ = s.rfind('(', 0, close)
+
+            s = s[:open_] + s[open_ + 1:close][::-1] + s[close + 1:]
+
+        return s
+```
+
+**Algorithm:**
+`Start → Find innermost ')' → Find matching '(' → Reverse substring → Remove parentheses → Repeat → End`
+
+**TC:** `O(n²)`
+**SC:** `O(n)`
+
+---
+
+## Better Solution
+
+```python
+class Solution:
+    def reverseParentheses(self, s: str) -> str:
+        stack = []
+
+        for ch in s:
+            if ch != ')':
+                stack.append(ch)
+            else:
+                temp = []
+
+                while stack[-1] != '(':
+                    temp.append(stack.pop())
+
+                stack.pop()
+                stack.extend(temp)
+
+        return ''.join(stack)
+```
+
+**Algorithm:**
+`Start → Read character → '(' or letter? Push → ')' → Pop until '(' → Remove '(' → Push reversed substring → Repeat → Join → End`
+
+**TC:** `O(n²)` worst case
+**SC:** `O(n)`
+
+---
+
+## Optimal Solution
+
+```python
+class Solution:
+    def reverseParentheses(self, s: str) -> str:
+        n = len(s)
+
+        openBracket = []
+        door = [0] * n
+
+        # First pass: Pair up parentheses
+        for i in range(n):
+            if s[i] == '(':
+                openBracket.append(i)
+
+            elif s[i] == ')':
+                j = openBracket.pop()
+                door[i] = j
+                door[j] = i
+
+        # Second pass: Build the result string
+        result = []
+        direction = 1  # Left to Right
+
+        i = 0
+        while 0 <= i < n:
+            if s[i] == '(' or s[i] == ')':
+                i = door[i]
+                direction = -direction
+            else:
+                result.append(s[i])
+
+            i += direction
+
+        return ''.join(result)
+
+TC: O(n)
+SC: O(n)
