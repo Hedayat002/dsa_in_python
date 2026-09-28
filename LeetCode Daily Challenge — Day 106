@@ -1,0 +1,99 @@
+## Brute Force Solution
+
+```python
+class Solution:
+    def maxDepth(self, s: str) -> int:
+        ans = 0
+
+        for i in range(len(s)):
+            if s[i] == '(':
+                depth = 0
+
+                for j in range(i + 1):
+                    if s[j] == '(':
+                        depth += 1
+                    elif s[j] == ')':
+                        depth -= 1
+
+                ans = max(ans, depth)
+
+        return ans
+```
+
+**TC:** O(n²)
+**SC:** O(1)
+
+**Flowchart:**
+`Start → Find '(' → Count active '(' before it → Update maximum → Repeat → End`
+
+---
+
+## Better Solution
+
+```python
+class Solution:
+    def maxDepth(self, s: str) -> int:
+        depth = 0
+        ans = 0
+
+        for ch in s:
+            if ch == '(':
+                depth += 1
+                ans = max(ans, depth)
+            elif ch == ')':
+                depth -= 1
+
+        return ans
+```
+
+**TC:** O(n)
+**SC:** O(1)
+
+**Flowchart:**
+`Start → Read character → '('? → depth++ → Update max → ')' ? → depth-- → Repeat → End`
+
+---
+
+## Optimal Solution
+
+```python
+class Solution:
+    def maxDepth(self, s: str) -> int:
+        depth = ans = 0
+
+        for ch in s:
+            depth += (ch == '(') - (ch == ')')
+            ans = max(ans, depth)
+
+        return ans
+```
+
+**TC:** O(n)
+**SC:** O(1)
+
+**Flowchart:**
+`Start → Read character → Update depth → Update maximum → Repeat for all characters → Return maximum → End`
+
+## Stack Solution
+
+```python
+class Solution:
+    def maxDepth(self, s: str) -> int:
+        stack = []
+        ans = 0
+
+        for ch in s:
+            if ch == '(':
+                stack.append(ch)
+                ans = max(ans, len(stack))
+            elif ch == ')':
+                stack.pop()
+
+        return ans
+```
+
+**TC:** O(n)
+**SC:** O(n)
+
+**Flowchart:**
+`Start → Read character → '('? → Push onto stack → Update maximum → ')' ? → Pop from stack → Repeat → Return maximum → End`
