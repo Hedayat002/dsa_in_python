@@ -1,0 +1,70 @@
+Yes. Both versions have the **same time and space complexity**.
+
+### 1. First version
+
+```python
+class Solution:
+    def maxDepthAfterSplit(self, seq: str) -> list[int]:
+        n = len(seq)
+        d = 0
+        result = [0] * n
+
+        for i in range(n):
+            if seq[i] == '(':
+                d += 1
+                result[i] = d % 2
+            else:
+                result[i] = d % 2
+                d -= 1
+
+        return result
+```
+
+* **Time Complexity:** `O(n)`
+
+  * We traverse `seq` exactly once.
+  * Each character takes `O(1)` work.
+
+* **Space Complexity:** `O(n)`
+
+  * `result` contains `n` elements.
+  * `d` uses only `O(1)` extra space.
+
+So:
+
+```text
+TC = O(n)
+SC = O(n)
+```
+
+---
+
+### 2. Second version
+
+```python
+class Solution:
+    def maxDepthAfterSplit(self, seq: str) -> list[int]:
+        result = []
+        d = 0
+
+        for ch in seq:
+            if ch == '(':
+                d += 1
+                result.append(d % 2)
+            else:
+                result.append(d % 2)
+                d -= 1
+
+        return result
+```
+
+* **Time Complexity:** `O(n)`
+* **Space Complexity:** `O(n)`
+
+Again:
+
+```text
+TC = O(n)
+SC = O(n)
+```
+
