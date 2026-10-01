@@ -1,0 +1,74 @@
+## Brute Force Solution
+
+```python
+class Solution:
+    def isValid(self, s: str) -> bool:
+        while "()" in s or "[]" in s or "{}" in s:
+            s = s.replace("()", "").replace("[]", "").replace("{}", "")
+
+        return s == ""
+```
+
+**Algorithm / Logic Flowchart:**
+`Start → Find valid adjacent pair → Remove pair → Pairs remain? → Yes: Repeat → No: Check empty → Result`
+
+**TC:** O(n²)
+**SC:** O(n)
+
+---
+
+## Better Solution
+
+```python
+class Solution:
+    def isValid(self, s: str) -> bool:
+        stack = []
+
+        for ch in s:
+            if ch in "([{":
+                stack.append(ch)
+            else:
+                if not stack:
+                    return False
+
+                top = stack.pop()
+
+                if (ch == ')' and top != '(') or \
+                   (ch == ']' and top != '[') or \
+                   (ch == '}' and top != '{'):
+                    return False
+
+        return not stack
+```
+
+**Algorithm / Logic Flowchart:**
+`Start → Read character → Opening? → Push → Closing? → Stack empty/mismatch? → False → Otherwise Pop → Repeat → Stack empty? → True`
+
+**TC:** O(n)
+**SC:** O(n)
+
+---
+
+## Optimal Solution
+
+```python
+class Solution:
+    def isValid(self, s: str) -> bool:
+        stack = []
+        pairs = {')': '(', ']': '[', '}': '{'}
+
+        for ch in s:
+            if ch in pairs:
+                if not stack or stack.pop() != pairs[ch]:
+                    return False
+            else:
+                stack.append(ch)
+
+        return not stack
+```
+
+**Algorithm / Logic Flowchart:**
+`Start → Read character → Closing bracket? → Yes: Stack empty/mismatch? → False → Otherwise Pop → No: Push → Repeat → Stack empty? → True`
+
+**TC:** O(n)
+**SC:** O(n)
