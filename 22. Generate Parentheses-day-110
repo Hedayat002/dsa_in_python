@@ -1,0 +1,44 @@
+1. Recursion
+class Solution:
+    def solve(self, n, s, open_count, close_count, result):
+        if len(s) == 2 * n:
+            result.append(s)
+            return
+
+        if open_count < n:
+            self.solve(n, s + "(", open_count + 1, close_count, result)
+
+        if close_count < open_count:
+            self.solve(n, s + ")", open_count, close_count + 1, result)
+
+    def generateParenthesis(self, n: int) -> list[str]:
+        result = []
+        self.solve(n, "", 0, 0, result)
+        return result
+
+TC: O(C pow n ​⋅n)
+SC: O(n) auxiliary space, excluding output.
+
+2. Memoization (Top-Down)
+class Solution:
+    def solve(self, n, s, open_count, close_count, dp, result):
+        if len(s) == 2 * n:
+            result.append(s)
+            return
+
+        if open_count < n:
+            self.solve(n, s + "(", open_count + 1, close_count, dp, result)
+
+        if close_count < open_count:
+            self.solve(n, s + ")", open_count, close_count + 1, dp, result)
+
+    def generateParenthesis(self, n: int) -> list[str]:
+        dp = [[-1] * (n + 1) for _ in range(n + 1)]
+        result = []
+        self.solve(n, "", 0, 0, dp, result)
+        return result
+
+TC: O( C pow n ⋅n)
+
+SC: O(n2) for dp, excluding recursion stack and output.
+
