@@ -1,0 +1,93 @@
+## Approach 1: Two-Pass Method — Python
+
+Python
+
+Run
+
+```
+class Solution:
+    def longestValidParentheses(self, s: str) -> int:
+        n = len(s)
+        open_count = 0
+        close_count = 0
+        result = 0
+
+        # Pass 1: Left to right
+        for i in range(n):
+            if s[i] == '(':
+                open_count += 1
+            else:
+                close_count += 1
+
+            if open_count == close_count:
+                result = max(result, open_count + close_count)
+            elif close_count > open_count:
+                open_count = 0
+                close_count = 0
+
+        open_count = 0
+        close_count = 0
+
+        # Pass 2: Right to left
+        for i in range(n - 1, -1, -1):
+            if s[i] == '(':
+                open_count += 1
+            else:
+                close_count += 1
+
+            if open_count == close_count:
+                result = max(result, open_count + close_count)
+            elif open_count > close_count:
+                open_count = 0
+                close_count = 0
+
+        return result
+```
+
+Complexity
+
+* Time: O(n) — two passes through the string.
+
+* Auxiliary space: O(1) — only counters and variables.
+
+## Approach 2: Stack Method — Python
+
+Python
+
+Run
+
+```
+class Solution:
+    def longestValidParentheses(self, s: str) -> int:
+        stack = [-1]
+        max_length = 0
+
+        for i in range(len(s)):
+            if s[i] == '(':
+                stack.append(i)
+            else:
+                stack.pop()
+
+                if not stack:
+                    stack.append(i)
+                else:
+                    max_length = max(max_length, i - stack[-1])
+
+        return max_length
+```
+
+Complexity
+
+* Time: O(n) — one pass through the string.
+
+* Auxiliary space: O(n) — the stack can store up to n+1n+1n+1 indices.
+
+### Key difference
+
+| Feature         | Two-pass method                               | Stack method                                       |
+| --------------- | --------------------------------------------- | -------------------------------------------------- |
+| Traversals      | 2                                             | 1                                                  |
+| Auxiliary space | O(1)O(1)O(1)                                  | O(n)O(n)O(n)                                       |
+| Main idea       | Count matching parentheses in both directions | Store indices to calculate valid substring lengths |
+
+Example: For `s = ")()())"`, both approaches return `4`, corresponding to the valid substring `"()()"`.
