@@ -1,0 +1,62 @@
+Stack using indices
+
+
+class Solution:
+    def checkValidString(self, s: str) -> bool:
+        left = []
+        stars = []
+
+        for i, ch in enumerate(s):
+            if ch == '(':
+                left.append(i)
+
+            elif ch == '*':
+                stars.append(i)
+
+            else:
+                if left:
+                    left.pop()
+                elif stars:
+                    stars.pop()
+                else:
+                    return False
+
+        while left and stars:
+            if left[-1] > stars[-1]:
+                return False
+
+            left.pop()
+            stars.pop()
+
+        return not left
+Time: \(O(n)\), because each index is pushed and popped at most once.
+Auxiliary space: \(O(n)\).
+
+5: Greedy — Minimum and maximum balance
+
+
+class Solution:
+    def checkValidString(self, s: str) -> bool:
+        low = high = 0
+
+        for ch in s:
+            if ch == '(':
+                low += 1
+                high += 1
+
+            elif ch == ')':
+                low -= 1
+                high -= 1
+
+            else:
+                low -= 1
+                high += 1
+
+            if high < 0:
+                return False
+
+            low = max(low, 0)
+
+        return low == 0
+Time: \(O(n)\), one pass.
+Auxiliary space: \(O(1)\), only two counters.
