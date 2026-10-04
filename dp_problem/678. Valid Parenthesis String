@@ -1,0 +1,122 @@
+1. Recursion
+class Solution:
+    def solve(self, i, balance, s):
+        if balance < 0:
+            return False
+
+        if i == len(s):
+            return balance == 0
+
+        if s[i] == '(':
+            return self.solve(i + 1, balance + 1, s)
+
+        if s[i] == ')':
+            return self.solve(i + 1, balance - 1, s)
+
+        return (
+            self.solve(i + 1, balance + 1, s)
+            or self.solve(i + 1, balance - 1, s)
+            or self.solve(i + 1, balance, s)
+        )
+
+    def checkValidString(self, s: str) -> bool:
+        return self.solve(0, 0, s)
+TC: (O(3^n))
+SC: (O(n))
+
+2. Memoization (Top-Down)
+
+class Solution:
+    def solve(self, i, balance, s,dp):
+        if balance < 0:
+            return False
+
+        if i == len(s):
+            return balance == 0
+
+        if dp[i][balance] != -1:
+            return dp[i][balance]
+
+        if s[i] == '(':
+            ans = self.solve(i + 1, balance + 1, s, dp)
+        elif s[i] == ')':
+            ans = self.solve(i + 1, balance - 1, s, dp)
+        else:
+            ans = (
+                self.solve(i + 1, balance + 1, s, dp)
+                or self.solve(i + 1, balance - 1, s, dp)
+                or self.solve(i + 1, balance, s, dp)
+            )
+
+        dp[i][balance] = ans
+        return dp[i][balance]
+
+    def checkValidString(self, s: str) -> bool:
+        n = len(s)
+        dp = [[-1] * (n + 1) for _ in range(n + 1)]
+        return self.solve(0, 0, s,dp)
+TC: \(O(n^2)\)
+SC: \(O(n^2)\)
+
+3. Tabulation (Bottom-Up)
+class Solution:
+
+    def checkValidString(self, s: str) -> bool:
+        n = len(s)
+        dp = [[False] * (n + 1) for _ in range(n + 1)]
+        dp[n][0] = True
+        for i in range(n - 1, -1, -1):
+            for balance in range(n + 1):
+                if s[i] == '(':
+                    if balance < n:
+                        dp[i][balance] = dp[i + 1][balance + 1]
+
+                elif s[i] == ')':
+                    if balance > 0:
+                        dp[i][balance] = dp[i + 1][balance - 1]
+
+                else:
+                    dp[i][balance] = dp[i + 1][balance]
+
+                    if balance < n:
+                        dp[i][balance] |= dp[i + 1][balance + 1]
+
+                    if balance > 0:
+                        dp[i][balance] |= dp[i + 1][balance - 1]
+
+        return dp[0][0]
+Time: (O(n^2))
+Space: (O(n^2))
+
+4. Tabulation (Space Optimization)
+class Solution:
+
+    def checkValidString(self, s: str) -> bool:
+        n = len(s)
+        prev = [False] * (n + 1) 
+        prev[0] = True
+        for i in range(n - 1, -1, -1):
+            curr = [False] * (n + 1)
+            for balance in range(n + 1):
+                if s[i] == '(':
+                    if balance < n:
+                        curr[balance] = prev[balance + 1]
+
+                elif s[i] == ')':
+                    if balance > 0:
+                        curr[balance] = prev[balance - 1]
+
+                else:
+                    curr[balance] = prev[balance]
+
+                    if balance < n:
+                        curr[balance] |= prev[balance + 1]
+
+                    if balance > 0:
+                        curr[balance] |= prev[balance - 1]
+            prev = curr
+
+        return prev[0]
+
+TC: \(O(n^2)\)
+SC: \(O(n)\)
