@@ -1,0 +1,101 @@
+## 1. Brute Force — Recursive Decomposition
+
+```python
+class Solution:
+    def scoreOfParentheses(self, s: str) -> int:
+        def solve(s):
+            if s == "()":
+                return 1
+
+            balance = 0
+
+            # Check if s is of the form (A)
+            for i, ch in enumerate(s):
+                balance += 1 if ch == '(' else -1
+
+                if balance == 0:
+                    if i == len(s) - 1:
+                        return 2 * solve(s[1:-1])
+
+                    # s = AB
+                    return solve(s[:i + 1]) + solve(s[i + 1:])
+
+        return solve(s)
+```
+
+**TC:** `O(n²)`  
+**SC:** `O(n)`
+
+---
+
+## 2. Optimized — Stack
+
+```python
+class Solution:
+    def scoreOfParentheses(self, s: str) -> int:
+        stack = [0]
+
+        for ch in s:
+            if ch == '(':
+                stack.append(0)
+            else:
+                inner = stack.pop()
+
+                if inner == 0:
+                    score = 1
+                else:
+                    score = 2 * inner
+
+                stack[-1] += score
+
+        return stack[0]
+```
+
+**TC:** `O(n)`  
+**SC:** `O(n)`
+
+---
+
+## 3. Most Optimized — Depth / Constant Extra Space
+
+```python
+class Solution:
+    def scoreOfParentheses(self, s: str) -> int:
+        score = 0
+        depth = 0
+
+        for i, ch in enumerate(s):
+            if ch == '(':
+                depth += 1
+            else:
+                depth -= 1
+
+                if s[i - 1] == '(':
+                    score += 1 << depth
+
+        return score
+```
+
+**TC:** `O(n)`  
+**SC:** `O(1)`
+
+### Key idea
+
+When we encounter `()`, its contribution is:
+
+```text
+2^depth
+```
+
+after decreasing the depth.
+
+Examples:
+
+```text
+()      → 1
+(())    → 2
+()()    → 1 + 1 = 2
+(()())  → 2 + 2 = 4
+```
+
+So the **third solution is the best** in terms of extra space: **O(1)**.
