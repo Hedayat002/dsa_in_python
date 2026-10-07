@@ -1,0 +1,160 @@
+## 1. Brute Force Solution — BFS
+
+```
+from collections import deque
+
+class Solution:
+    def removeInvalidParentheses(self, s: str) -> list[str]:
+        q = deque([s])
+        visited = {s}
+        ans = []
+        found = False
+
+        while q:
+            cur = q.popleft()
+
+            if self.isValid(cur):
+                ans.append(cur)
+                found = True
+
+            if found:
+                continue
+
+            for i in range(len(cur)):
+                if cur[i] not in "()":
+                    continue
+
+                nxt = cur[:i] + cur[i + 1:]
+
+                if nxt not in visited:
+                    visited.add(nxt)
+                    q.append(nxt)
+
+        return ans
+
+    def isValid(self, s: str) -> bool:
+        count = 0
+
+        for ch in s:
+            if ch == '(':
+                count += 1
+            elif ch == ')':
+                count -= 1
+
+            if count < 0:
+                return False
+
+        return count == 0
+```
+
+**TC:** O(n × 2ⁿ)
+
+**SC:** O(n × 2ⁿ)
+
+## 2. Better Solution — DFS with Removal Counts
+
+```
+class Solution:
+    def removeInvalidParentheses(self, s: str) -> list[str]:
+        left_remove = 0
+        right_remove = 0
+
+        for ch in s:
+            if ch == '(':
+                left_remove += 1
+            elif ch == ')':
+                if left_remove > 0:
+                    left_remove -= 1
+                else:
+                    right_remove += 1
+
+        ans = set()
+
+        def dfs(index, left, right, balance, path):
+            if index == len(s):
+                if left == 0 and right == 0 and balance == 0:
+                    ans.add(path)
+                return
+
+            ch = s[index]
+
+            if ch == '(' and left > 0:
+                dfs(index + 1, left - 1, right, balance, path)
+
+            elif ch == ')' and right > 0:
+                dfs(index + 1, left, right - 1, balance, path)
+
+            if ch == '(':
+                dfs(index + 1, left, right, balance + 1, path + ch)
+
+            elif ch == ')':
+                if balance > 0:
+                    dfs(index + 1, left, right, balance - 1, path + ch)
+
+            else:
+                dfs(index + 1, left, right, balance, path + ch)
+
+        dfs(0, left_remove, right_remove, 0, "")
+        return list(ans)
+```
+
+**TC:** O(n × 2ⁿ)
+
+**SC:** O(n × 2ⁿ)
+
+## 3. Optimal Solution — BFS with Early Termination
+
+```
+from collections import deque
+
+class Solution:
+    def removeInvalidParentheses(self, s: str) -> list[str]:
+        q = deque([s])
+        visited = {s}
+
+        while q:
+            level_size = len(q)
+            ans = []
+
+            for _ in range(level_size):
+                cur = q.popleft()
+
+                if self.isValid(cur):
+                    ans.append(cur)
+                    continue
+
+                for i in range(len(cur)):
+                    if cur[i] not in "()":
+                        continue
+
+                    nxt = cur[:i] + cur[i + 1:]
+
+                    if nxt not in visited:
+                        visited.add(nxt)
+                        q.append(nxt)
+
+            if ans:
+                return ans
+
+        return [""]
+
+    def isValid(self, s: str) -> bool:
+        balance = 0
+
+        for ch in s:
+            if ch == '(':
+                balance += 1
+            elif ch == ')':
+                balance -= 1
+
+            if balance < 0:
+                return False
+
+        return balance == 0
+```
+
+**TC:** O(n × 2ⁿ)
+
+**SC:** O(n × 2ⁿ)
+
+GitHub recommendation: Keep all three implementations in separate files or sections. Use Solution 3 (BFS with early termination) as your recommended solution.
