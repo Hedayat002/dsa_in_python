@@ -1,0 +1,121 @@
+Here is the updated GitHub-ready version, including your original solution and the reason string concatenation can take \\(O(n^2)\\).
+
+# LeetCode 1021 — Remove Outermost Parentheses
+
+**Difficulty:** Easy\
+**Topics:** String, Stack, Depth Counting
+
+## Problem
+
+Given a valid parentheses string `s`, remove the outermost parentheses of every primitive substring.
+
+## Solution 1: Brute Force — Primitive Substrings
+
+```
+class Solution:
+    def removeOuterParentheses(self, s: str) -> str:
+        result = []
+        start = 0
+        cnt = 0
+
+        for i, char in enumerate(s):
+            if char == '(':
+                cnt += 1
+            else:
+                cnt -= 1
+
+            if cnt == 0:
+                result.extend(s[start + 1:i])
+                start = i + 1
+
+        return ''.join(result)
+```
+
+**Time Complexity:** O(n)\
+**Space Complexity:** O(n)
+
+## Solution 2: My Original Solution — String Concatenation
+
+```
+class Solution:
+    def removeOuterParentheses(self, s: str) -> str:
+        cnt = 0
+        result = ""
+
+        for char in s:
+            if char == '(':
+                if cnt != 0:
+                    result += char
+                cnt += 1
+            else:
+                cnt -= 1
+                if cnt != 0:
+                    result += char
+
+        return result
+```
+
+**Time Complexity:** O(n²) worst case\
+**Space Complexity:** O(n)
+
+### Why can the time complexity be O(n²)?
+
+The statement `result += char` may create a new string and copy the existing characters.
+
+If the result grows by one character each time, the total copying work can be:
+
+```
+1 + 2 + 3 + 4 + ... + n
+= n * (n + 1) / 2
+= O(n²)
+```
+
+Python may optimize some concatenations, but O(n²) is the conservative worst-case bound.
+
+## Solution 3: Optimal — List + Join
+
+```
+class Solution:
+    def removeOuterParentheses(self, s: str) -> str:
+        cnt = 0
+        result = []
+
+        for char in s:
+            if char == '(':
+                if cnt > 0:
+                    result.append(char)
+                cnt += 1
+            else:
+                cnt -= 1
+                if cnt > 0:
+                    result.append(char)
+
+        return ''.join(result)
+```
+
+**Time Complexity:** O(n)\
+**Space Complexity:** O(n)
+
+### Why is this optimal?
+
+- `append()` takes amortized O(1) time per character.
+- Processing all characters takes O(n) time.
+- `join()` combines the characters in O(n) time.
+
+Therefore, the total time complexity is **O(n)**.
+
+## Comparison
+
+| Approach                                    | Time Complexity  | Space Complexity |
+| ------------------------------------------- | ---------------- | ---------------- |
+| Brute Force — Primitive Substrings          | O(n)             | O(n)             |
+| My Original Solution — String Concatenation | O(n²) worst case | O(n)             |
+| Optimal — List + Join                       | O(n)             | O(n)             |
+
+## Final Verdict
+
+**Best Solution:** List + Join.
+
+It achieves O(n) time complexity and O(n) space complexity, including output storage. The counter itself uses O(1) auxiliary space.
+
+Add a depth-counting walkthroughClarify the first solution's misleading label
