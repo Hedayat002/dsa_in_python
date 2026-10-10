@@ -1,0 +1,115 @@
+# 2333. Minimum Sum of Squared Difference
+
+**Difficulty:** Medium\
+**Topics:** Array, Binary Search, Greedy, Sorting, Heap (Priority Queue)
+
+## 1. Brute Force Solution — Max Heap
+
+```
+import heapq
+
+class Solution:
+    def minSumSquareDiff(self, nums1, nums2, k1, k2):
+        pq = [-abs(a - b) for a, b in zip(nums1, nums2)]
+        heapq.heapify(pq)
+
+        k = k1 + k2
+
+        while k > 0 and pq and pq[0] < 0:
+            largest = -heapq.heappop(pq)
+            heapq.heappush(pq, -(largest - 1))
+            k -= 1
+
+        return sum(d * d for d in pq)
+```
+
+**Time Complexity:** `O(n + K log n)`\
+**Space Complexity:** `O(n)`
+
+Where `K = k1 + k2`.
+
+## 2. Better Solution — Binary Search
+
+```
+class Solution:
+    def minSumSquareDiff(self, nums1, nums2, k1, k2):
+        diff = [abs(a - b) for a, b in zip(nums1, nums2)]
+        k = k1 + k2
+
+        if sum(diff) <= k:
+            return 0
+
+        left, right = 0, max(diff)
+
+        while left < right:
+            mid = (left + right) // 2
+
+            operations = sum(max(0, d - mid) for d in diff)
+
+            if operations <= k:
+                right = mid
+            else:
+                left = mid + 1
+
+        level = left
+
+        operations = sum(max(0, d - level) for d in diff)
+        result = sum(min(d, level) ** 2 for d in diff)
+
+        remaining = k - operations
+        result -= remaining * (2 * level - 1)
+
+        return result
+```
+
+**Time Complexity:** `O(n log D)`\
+**Space Complexity:** `O(n)`
+
+Where `D = max(diff)`.
+
+## 3. Optimal Solution — Counting Sort
+
+```
+class Solution:
+    def minSumSquareDiff(self, nums1, nums2, k1, k2):
+        diff = [abs(a - b) for a, b in zip(nums1, nums2)]
+        k = k1 + k2
+
+        if sum(diff) <= k:
+            return 0
+
+        max_diff = max(diff)
+        count = [0] * (max_diff + 1)
+
+        for d in diff:
+            count[d] += 1
+
+        for d in range(max_diff, 0, -1):
+            if k == 0:
+                break
+
+            operations = min(count[d], k)
+
+            count[d] -= operations
+            count[d - 1] += operations
+            k -= operations
+
+        return sum(d * d * count[d] for d in range(max_diff + 1))
+```
+
+**Time Complexity:** `O(n + D)`\
+**Space Complexity:** `O(n + D)`
+
+Where `D = max(diff)`, with `D <= 10^5`.
+
+## Comparison
+
+| Approach                | Time Complexity  | Space Complexity |
+| ----------------------- | ---------------- | ---------------- |
+| Brute Force — Max Heap  | `O(n + K log n)` | `O(n)`           |
+| Better — Binary Search  | `O(n log D)`     | `O(n)`           |
+| Optimal — Counting Sort | `O(n + D)`       | `O(n + D)`       |
+
+**Best Approach:** Counting Sort — efficient when `k1 + k2` is very large.
+
+Fix the heap result calculationAdd explanations for all three approaches
