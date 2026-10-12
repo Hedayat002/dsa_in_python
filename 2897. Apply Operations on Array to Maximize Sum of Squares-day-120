@@ -1,0 +1,96 @@
+# 2897. Apply Operations on Array to Maximize Sum of Squares
+
+## 1. Brute Force Solution
+
+```python
+class Solution:
+    def maxSum(self, nums: list[int], k: int) -> int:
+        MOD = 10**9 + 7
+        n = len(nums)
+
+        for i in range(n):
+            for j in range(i + 1, n):
+                a, b = nums[i], nums[j]
+                nums[i] = a & b
+                nums[j] = a | b
+
+        nums.sort(reverse=True)
+
+        return sum(x * x for x in nums[:k]) % MOD
+```
+
+**TC:** O(n² + n log n)  
+**SC:** O(n)
+
+## 2. Better Solution — Bit Counting + Greedy
+
+```python
+class Solution:
+    def maxSum(self, nums: list[int], k: int) -> int:
+        MOD = 10**9 + 7
+        count = [0] * 32
+
+        for num in nums:
+            for b in range(32):
+                if num & (1 << b):
+                    count[b] += 1
+
+        values = []
+
+        for _ in range(k):
+            curr = 0
+
+            for b in range(32):
+                if count[b] > 0:
+                    count[b] -= 1
+                    curr |= 1 << b
+
+            values.append(curr)
+
+        return sum(x * x for x in values) % MOD
+```
+
+**TC:** O(32n + 32k) = O(n + k)  
+**SC:** O(k)
+
+## 3. Optimal Solution — Bit Counting + Greedy
+
+```python
+class Solution:
+    def maxSum(self, nums: list[int], k: int) -> int:
+        MOD = 10**9 + 7
+        count = [0] * 32
+
+        for num in nums:
+            for b in range(32):
+                if num & (1 << b):
+                    count[b] += 1
+
+        result = 0
+
+        while k > 0:
+            curr = 0
+
+            for b in range(32):
+                if count[b] > 0:
+                    count[b] -= 1
+                    curr |= 1 << b
+
+            result = (result + curr * curr) % MOD
+            k -= 1
+
+        return result
+```
+
+**TC:** O(32n + 32k) = O(n + k)  
+**SC:** O(1)
+
+## Comparison
+
+| Approach | Time Complexity | Space Complexity |
+|---|---|---|
+| Brute Force | O(n² + n log n) | O(n) |
+| Better | O(n + k) | O(k) |
+| Optimal | O(n + k) | O(1) |
+
+**Best Approach:** Optimal — Bit Counting + Greedy.
