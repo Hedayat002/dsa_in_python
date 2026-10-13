@@ -1,0 +1,121 @@
+# 3727. Maximum Alternating Sum of Squares
+
+**Difficulty:** Medium  
+**Topics:** Greedy, Sorting, Array  
+**Time Complexity:** `O(n log n)`  
+**Space Complexity:** `O(log n)` auxiliary space
+
+## Problem
+
+Given an integer array `nums`, rearrange its elements to maximize the alternating score:
+
+`score = arr[0]² - arr[1]² + arr[2]² - arr[3]² + ...`
+
+Return the maximum possible alternating score.
+
+## Approach 1: Brute Force
+
+```python
+from itertools import permutations
+from typing import List
+
+class Solution:
+    def maxAlternatingSum(self, nums: List[int]) -> int:
+        ans = float('-inf')
+
+        for arr in permutations(nums):
+            score = 0
+
+            for i, num in enumerate(arr):
+                if i % 2 == 0:
+                    score += num * num
+                else:
+                    score -= num * num
+
+            ans = max(ans, score)
+
+        return ans
+```
+
+**Time Complexity:** `O(n! * n)`  
+**Space Complexity:** `O(n)` auxiliary space, excluding permutation storage.
+
+## Approach 2: Better Solution (Sorting)
+
+```python
+from typing import List
+
+class Solution:
+    def maxAlternatingSum(self, nums: List[int]) -> int:
+        squares = sorted(num * num for num in nums)
+
+        n = len(squares)
+        k = (n + 1) // 2
+
+        return sum(squares[n - k:]) - sum(squares[:n - k])
+```
+
+**Time Complexity:** `O(n log n)`  
+**Space Complexity:** `O(n)`
+
+## Approach 3: Optimal Solution (In-Place Sorting)
+
+```python
+from typing import List
+
+class Solution:
+    def maxAlternatingSum(self, nums: List[int]) -> int:
+        nums.sort(key=lambda x: x * x)
+
+        n = len(nums)
+        k = (n + 1) // 2
+
+        ans = 0
+
+        for i in range(k):
+            ans += nums[n - 1 - i] ** 2
+
+        for i in range(n - k):
+            ans -= nums[i] ** 2
+
+        return ans
+```
+
+**Time Complexity:** `O(n log n)`  
+**Space Complexity:** `O(log n)` auxiliary space, typically for Python's in-place sorting.
+
+## Example 1
+
+**Input**
+```text
+nums = [1, 2, 3]
+```
+
+**Output**
+```text
+12
+```
+
+## Example 2
+
+**Input**
+```text
+nums = [1, -1, 2, -2, 3, -3]
+```
+
+**Output**
+```text
+16
+```
+
+## Complexity Comparison
+
+| Approach | Time Complexity | Space Complexity |
+|---|---|---|
+| Brute Force | `O(n! * n)` | `O(n)` auxiliary |
+| Sorting | `O(n log n)` | `O(n)` |
+| In-Place Sorting | `O(n log n)` | `O(log n)` auxiliary |
+
+**Best Approach:** In-place sorting, with `O(n log n)` time complexity.
+
+**Note:** The brute-force approach is for comparison only and is not feasible for the maximum constraint of `n = 10^5`.
