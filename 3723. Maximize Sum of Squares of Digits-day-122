@@ -1,0 +1,78 @@
+# 3723. Maximize Sum of Squares of Digits
+
+**Difficulty:** Medium  
+**Topics:** Greedy, String
+
+## Problem
+Given two positive integers `num` and `sum`, construct a `num`-digit positive integer whose digits add up to `sum` and whose sum of squared digits is maximized. If multiple answers achieve the maximum score, return the largest integer as a string. If no valid integer exists, return `""`.
+
+## Approach 1: Better Solution — String Concatenation
+
+```python
+class Solution:
+    def maxSumOfSquares(self, num: int, sum: int) -> str:
+        if sum > 9 * num:
+            return ""
+
+        ans = ""
+
+        for i in range(num):
+            digit = min(9, sum)
+            ans += str(digit)
+            sum -= digit
+
+        if sum > 0:
+            return ""
+
+        return ans
+```
+
+**Time Complexity:** O(num²)  
+**Space Complexity:** O(num)
+
+## Approach 2: Optimal Solution — List and Join
+
+```python
+class Solution:
+    def maxSumOfSquares(self, num: int, sum: int) -> str:
+        if sum > 9 * num or sum < 1:
+            return ""
+
+        ans = []
+
+        for i in range(num):
+            digit = min(9, sum)
+            ans.append(str(digit))
+            sum -= digit
+
+        if sum != 0:
+            return ""
+
+        return "".join(ans)
+```
+
+**Time Complexity:** O(num)  
+**Space Complexity:** O(num)
+
+## Complexity Comparison
+
+| Approach | Time Complexity | Space Complexity |
+|---|---|---|
+| String Concatenation | O(num²) | O(num) |
+| List and Join | O(num) | O(num) |
+
+## Example
+
+**Input:**
+```text
+num = 2, sum = 3
+```
+
+**Output:**
+```text
+"30"
+```
+
+## Key Takeaway
+
+The greedy strategy assigns the largest possible digit, up to `9`, at each position. This maximizes the sum of squared digits. Using a list with `"".join()` avoids repeated string creation and achieves linear time complexity.
