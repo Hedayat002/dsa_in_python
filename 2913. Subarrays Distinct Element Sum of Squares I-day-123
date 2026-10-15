@@ -1,0 +1,75 @@
+# 2913. Subarrays Distinct Element Sum of Squares
+
+## Brute Force Solution
+
+```python
+class Solution:
+    def sumCounts(self, nums: List[int]) -> int:
+        n = len(nums)
+        ans = 0
+
+        for i in range(n):
+            for j in range(i, n):
+                distinct = len(set(nums[i:j + 1]))
+                ans += distinct * distinct
+
+        return ans
+```
+
+- **Time Complexity:** O(n³)
+- **Space Complexity:** O(n)
+
+## Better Solution
+
+```python
+class Solution:
+    def sumCounts(self, nums: List[int]) -> int:
+        n = len(nums)
+        ans = 0
+
+        for i in range(n):
+            seen = set()
+
+            for j in range(i, n):
+                seen.add(nums[j])
+                distinct = len(seen)
+                ans += distinct * distinct
+
+        return ans
+```
+
+- **Time Complexity:** O(n²) expected
+- **Space Complexity:** O(n)
+
+## Optimal Solution
+
+```python
+class Solution:
+    def sumCounts(self, nums: List[int]) -> int:
+        n = len(nums)
+        ans = 0
+
+        for i in range(n):
+            seen = set()
+            distinct = 0
+
+            for j in range(i, n):
+                if nums[j] not in seen:
+                    seen.add(nums[j])
+                    distinct += 1
+
+                ans += distinct * distinct
+
+        return ans
+```
+
+- **Time Complexity:** O(n²) expected
+- **Space Complexity:** O(n)
+
+## Complexity Comparison
+
+| Approach | Time Complexity | Space Complexity |
+|---|---|---|
+| Brute Force | O(n³) | O(n) |
+| Better | O(n²) | O(n) |
+| Optimal | O(n²) | O(n) |
