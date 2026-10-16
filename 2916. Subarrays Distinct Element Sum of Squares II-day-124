@@ -1,0 +1,79 @@
+
+## Optimized Solution — Segment Tree + Lazy Propagation
+
+```python
+class Solution:
+    def sumCounts(self, nums: list[int]) -> int:
+        MOD = 10**9 + 7
+        n = len(nums)
+
+        sqSumSegTree = [0] * (4 * n)
+        sumSegTree = [0] * (4 * n)
+        lazyTree = [0] * (4 * n)
+
+        def lazyAddition(i, l, r, val):
+            length = r - l + 1
+
+            sqSumSegTree[i] += (
+                2 * val * sumSegTree[i]
+                + length * val * val
+            )
+            sumSegTree[i] += length * val
+
+        def updateRange(start, end, i, l, r, val):
+            if lazyTree[i] != 0:
+                lazyAddition(i, l, r, lazyTree[i])
+
+                if l != r:
+                    lazyTree[2 * i + 1] += lazyTree[i]
+                    lazyTree[2 * i + 2] += lazyTree[i]
+
+                lazyTree[i] = 0
+
+            if l > end or r < start or l > r:
+                return
+
+            if l >= start and r <= end:
+                lazyAddition(i, l, r, val)
+
+                if l != r:
+                    lazyTree[2 * i + 1] += val
+                    lazyTree[2 * i + 2] += val
+
+                return
+
+            mid = l + (r - l) // 2
+
+            updateRange(start, end, 2 * i + 1, l, mid, val)
+            updateRange(start, end, 2 * i + 2, mid + 1, r, val)
+
+            sumSegTree[i] = (
+                sumSegTree[2 * i + 1]
+                + sumSegTree[2 * i + 2]
+            )
+
+            sqSumSegTree[i] = (
+                sqSumSegTree[2 * i + 1]
+                + sqSumSegTree[2 * i + 2]
+            )
+
+        lastSeenIdx = {}
+        result = 0
+
+        for i, num in enumerate(nums):
+            start = lastSeenIdx.get(num, -1) + 1
+            end = i
+
+            updateRange(start, end, 0, 0, n - 1, 1)
+
+            result = (result + sqSumSegTree[0]) % MOD
+
+            lastSeenIdx[num] = i
+
+        return result
+```
+
+## Complexity Analysis
+
+- **Time Complexity:** O(n log n) — Each element performs one range update on the segment tree.
+- **Space Complexity:** O(n) — The segment trees and last-seen index dictionary require linear space.
