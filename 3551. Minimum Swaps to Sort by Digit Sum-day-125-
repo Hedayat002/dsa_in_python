@@ -1,0 +1,131 @@
+# 3551. Minimum Swaps to Sort by Digit Sum
+
+**Difficulty:** Medium
+
+## 1. Brute Force Solution
+
+```python
+class Solution:
+    def getDigitSum(self, num: int) -> int:
+        total = 0
+        while num:
+            total += num % 10
+            num //= 10
+        return total
+
+    def minSwaps(self, nums: list[int]) -> int:
+        arr = nums.copy()
+        target = sorted(arr, key=lambda x: (self.getDigitSum(x), x))
+        n = len(arr)
+        swaps = 0
+
+        for i in range(n):
+            if arr[i] == target[i]:
+                continue
+
+            j = i + 1
+            while arr[j] != target[i]:
+                j += 1
+
+            arr[i], arr[j] = arr[j], arr[i]
+            swaps += 1
+
+        return swaps
+```
+
+**Time Complexity:** O(n² + n log n × d)
+
+**Space Complexity:** O(n)
+
+---
+
+## 2. Better Solution — Sort and Compare Indices
+
+```python
+class Solution:
+    def getDigitSum(self, num: int) -> int:
+        total = 0
+        while num:
+            total += num % 10
+            num //= 10
+        return total
+
+    def minSwaps(self, nums: list[int]) -> int:
+        target = sorted(nums, key=lambda x: (self.getDigitSum(x), x))
+        position = {value: i for i, value in enumerate(nums)}
+        swaps = 0
+
+        for i in range(len(nums)):
+            expected = target[i]
+            current = nums[i]
+
+            if current == expected:
+                continue
+
+            j = position[expected]
+            nums[i], nums[j] = nums[j], nums[i]
+
+            position[current] = j
+            position[expected] = i
+            swaps += 1
+
+        return swaps
+```
+
+**Time Complexity:** O(n log n × d)
+
+**Space Complexity:** O(n)
+
+---
+
+## 3. Optimal Solution — Cycle Decomposition
+
+```python
+class Solution:
+    def getDigitSum(self, num: int) -> int:
+        total = 0
+        while num:
+            total += num % 10
+            num //= 10
+        return total
+
+    def minSwaps(self, nums: list[int]) -> int:
+        n = len(nums)
+        target = sorted(nums, key=lambda x: (self.getDigitSum(x), x))
+        position = {value: i for i, value in enumerate(nums)}
+
+        permutation = [position[value] for value in target]
+        visited = [False] * n
+        swaps = 0
+
+        for i in range(n):
+            if visited[i]:
+                continue
+
+            cycle_size = 0
+            j = i
+
+            while not visited[j]:
+                visited[j] = True
+                j = permutation[j]
+                cycle_size += 1
+
+            if cycle_size > 1:
+                swaps += cycle_size - 1
+
+        return swaps
+```
+
+**Time Complexity:** O(n log n × d)
+
+**Space Complexity:** O(n)
+
+---
+
+**Variables:**
+- `n` = number of elements in `nums`
+- `d` = maximum number of digits in an element
+
+**Sorting Order:** `(digit_sum, number)`
+
+**Minimum Swaps Formula:** `cycle_size - 1` for each cycle.
