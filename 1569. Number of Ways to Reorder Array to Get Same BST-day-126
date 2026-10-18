@@ -1,0 +1,128 @@
+# 1569. Number of Ways to Reorder Array to Get Same BST
+
+**Difficulty:** Hard  
+**Topics:** Binary Search Tree, Recursion, Combinatorics, Dynamic Programming  
+**Language:** Python
+
+## 1. Brute Force Solution
+
+```python
+from itertools import permutations
+
+class Solution:
+    def numOfWays(self, nums):
+        MOD = 10**9 + 7
+        n = len(nums)
+
+        def build(arr):
+            if not arr:
+                return None
+
+            root = arr[0]
+            left = [x for x in arr[1:] if x < root]
+            right = [x for x in arr[1:] if x > root]
+
+            return (root, build(left), build(right))
+
+        target = build(nums)
+        count = 0
+
+        for p in permutations(nums[1:]):
+            if build([nums[0]] + list(p)) == target:
+                count += 1
+
+        return count % MOD
+
+
+# Time Complexity: O((n-1)! * n^2)
+# Space Complexity: O(n^2)
+```
+
+## 2. Better Solution — Recursive Counting
+
+```python
+class Solution:
+    def numOfWays(self, nums):
+        MOD = 10**9 + 7
+
+        def solve(arr):
+            if len(arr) < 3:
+                return 1
+
+            root = arr[0]
+            left = [x for x in arr[1:] if x < root]
+            right = [x for x in arr[1:] if x > root]
+
+            return (
+                solve(left) * solve(right)
+            ) % MOD
+
+        return (solve(nums) - 1) % MOD
+
+
+# Time Complexity: O(n^2)
+# Space Complexity: O(n^2)
+```
+
+## 3. Optimal Solution — Pascal's Triangle + Recursion
+
+```python
+class Solution:
+    def __init__(self):
+        self.MOD = 10**9 + 7
+        self.PT = []
+
+    def solve(self, nums):
+        m = len(nums)
+
+        if m < 3:
+            return 1
+
+        root = nums[0]
+        left = []
+        right = []
+
+        for x in nums[1:]:
+            if x < root:
+                left.append(x)
+            else:
+                right.append(x)
+
+        leftways = self.solve(left)
+        rightways = self.solve(right)
+
+        return (
+            leftways
+            * rightways
+            % self.MOD
+            * self.PT[m - 1][len(left)]
+        ) % self.MOD
+
+    def numOfWays(self, nums):
+        n = len(nums)
+
+        self.PT = [[1] * (i + 1) for i in range(n + 1)]
+
+        for i in range(2, n + 1):
+            for j in range(1, i):
+                self.PT[i][j] = (
+                    self.PT[i - 1][j - 1]
+                    + self.PT[i - 1][j]
+                ) % self.MOD
+
+        return (self.solve(nums) - 1) % self.MOD
+
+
+# Time Complexity: O(n^2)
+# Space Complexity: O(n^2)
+```
+
+## Complexity Comparison
+
+| Approach | Time Complexity | Space Complexity |
+|---|---|---|
+| Brute Force | O((n-1)! × n²) | O(n²) auxiliary per BST construction |
+| Better | O(n²) | O(n²) |
+| Optimal | O(n²) | O(n²) |
+
+**Note:** Submit Solution 3 on LeetCode. The answer subtracts `1` because the original ordering is not counted as a different reordering.
