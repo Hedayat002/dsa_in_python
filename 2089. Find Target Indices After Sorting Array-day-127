@@ -1,0 +1,102 @@
+# 2089. Find Target Indices After Sorting Array
+
+**Difficulty:** Easy  
+**Topics:** Array, Binary Search, Sorting  
+**LeetCode:** https://leetcode.com/problems/find-target-indices-after-sorting-array/
+
+## 1. Brute Force Solution
+
+```python
+class Solution:
+    def targetIndices(self, nums: list[int], target: int) -> list[int]:
+        nums.sort()
+        result = []
+
+        for i in range(len(nums)):
+            if nums[i] == target:
+                result.append(i)
+
+        return result
+```
+
+**Time Complexity:** `O(n log n)`  
+**Space Complexity:** `O(n)`
+
+## 2. Better Solution
+
+```python
+class Solution:
+    def targetIndices(self, nums: list[int], target: int) -> list[int]:
+        nums.sort()
+        return [i for i, num in enumerate(nums) if num == target]
+```
+
+**Time Complexity:** `O(n log n)`  
+**Space Complexity:** `O(n)`
+
+## 3. Optimal Solution (Counting)
+
+```python
+class Solution:
+    def targetIndices(self, nums: list[int], target: int) -> list[int]:
+        smaller = 0
+        equal = 0
+
+        for num in nums:
+            if num < target:
+                smaller += 1
+            elif num == target:
+                equal += 1
+
+        return list(range(smaller, smaller + equal))
+```
+
+**Time Complexity:** `O(n)`  
+**Space Complexity:** `O(k)`, where `k` is the number of occurrences of `target`.
+
+## 4. Binary Search Solution
+
+```python
+class Solution:
+    def targetIndices(self, nums: list[int], target: int) -> list[int]:
+        nums.sort()
+        n = len(nums)
+
+        left, right = 0, n
+
+        while left < right:
+            mid = (left + right) // 2
+
+            if nums[mid] < target:
+                left = mid + 1
+            else:
+                right = mid
+
+        start = left
+
+        left, right = 0, n
+
+        while left < right:
+            mid = (left + right) // 2
+
+            if nums[mid] <= target:
+                left = mid + 1
+            else:
+                right = mid
+
+        end = left
+
+        return list(range(start, end))
+```
+
+**Time Complexity:** `O(n log n)`  
+**Space Complexity:** `O(n)`
+
+## Complexity Summary
+
+| Approach | Time Complexity | Space Complexity |
+|---|---|---|
+| Brute Force | `O(n log n)` | `O(n)` |
+| Better | `O(n log n)` | `O(n)` |
+| Optimal (Counting) | `O(n)` | `O(k)` |
+| Binary Search | `O(n log n)` | `O(n)` |
