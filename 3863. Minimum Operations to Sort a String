@@ -1,0 +1,100 @@
+Approach 1: Brute Force (BFS on All Proper Substrings)
+from collections import deque
+
+class Solution:
+    def minOperations(self, s: str) -> int:
+        n = len(s)
+        target = "".join(sorted(s))
+        
+        if s == target:
+            return 0
+        if n == 2:
+            return -1
+            
+        queue = deque([(s, 0)])
+        visited = {s}
+        
+        while queue:
+            curr, steps = queue.popleft()
+            
+            # Generate all proper substrings of length >= 2
+            for i in range(n):
+                for j in range(i + 2, n + 1):
+                    # Skip the entire string
+                    if i == 0 and j == n:
+                        continue
+                        
+                    # Sort the chosen substring
+                    nxt = curr[:i] + "".join(sorted(curr[i:j])) + curr[j:]
+                    if nxt == target:
+                        return steps + 1
+                        
+                    if nxt not in visited:
+                        visited.add(nxt)
+                        queue.append((nxt, steps + 1))
+                        
+        return -1
+
+Time Complexity: O(3^{n^2} 
+Space Complexity: O(n^3)
+
+Approach 2: Better Solution (Prefix/Suffix Simulation with Sorting)
+class Solution:
+    def minOperations(self, s: str) -> int:
+        n = len(s)
+        target = "".join(sorted(s))
+        
+        # 0 Operations
+        if s == target:
+            return 0
+            
+        # Impossible case
+        if n == 2:
+            return -1
+            
+        # Simulate 1 Operation (Prefix sort vs Suffix sort)
+        op1_prefix = "".join(sorted(s[:-1])) + s[-1]
+        op1_suffix = s[0] + "".join(sorted(s[1:]))
+        
+        if op1_prefix == target or op1_suffix == target:
+            return 1
+            
+        # Simulate 2 Operations (Prefix -> Suffix vs Suffix -> Prefix)
+        op2_pref_suff = op1_prefix[0] + "".join(sorted(op1_prefix[1:]))
+        op2_suff_pref = "".join(sorted(op1_suffix[:-1])) + op1_suffix[-1]
+        
+        if op2_pref_suff == target or op2_suff_pref == target:
+            return 2
+            
+        # Worst case always takes 3 operations
+        return 3
+Time Complexity: O(n \log n)
+Space Complexity: O(n)
+Approach 3: Optimal Solution (Greedy Endpoint Analysis)
+class Solution:
+    def minOperations(self, s: str) -> int:
+        n = len(s)
+        
+        # 1. Check if already sorted in O(n) time
+        if all(s[i] <= s[i + 1] for i in range(n - 1)):
+            return 0
+            
+        # 2. Length 2 unsorted strings cannot be sorted
+        if n == 2:
+            return -1
+            
+        c_min = min(s)
+        c_max = max(s)
+        
+        # 3. 1 operation if either endpoint is already in its final extreme spot
+        if s[0] == c_min or s[-1] == c_max:
+            return 1
+            
+        # 4. 3 operations if unique max is at index 0 AND unique min is at index n-1
+        if s[0] == c_max and s[-1] == c_min and s.count(c_max) == 1 and s.count(c_min) == 1:
+            return 3
+            
+        # 5. All remaining cases require 2 operations
+        return 2
+Time Complexity: O(n)
+Space Complexity: O(1)
