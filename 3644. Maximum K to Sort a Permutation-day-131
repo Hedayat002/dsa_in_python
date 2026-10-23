@@ -1,0 +1,97 @@
+# 3644. Maximum K to Sort a Permutation
+
+**Difficulty:** Medium  
+**Topics:** Array, Bit Manipulation
+
+## 1. Brute Force Solution
+
+```python
+from typing import List
+
+class Solution:
+    def sortPermutation(self, nums: List[int]) -> int:
+        n = len(nums)
+
+        if nums == list(range(n)):
+            return 0
+
+        ans = 0
+
+        for k in range(n):
+            parent = list(range(n))
+
+            def find(x):
+                while parent[x] != x:
+                    parent[x] = parent[parent[x]]
+                    x = parent[x]
+                return x
+
+            def union(a, b):
+                ra = find(a)
+                rb = find(b)
+
+                if ra != rb:
+                    parent[ra] = rb
+
+            for i in range(n):
+                for j in range(i + 1, n):
+                    if (nums[i] & nums[j]) == k:
+                        union(nums[i], nums[j])
+
+            possible = True
+
+            for i in range(n):
+                if find(nums[i]) != find(i):
+                    possible = False
+                    break
+
+            if possible:
+                ans = k
+
+        return ans
+```
+
+**Time Complexity:** O(n² · α(n) · n)  
+**Space Complexity:** O(n)
+
+## 2. Better Solution
+
+```python
+from typing import List
+
+class Solution:
+    def sortPermutation(self, nums: List[int]) -> int:
+        n = len(nums)
+
+        if nums == list(range(n)):
+            return 0
+
+        ans = -1
+
+        for i in range(n):
+            if nums[i] != i:
+                ans &= nums[i]
+
+        return ans
+```
+
+**Time Complexity:** O(n)  
+**Space Complexity:** O(1)
+
+## 3. Optimal Solution
+
+```python
+class Solution:
+    def sortPermutation(self, nums: List[int]) -> int:
+        n = len(nums)
+        K = -1  # All bits set in Python's bitwise representation
+
+        for i in range(n):
+            if nums[i] != i:
+                K &= nums[i]
+
+        return 0 if K == -1 else K
+```
+
+**Time Complexity:** O(n)  
+**Space Complexity:** O(1)
