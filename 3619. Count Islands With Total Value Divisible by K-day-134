@@ -1,0 +1,148 @@
+# 3619. Count Islands With Total Value Divisible by K
+
+**Difficulty:** Medium
+
+## Problem
+
+Given an `m x n` matrix `grid` and a positive integer `k`, an island is a group of positive integers connected horizontally or vertically.
+
+Return the number of islands whose total value is divisible by `k`.
+
+---
+
+## 1. Brute Force Solution — DFS
+
+```python
+from typing import List
+
+class Solution:
+    def countIslands(self, grid: List[List[int]], k: int) -> int:
+        m, n = len(grid), len(grid[0])
+        count = 0
+
+        def dfs(r, c):
+            if r < 0 or r >= m or c < 0 or c >= n or grid[r][c] == 0:
+                return 0
+
+            total = grid[r][c]
+            grid[r][c] = 0
+
+            total += dfs(r + 1, c)
+            total += dfs(r - 1, c)
+            total += dfs(r, c + 1)
+            total += dfs(r, c - 1)
+
+            return total
+
+        for i in range(m):
+            for j in range(n):
+                if grid[i][j] > 0:
+                    total = dfs(i, j)
+
+                    if total % k == 0:
+                        count += 1
+
+        return count
+```
+
+**Time Complexity:** O(m × n)
+
+**Space Complexity:** O(m × n)
+
+---
+
+## 2. Better Solution — BFS
+
+```python
+from collections import deque
+from typing import List
+
+class Solution:
+    def countIslands(self, grid: List[List[int]], k: int) -> int:
+        m, n = len(grid), len(grid[0])
+        count = 0
+
+        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+
+        def bfs(r, c):
+            queue = deque([(r, c)])
+            total = grid[r][c]
+            grid[r][c] = 0
+
+            while queue:
+                x, y = queue.popleft()
+
+                for dx, dy in directions:
+                    nx, ny = x + dx, y + dy
+
+                    if 0 <= nx < m and 0 <= ny < n and grid[nx][ny] > 0:
+                        total += grid[nx][ny]
+                        grid[nx][ny] = 0
+                        queue.append((nx, ny))
+
+            return total
+
+        for i in range(m):
+            for j in range(n):
+                if grid[i][j] > 0:
+                    total = bfs(i, j)
+
+                    if total % k == 0:
+                        count += 1
+
+        return count
+```
+
+**Time Complexity:** O(m × n)
+
+**Space Complexity:** O(m × n)
+
+---
+
+## 3. Optimal Solution — BFS (Recommended)
+
+```python
+from collections import deque
+from typing import List
+
+class Solution:
+    def bfs(self, grid: List[List[int]], r: int, c: int,
+            m: int, n: int) -> int:
+
+        queue = deque([(r, c)])
+        total = grid[r][c]
+        grid[r][c] = 0
+
+        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+
+        while queue:
+            x, y = queue.popleft()
+
+            for dx, dy in directions:
+                nx, ny = x + dx, y + dy
+
+                if 0 <= nx < m and 0 <= ny < n and grid[nx][ny] > 0:
+                    total += grid[nx][ny]
+                    grid[nx][ny] = 0
+                    queue.append((nx, ny))
+
+        return total
+
+    def countIslands(self, grid: List[List[int]], k: int) -> int:
+        m, n = len(grid), len(grid[0])
+        count = 0
+
+        for i in range(m):
+            for j in range(n):
+                if grid[i][j] > 0:
+                    total = self.bfs(grid, i, j, m, n)
+
+                    if total % k == 0:
+                        count += 1
+
+        return count
+```
+
+**Time Complexity:** O(m × n)
+
+**Space Complexity:** O(m × n)
