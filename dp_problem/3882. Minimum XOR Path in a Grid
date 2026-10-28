@@ -1,0 +1,146 @@
+1. Recursion
+class Solution:
+    def dfs(self, grid, i, j, xor_value, m, n):
+        xor_value ^= grid[i][j]
+
+        if i == m - 1 and j == n - 1:
+            return xor_value
+
+        ans = float('inf')
+
+        # Move right
+        if j + 1 < n:
+            ans = min(ans, self.dfs(grid, i, j + 1, xor_value, m, n))
+
+        # Move down
+        if i + 1 < m:
+            ans = min(ans, self.dfs(grid, i + 1, j, xor_value, m, n))
+
+        return ans
+    def minCost(self, grid: list[list[int]]) -> int:
+        m = len(grid)
+        n = len(grid[0]) 
+
+        return self.dfs(grid, 0, 0, 0, m, n)
+
+
+TC: O(2^(m+n))
+SC: O(m+n)
+
+2. Memoization (Top-Down)
+class Solution:
+    def dfs(self, grid, i, j, xor_value, m, n, dp):
+        xor_value ^= grid[i][j]
+
+        if i == m - 1 and j == n - 1:
+            return xor_value
+
+        if dp[i][j][xor_value] != -1:
+            return dp[i][j][xor_value]
+
+        ans = float('inf')
+
+        if j + 1 < n:
+            ans = min(ans, self.dfs(grid, i, j + 1, xor_value, m, n, dp))
+
+        if i + 1 < m:
+            ans = min(ans, self.dfs(grid, i + 1, j, xor_value, m, n, dp))
+
+        dp[i][j][xor_value] = ans
+        return dp[i][j][xor_value]
+
+    def minCost(self, grid: list[list[int]]) -> int:
+        m = len(grid)
+        n = len(grid[0])
+        dp = [[[-1] * 1024 for _ in range(n)] for _ in range(m)]
+
+        return self.dfs(grid, 0, 0, 0, m, n, dp)
+TC: O(m × n × 1024)
+SC: O(m × n × 1024) + O(m+n)
+
+3. Tabulation (Bottom-Up)
+class Solution:
+    def minCost(self, grid: list[list[int]]) -> int:
+        m = len(grid)
+        n = len(grid[0])
+        dp = [[[0] * 1024 for _ in range(n)] for _ in range(m)]
+
+        for i in range(m - 1, -1, -1):
+            for j in range(n - 1, -1, -1):
+                for xor_value in range(1024):
+                    new_xor = xor_value ^ grid[i][j]
+
+                    # Base case: bottom-right corner
+                    if i == m - 1 and j == n - 1:
+                        dp[i][j][xor_value] = new_xor
+                        continue
+
+                    ans = float('inf')
+
+                    # Look right (already computed)
+                    if j + 1 < n:
+                        ans = min(ans, dp[i][j + 1][new_xor])
+
+                    # Look down (already computed)
+                    if i + 1 < m:
+                        ans = min(ans, dp[i + 1][j][new_xor])
+
+                    dp[i][j][xor_value] = ans
+
+        # Start at (0, 0) with an initial running XOR of 0
+        return dp[0][0][0]
+
+
+3.2
+class Solution:
+    def minCost(self, grid: list[list[int]]) -> int:
+        m, n = len(grid), len(grid[0])
+        dp = [[set() for _ in range(n)] for _ in range(m)]
+        dp[0][0].add(grid[0][0])
+
+        for i in range(m):
+            for j in range(n):
+                val = grid[i][j]
+                if i > 0:
+                    dp[i][j].update(x ^ val for x in dp[i - 1][j])
+                if j > 0:
+                    dp[i][j].update(x ^ val for x in dp[i][j - 1])
+
+        return min(dp[m - 1][n - 1])
+
+
+TC: O(m × n × 1024)
+SC: O(m × n × 1024)
+4. Tabulation (Space Optimization)
+
+class Solution:
+    def minCost(self, grid: list[list[int]]) -> int:
+        m, n = len(grid), len(grid[0])
+        dp = [[set() for _ in range(n)] for _ in range(m)]
+
+        dp[0][0].add(grid[0][0])
+
+        for i in range(m):
+            for j in range(n):
+                if i == 0 and j == 0:
+                    continue
+
+                prev = set()
+
+                if i > 0:
+                    prev.update(dp[i - 1][j])
+
+                if j > 0:
+                    prev.update(dp[i][j - 1])
+
+                for x in prev:
+                    dp[i][j].add(x ^ grid[i][j])
+
+        return min(dp[m - 1][n - 1])
+TC: O(m × n × K)
+SC: O(m × n × K)
+
+Here, K is the maximum number of distinct XOR values reachable at a cell, bounded by 1024.
+
+
+
