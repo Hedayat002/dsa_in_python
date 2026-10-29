@@ -1,3 +1,360 @@
+# Palindrome Path — Segment Tree + Binary Lifting + Euler Tour
+
+## 1. Approach
+
+This solution uses the following techniques to efficiently process character updates and path palindrome queries on a tree.
+
+- **Adjacency List:** Represents the tree.
+- **DFS (Depth-First Search):** Traverses the tree and calculates node depths.
+- **Euler Tour:** Records the entry and exit times of every node.
+- **Bitmasking:** Represents character frequencies using bits.
+- **Segment Tree:** Supports point updates and range XOR queries.
+- **Binary Lifting:** Precomputes ancestors of each node.
+- **LCA (Lowest Common Ancestor):** Finds the lowest common ancestor of two nodes.
+- **XOR Operations:** Calculates the character parity mask along a tree path.
+- **Bit Manipulation:** Checks whether the path characters can be rearranged into a palindrome.
+
+---
+
+## 2. Data Structures Used
+
+### 2.1 Adjacency List
+**Variable:** `adj`
+
+Stores the tree as an adjacency list.
+
+Each node maintains a list of its neighboring nodes.
+
+**Purpose:** Efficient tree traversal using DFS.
+
+**Space Complexity:** `O(n)`
+
+### 2.2 Euler Tour
+**Variables:** `tin`, `tout`, `eulerTour`
+
+- `tin[node]`: Entry time of a node during DFS.
+- `tout[node]`: Exit time of a node during DFS.
+- `eulerTour`: Stores the character bitmask at both entry and exit positions.
+
+Each node appears twice in the Euler Tour.
+
+**Purpose:** Represents root-to-node character information through prefix XOR queries.
+
+**Space Complexity:** `O(n)`
+
+### 2.3 Bitmask Representation
+**Expression:**
+`1 << (ord(c) - ord('a'))`
+
+Each lowercase English character corresponds to one bit.
+
+For example:
+
+- `a` → `000...001`
+- `b` → `000...010`
+- `c` → `000...100`
+
+**Purpose:** Tracks whether each character occurs an odd or even number of times.
+
+**Time Complexity:** `O(1)` per character.
+
+### 2.4 Segment Tree
+**Variable:** `segmentTree`
+
+Stores the XOR of character bitmasks over Euler Tour intervals.
+
+Supported operations:
+
+- Build: `O(n)`
+- Point Update: `O(log n)`
+- Range XOR Query: `O(log n)`
+
+**Purpose:** Efficiently updates node characters and calculates prefix XOR values.
+
+### 2.5 Binary Lifting Table
+**Variable:** `ancestorTable`
+
+Stores the `2^j`-th ancestor of each node.
+
+`ancestorTable[node][j]` represents the ancestor reached after moving upward by `2^j` edges.
+
+**Purpose:** Efficiently finds the Lowest Common Ancestor (LCA).
+
+**Preprocessing Time:** `O(n log n)`
+
+**Space Complexity:** `O(n log n)`
+
+---
+
+## 3. Complete Code Breakdown
+
+### Method 1: `__init__` / Initialization
+
+The solution initializes the data structures required by the algorithm.
+
+In this implementation, initialization occurs inside `palindromePath()`.
+
+It creates:
+
+- Adjacency list
+- Entry and exit time arrays
+- Euler Tour array
+- Node depth array
+- Binary Lifting table
+- Segment Tree
+
+### Method 2: `dfs()`
+
+**Algorithm:** Depth-First Search + Euler Tour Construction
+
+**Purpose:**
+- Traverse the tree.
+- Record each node's depth.
+- Store its immediate parent.
+- Record its entry time (`tin`).
+- Record its exit time (`tout`).
+- Store the node's character bitmask at both positions.
+
+Each node is entered and exited exactly once.
+
+**Time Complexity:** `O(n)`
+
+**Auxiliary Space:** `O(n)` in the worst case due to recursion.
+
+### Method 3: `buildSegmentTree()`
+
+**Algorithm:** Segment Tree Construction using XOR
+
+**Purpose:**
+- Build a segment tree over the Euler Tour array.
+- Store XOR values in internal nodes.
+- Combine child results using XOR.
+
+For every internal node:
+
+`segmentTree[i] = segmentTree[left] ^ segmentTree[right]`
+
+**Time Complexity:** `O(n)`
+
+### Method 4: `updateSegTree()`
+
+**Algorithm:** Segment Tree Point Update
+
+**Purpose:**
+- Update the bitmask at a specified Euler Tour position.
+- Recalculate XOR values along the path from the leaf to the root.
+
+When a node's character changes, both its entry and exit positions must be updated.
+
+**Time Complexity:** `O(log n)` per update.
+
+**Total Character Update:** `O(log n)` because two point updates are performed.
+
+### Method 5: `querySegmentTree()`
+
+**Algorithm:** Segment Tree Range XOR Query
+
+**Purpose:**
+Calculate the XOR of character bitmasks within a specified interval.
+
+The query handles three cases:
+
+1. **No overlap:** Return `0`.
+2. **Complete overlap:** Return the stored segment XOR.
+3. **Partial overlap:** Query both children and combine their results using XOR.
+
+**Time Complexity:** `O(log n)` for the prefix queries used by this solution.
+
+### Method 6: `buildAncestorTable()`
+
+**Algorithm:** Binary Lifting Preprocessing
+
+**Purpose:**
+Build the ancestor table using previously computed ancestors.
+
+The recurrence is:
+
+`ancestorTable[node][j] = ancestorTable[ancestorTable[node][j-1]][j-1]`
+
+This finds the `2^j`-th ancestor by combining two jumps of length `2^(j-1)`.
+
+**Time Complexity:** `O(n log n)`
+
+### Method 7: `getLCA()`
+
+**Algorithm:** Lowest Common Ancestor using Binary Lifting
+
+**Purpose:**
+Find the lowest common ancestor of nodes `u` and `v`.
+
+Steps:
+
+1. Ensure `u` is at least as deep as `v`.
+2. Lift `u` until both nodes have equal depth.
+3. If both nodes become equal, return that node.
+4. Otherwise, lift both nodes from the largest power of two downward.
+5. Return their common parent.
+
+**Time Complexity:** `O(log n)`
+
+### Method 8: `palindromePath()`
+
+**Algorithm:** Query Processing + Bitmasking + Segment Tree + LCA
+
+This is the main method.
+
+It processes two types of queries.
+
+#### A. Update Query
+
+Format:
+
+`update node character`
+
+Steps:
+
+1. Convert the new character into a bitmask.
+2. Update the character stored for the node.
+3. Update its entry position in the Segment Tree.
+4. Update its exit position in the Segment Tree.
+
+**Time Complexity:** `O(log n)`
+
+#### B. Path Query
+
+Format:
+
+`query u v`
+
+Steps:
+
+1. Find `LCA(u, v)`.
+2. Obtain the prefix XOR from the root through `u`.
+3. Obtain the prefix XOR from the root through `v`.
+4. XOR both prefix masks.
+5. XOR the LCA character mask once to correct the duplicated LCA contribution.
+6. Check whether at most one bit is set.
+
+The resulting mask represents the odd-frequency characters on the path.
+
+**Time Complexity:** `O(log n)`
+
+---
+
+## 4. Why Does the XOR Formula Work?
+
+Let `P(u)` represent the XOR of character bitmasks along the path from the root to node `u`, including both endpoints.
+
+For nodes `u` and `v`, let their lowest common ancestor be `w`.
+
+The path mask is:
+
+`pathMask = P(u) ^ P(v) ^ mask(w)`
+
+### Explanation
+
+- Characters appearing an even number of times cancel out under XOR.
+- The common root-to-LCA path appears in both prefix masks and cancels out.
+- The LCA character is removed twice by the prefix XOR and must be included once.
+
+Therefore, XORing the LCA character mask once gives the correct path parity mask.
+
+In the implementation, the two prefix masks are obtained using the Segment Tree over the Euler Tour.
+
+---
+
+## 5. How Does the Euler Tour Prefix XOR Work?
+
+Every node contributes its character bitmask twice:
+
+1. Once when DFS enters the node.
+2. Once when DFS exits the node.
+
+For a node `u`, consider the Euler Tour prefix ending at `tin[u]`.
+
+Every completed subtree before `u` contributes pairs of identical bitmasks. These cancel under XOR.
+
+The remaining contribution is the XOR of the characters on the root-to-`u` path.
+
+Thus:
+
+`P(u) = XOR(eulerTour[0 : tin[u] + 1])`
+
+The Segment Tree calculates this prefix efficiently in `O(log n)` time.
+
+---
+
+## 6. How Is a Palindrome Possible?
+
+A string can be rearranged into a palindrome if **at most one character has an odd frequency**.
+
+The bitmask stores the parity of every character's frequency.
+
+The condition is:
+
+`(mask & (mask - 1)) == 0`
+
+This condition is true when:
+
+- `mask == 0`: Every character has an even frequency.
+- `mask` contains exactly one set bit: Exactly one character has an odd frequency.
+
+Otherwise, the path characters cannot be rearranged into a palindrome.
+
+**Time Complexity:** `O(1)`
+
+---
+
+## 7. Complexity Analysis
+
+Let:
+
+- `n` = Number of nodes.
+- `q` = Number of queries.
+
+### Time Complexity
+
+| Operation | Complexity |
+|---|---|
+| Build adjacency list | `O(n)` |
+| DFS + Euler Tour | `O(n)` |
+| Build Segment Tree | `O(n)` |
+| Build Binary Lifting Table | `O(n log n)` |
+| Update a node's character | `O(log n)` |
+| Find LCA | `O(log n)` |
+| Process a path query | `O(log n)` |
+| **Overall** | **`O((n + q) log n)`** |
+
+### Space Complexity
+
+| Data Structure | Complexity |
+|---|---|
+| Adjacency List | `O(n)` |
+| Euler Tour and Time Arrays | `O(n)` |
+| Segment Tree | `O(n)` |
+| Binary Lifting Table | `O(n log n)` |
+| DFS Recursion Stack | `O(n)` worst case |
+| Result Array | `O(q)` |
+| **Overall Auxiliary Space** | **`O(n log n)`** |
+| **Total Space Including Results** | **`O(n log n + q)`** |
+
+---
+
+## 8. Important Implementation Note
+
+The recursive DFS can exceed Python's recursion limit for a highly skewed tree.
+
+For large constraints, consider using an iterative DFS to avoid `RecursionError`.
+
+The implementation also assumes:
+- The tree is connected.
+- The tree is rooted at node `0`.
+- Node indices range from `0` to `n - 1`.
+- Characters are lowercase English letters.
+- Update queries modify the character of a node.
+- Path queries check whether the path characters can be rearranged into a palindrome.
+
+
 import math
 class Solution:
     def palindromePath(self, n, edges, s, queries):
@@ -204,3 +561,16 @@ class Solution:
                 v = self.ancestorTable[v][j]
 
         return self.ancestorTable[u][0]
+### Complexity Analysis
+
+- **Time Complexity:** `O((n + q) log n)`
+- **Space Complexity:** `O(n log n + q)`
+
+**Explanation:**
+- DFS + Euler Tour: `O(n)`
+- Segment Tree Construction: `O(n)`
+- Binary Lifting Preprocessing: `O(n log n)`
+- Each Update Query: `O(log n)`
+- Each Path Query: `O(log n)`
+- Auxiliary Space: `O(n log n)`
+- Result Array Space: `O(q)`
