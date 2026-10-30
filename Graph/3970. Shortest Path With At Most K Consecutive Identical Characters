@@ -1,0 +1,54 @@
+Optimal Solution — Dijkstra with State Tracking
+class Solution:
+    def shortestPath(self, n: int, edges: list[list[int]], labels: str, k: int) -> int:
+        # Build adjacency list
+        adj = [[] for _ in range(n)]
+
+        for u, v, wt in edges:
+            adj[u].append((v, wt))
+
+        # result[node][count] = minimum cost to reach node
+        # with 'count' consecutive identical characters
+        result = [[float('inf')] * (k + 1) for _ in range(n)]
+
+        # Min-heap: (distance, node, count)
+        pq = []
+
+        result[0][1] = 0
+        heapq.heappush(pq, (0, 0, 1))
+
+        while pq:
+            d, node, count = heapq.heappop(pq)
+
+            # Skip outdated states
+            if d > result[node][count]:
+                continue
+
+            # Destination reached
+            if node == n - 1:
+                return d
+
+            # Explore adjacent nodes
+            for adjNode, wt in adj[node]:
+
+                # Update consecutive character count
+                if labels[adjNode] == labels[node]:
+                    newCount = count + 1
+                else:
+                    newCount = 1
+
+                # Skip if consecutive count exceeds k
+                if newCount > k:
+                    continue
+
+                newDist = d + wt
+
+                # Relaxation step
+                if newDist < result[adjNode][newCount]:
+                    result[adjNode][newCount] = newDist
+                    heapq.heappush(pq, (newDist, adjNode, newCount))
+
+        return -1
+
+TC: O((n + m) × k × log(n × k))
+SC: O(n × k + m)
