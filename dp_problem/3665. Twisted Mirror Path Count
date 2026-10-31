@@ -1,0 +1,194 @@
+1. Recursion
+from typing import List
+
+class Solution:
+    def solve(self, grid, i, j, direction):
+        MOD = 10**9 + 7
+        n = len(grid)
+        m = len(grid[0])
+
+        # Out of bounds
+        if i < 0 or j < 0 or i >= n or j >= m:
+            return 0
+
+        # Destination
+        if i == 0 and j == 0:
+            return 1
+
+        # Mirror
+        if grid[i][j] == 1:
+
+            # Entered from left (moving right)
+            if direction == 0:
+                return self.solve(grid, i - 1, j, 1)
+
+            # Entered from above (moving down)
+            else:
+                return self.solve(grid, i, j - 1, 0)
+
+        cnt = 0
+
+        # Empty cell: Right
+        cnt += self.solve(grid, i, j - 1, 0)
+
+        # Empty cell: Down
+        cnt += self.solve(grid, i - 1, j, 1)
+
+        return cnt % MOD
+
+    def uniquePaths(self, grid: List[List[int]]) -> int:
+        n = len(grid)
+        m = len(grid[0])
+        return self.solve(grid, n-1, m-1, -1)
+
+TC: \(O(2^{m+n})\)
+SC: \(O(m+n)\) — recursion stack.
+
+2. Memoization (Top-Down)
+from typing import List
+
+class Solution:
+    def solve(self, grid, i, j, direction,dp):
+        MOD = 10**9 + 7
+        n = len(grid)
+        m = len(grid[0])
+
+        # Out of bounds
+        if i < 0 or j < 0 or i >= n or j >= m:
+            return 0
+
+        # Destination
+        if i == 0 and j == 0:
+            return 1
+        if dp[i][j][direction] != -1:
+            return dp[i][j][direction]
+
+        # Mirror
+        if grid[i][j] == 1:
+
+            # Entered from left (moving right)
+            if direction == 0:
+                return self.solve(grid, i - 1, j, 1,dp)
+
+            # Entered from above (moving down)
+            else:
+                return self.solve(grid, i, j - 1, 0,dp)
+
+        cnt = 0
+
+        # Empty cell: Right
+        cnt += self.solve(grid, i, j - 1, 0,dp)
+
+        # Empty cell: Down
+        cnt += self.solve(grid, i - 1, j, 1,dp)
+
+        
+        dp[i][j][direction] = cnt % MOD
+
+        return dp[i][j][direction]
+
+    def uniquePaths(self, grid: List[List[int]]) -> int:
+        n = len(grid)
+        m = len(grid[0])
+        dp = [[[-1] * 2 for _ in range(m)] for _ in range(n)]
+        return self.solve(grid, n-1, m-1, -1,dp)
+TC: (O(m *n)
+SC: O(m *n) + recursion stack.
+
+3. Tabulation (Bottom-Up)
+
+
+from typing import List
+
+class Solution:
+    def uniquePaths(self, grid: List[List[int]]) -> int:
+        MOD = 10**9 + 7
+        n = len(grid)
+        m = len(grid[0])
+
+        dp = [[[0] * 2 for _ in range(m)] for _ in range(n)]
+
+        dp[0][0][0] = 1
+        dp[0][0][1] = 1
+
+        for i in range(n):
+            for j in range(m):
+
+                if i == 0 and j == 0:
+                    continue
+
+                if grid[i][j] == 1:
+
+                    if i > 0:
+                        dp[i][j][0] = dp[i-1][j][1]
+
+                    if j > 0:
+                        dp[i][j][1] = dp[i][j-1][0]
+
+                else:
+                    cnt = 0
+
+                    if j > 0:
+                        cnt += dp[i][j-1][0]
+
+                    if i > 0:
+                        cnt += dp[i-1][j][1]
+
+                    dp[i][j][0] = cnt % MOD
+                    dp[i][j][1] = cnt % MOD
+
+        return dp[n-1][m-1][0]
+TC: O(m*n)
+SC:O(m *n)
+
+4. Tabulation (Space Optimization)
+
+
+from typing import List
+
+class Solution:
+    def uniquePaths(self, grid: List[List[int]]) -> int:
+        MOD = 10**9 + 7
+        n = len(grid)
+        m = len(grid[0])
+
+        prev = [[0] * 2 for _ in range(m)]
+        prev[0][0] = 1
+        prev[0][1] = 1
+
+        for i in range(n):
+            curr = [[0] * 2 for _ in range(m)]
+
+            for j in range(m):
+
+                if i == 0 and j == 0:
+                    curr[j][0] = 1
+                    curr[j][1] = 1
+                    continue
+
+                if grid[i][j] == 1:
+
+                    if i > 0:
+                        curr[j][0] = prev[j][1]
+
+                    if j > 0:
+                        curr[j][1] = curr[j-1][0]
+
+                else:
+                    cnt = 0
+
+                    if j > 0:
+                        cnt += curr[j-1][0]
+
+                    if i > 0:
+                        cnt += prev[j][1]
+
+                    curr[j][0] = cnt % MOD
+                    curr[j][1] = cnt % MOD
+
+            prev = curr
+
+        return prev[m-1][0]
+
+TC: (O(n * m))
+SC: (O(m))
