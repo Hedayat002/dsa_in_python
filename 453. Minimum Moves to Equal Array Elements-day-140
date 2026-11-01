@@ -1,0 +1,111 @@
+# Minimum Moves to Equal Array Elements
+
+## Problem
+Given an integer array `nums`, return the minimum number of moves required to make all array elements equal.
+
+In one move, you can increment `n - 1` elements by `1`.
+
+---
+
+## Approach 1: Brute Force
+
+### Code (Python)
+
+```python
+class Solution:
+    def allEqual(self, nums):
+        for i in range(1, len(nums)):
+            if nums[i] != nums[0]:
+                return False
+        return True
+
+    def minMoves(self, nums):
+        n = len(nums)
+        moves = 0
+
+        while not self.allEqual(nums):
+
+            # Find the maximum element's index
+            maxIdx = 0
+            for i in range(1, n):
+                if nums[i] > nums[maxIdx]:
+                    maxIdx = i
+
+            # Increment every element except maximum
+            for i in range(n):
+                if i != maxIdx:
+                    nums[i] += 1
+
+            moves += 1
+
+        return moves
+```
+
+### Complexity Analysis
+- **Time Complexity:** O(n × moves)
+- **Space Complexity:** O(1)
+
+---
+
+## Approach 2: Two Pass (Using Built-in Functions)
+
+### Code (Python)
+
+```python
+class Solution:
+    def minMoves(self, nums):
+        n = len(nums)
+
+        total_sum = sum(nums)
+        min_el = min(nums)
+
+        return total_sum - (n * min_el)
+```
+
+### Complexity Analysis
+- **Time Complexity:** O(n)
+- **Space Complexity:** O(1)
+
+---
+
+## Approach 3: One Pass (Optimal)
+
+### Code (Python)
+
+```python
+class Solution:
+    def minMoves(self, nums):
+        n = len(nums)
+
+        total_sum = 0
+        min_el = float('inf')
+
+        for i in range(n):
+            total_sum += nums[i]
+            min_el = min(min_el, nums[i])
+
+        return total_sum - (n * min_el)
+```
+
+### Complexity Analysis
+- **Time Complexity:** O(n)
+- **Space Complexity:** O(1)
+
+---
+## Approach Comparison
+
+| Approach | Time Complexity | Space Complexity |
+|---|---|---|
+| Brute Force | O(n × moves) | O(1) |
+| Two Pass | O(n) | O(1) |
+| One Pass | O(n) | O(1) |
+
+## Key Takeaway
+
+- **Approach 1:** Simulates every operation.
+- **Approach 2:** Uses Python's built-in `sum()` and `min()`.
+- **Approach 3:** Calculates the sum and minimum in one traversal.
+
+**Recommended Approach:** Approach 3 — One Pass.
+
+It avoids unnecessary simulation and solves the problem in linear time with constant auxiliary space.
