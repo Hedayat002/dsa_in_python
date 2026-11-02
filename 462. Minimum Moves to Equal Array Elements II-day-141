@@ -1,0 +1,77 @@
+# 462. Minimum Moves to Equal Array Elements II
+## Problem
+
+Given an integer array `nums` of size `n`, return the minimum number of moves required to make all array elements equal.
+
+In one move, you can increment or decrement an element of the array by `1`.
+
+## 1. Brute Force Solution
+
+```python
+class Solution:
+    def minMoves2(self, nums: list[int]) -> int:
+        min_moves = float('inf')
+
+        for target in nums:
+            moves = 0
+
+            for num in nums:
+                moves += abs(num - target)
+
+            min_moves = min(min_moves, moves)
+
+        return min_moves
+```
+
+**Time Complexity:** O(n²)  
+**Space Complexity:** O(1)
+
+## 2. Better Solution (Sorting + Prefix Sum)
+
+```python
+class Solution:
+    def minMoves2(self, nums: list[int]) -> int:
+        nums.sort()
+        n = len(nums)
+
+        prefix = [0] * (n + 1)
+
+        for i in range(n):
+            prefix[i + 1] = prefix[i] + nums[i]
+
+        mid = n // 2
+        median = nums[mid]
+
+        left_moves = median * mid - prefix[mid]
+
+        right_moves = (
+            prefix[n] - prefix[mid + 1]
+            - median * (n - mid - 1)
+        )
+
+        return left_moves + right_moves
+```
+
+**Time Complexity:** O(n log n)  
+**Space Complexity:** O(n)
+
+## 3. Optimal Solution (Sorting + Median)
+
+```python
+class Solution:
+    def minMoves2(self, nums: list[int]) -> int:
+        nums.sort()
+        n = len(nums)
+
+        median = nums[n // 2]
+
+        total_moves = 0
+
+        for i in range(n):
+            total_moves += abs(nums[i] - median)
+
+        return total_moves
+```
+
+**Time Complexity:** O(n log n)  
+**Space Complexity:** O(1) auxiliary space (excluding sorting space)
