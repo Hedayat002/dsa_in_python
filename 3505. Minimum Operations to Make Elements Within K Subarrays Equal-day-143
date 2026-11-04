@@ -1,0 +1,195 @@
+1. Recursion
+
+
+from typing import List
+
+class Solution:
+    def solve(self, i, k, x, cost, n):
+        if k == 0:
+            return 0
+
+        if n - i < k * x:
+            return float('inf')
+
+        skip = self.solve(i + 1, k, x, cost, n)
+        take = cost[i] + self.solve(i + x, k - 1, x, cost, n)
+
+        return min(skip, take)
+
+    def minOperations(self, nums: List[int], x: int, k: int) -> int:
+        n = len(nums)
+        cost = []
+
+        for i in range(n - x + 1):
+            window = sorted(nums[i:i + x])
+            median = window[x // 2]
+            operations = sum(abs(v - median) for v in window)
+            cost.append(operations)
+
+        return self.solve(0, k, x, cost, n)
+TC: \(O(nx\log x+2^n)\)
+
+SC: \(O(n+x)\)
+2. Memoization (Top-Down)
+class Solution:
+    def solve(self, i, k, x, cost, n,dp):
+        # All k subarrays selected
+        if k == 0:
+            return 0
+
+        # Not enough elements remaining
+        if n - i < k * x:
+            return float('inf')
+
+        if dp[i][k] != -1:
+            return dp[i][k] 
+        # Choice 1: Skip current index
+        skip = self.solve(i + 1, k, x, cost, n,dp)
+
+        # Choice 2: Take subarray of size x
+        take = cost[i] + self.solve(i + x, k - 1, x, cost, n,dp)
+
+        dp[i][k] = min(skip, take)
+
+        return dp[i][k] 
+
+    def minOperations(self, nums: List[int], x: int, k: int) -> int:
+        n = len(nums)
+        cost = []
+
+        # Calculate cost of making each window equal
+        for i in range(n - x + 1):
+            window = sorted(nums[i:i + x])
+            median = window[x // 2]
+
+            operations = sum(abs(num - median) for num in window)
+            cost.append(operations)
+        
+        dp = [[-1] * (k + 1) for _ in range(n + 1)]
+
+        return self.solve(0, k, x, cost, n,dp)
+TC: \(O(nx\log x+nk)\)
+
+SC: \(O(nk+x)\)
+
+
+3. Tabulation (Bottom-Up)
+from typing import List
+
+class Solution:
+    def minOperations(self, nums: List[int], x: int, k: int) -> int:
+        n = len(nums)
+        cost = []
+
+        for i in range(n - x + 1):
+            window = sorted(nums[i:i + x])
+            median = window[x // 2]
+
+            operations = sum(abs(num - median) for num in window)
+            cost.append(operations)
+
+        dp = [[float('inf')] * (k + 1) for _ in range(n + 1)]
+
+        # Base case: No subarrays needed
+        for i in range(n + 1):
+            dp[i][0] = 0
+
+        for i in range(n - 1, -1, -1):
+            for j in range(1, k + 1):
+
+                # Choice 1: Skip
+                skip = dp[i + 1][j]
+
+                # Choice 2: Take
+                take = float('inf')
+
+                if i + x <= n:
+                    take = cost[i] + dp[i + x][j - 1]
+
+                dp[i][j] = min(skip, take)
+
+        return dp[0][k]
+
+TC: O(n x log x+nk)
+SC: (O(nk+x))
+4. Tabulation (Space Optimization)
+
+from typing import List
+
+class Solution:
+    def minOperations(self, nums: List[int], x: int, k: int) -> int:
+        n = len(nums)
+
+        values = sorted(set(nums))
+        m = len(values)
+        rank = {v: i + 1 for i, v in enumerate(values)}
+
+        count = [0] * (m + 1)
+        sums = [0] * (m + 1)
+
+        def update(num, delta):
+            i = rank[num]
+            while i <= m:
+                count[i] += delta
+                sums[i] += num * delta
+                i += i & -i
+
+        def query(i):
+            c = s = 0
+            while i > 0:
+                c += count[i]
+                s += sums[i]
+                i -= i & -i
+            return c, s
+
+        def getMedian():
+            target = (x + 1) // 2
+            pos = 0
+            bit = 1 << (m.bit_length() - 1)
+
+            while bit:
+                nxt = pos + bit
+                if nxt <= m and count[nxt] < target:
+                    target -= count[nxt]
+                    pos = nxt
+                bit >>= 1
+
+            return values[pos]
+
+        cost = []
+        total = sum(nums[:x])
+
+        for num in nums[:x]:
+            update(num, 1)
+
+        for i in range(n - x + 1):
+            median = getMedian()
+            c, s = query(rank[median])
+
+            operations = median * c - s
+            operations += (total - s) - median * (x - c)
+
+            cost.append(operations)
+
+            if i + x < n:
+                update(nums[i], -1)
+                update(nums[i + x], 1)
+                total += nums[i + x] - nums[i]
+
+        prev = [0] * (n + 1)
+
+        for i in range(1, k + 1):
+            curr = [float('inf')] * (n + 1)
+
+            for j in range(n - x, -1, -1):
+                skip = curr[j + 1]
+                take = cost[j] + prev[j + x]
+
+                curr[j] = min(skip, take)
+
+            prev = curr
+
+        return prev[0]
+TC: (O(nlog n+nk))
+
+SC: (O(n))
