@@ -1,0 +1,191 @@
+
+# 1385. Find the Distance Value Between Two Arrays
+
+**Difficulty:** Easy  
+**Topics:** Array, Sorting, Two Pointers, Binary Search  
+**Platform:** LeetCode
+
+## Problem Statement
+
+Given two integer arrays `arr1` and `arr2`, and an integer `d`, return the number of elements in `arr1` such that there is no element in `arr2` whose absolute difference is less than or equal to `d`.
+
+### Example 1
+
+**Input:**
+```python
+arr1 = [4, 5, 8]
+arr2 = [10, 9, 1, 8]
+d = 2
+```
+
+**Output:**
+```python
+2
+```
+
+### Example 2
+
+**Input:**
+```python
+arr1 = [1, 4, 2, 3]
+arr2 = [-4, -3, 6, 10, 20, 30]
+d = 3
+```
+
+**Output:**
+```python
+2
+```
+
+### Example 3
+
+**Input:**
+```python
+arr1 = [2, 1, 100, 3]
+arr2 = [-5, -2, 10, -3, 7]
+d = 6
+```
+
+**Output:**
+```python
+1
+```
+
+---
+
+## 1. Brute Force Solution
+
+### Approach
+- Iterate through every element of `arr1`.
+- Compare it with every element of `arr2`.
+- If the absolute difference is `<= d`, mark it invalid.
+- Otherwise, increase the count.
+
+### Python Code
+
+```python
+class Solution:
+    def findTheDistanceValue(self, arr1: list[int], arr2: list[int], d: int) -> int:
+        count = 0
+
+        for i in arr1:
+            valid = True
+
+            for j in arr2:
+                if abs(i - j) <= d:
+                    valid = False
+                    break
+
+            if valid:
+                count += 1
+
+        return count
+```
+
+### Complexity Analysis
+
+- **Time Complexity:** `O(n * m)`
+- **Space Complexity:** `O(1)`
+
+---
+
+## 2. Better Solution — Sorting + Two Pointers
+
+### Approach
+- Sort both arrays.
+- Maintain a pointer `j` in `arr2`.
+- For each element in `arr1`, move `j` forward while `arr2[j] < num - d`.
+- If no element falls within `[num - d, num + d]`, increase the count.
+
+### Python Code
+
+```python
+class Solution:
+    def findTheDistanceValue(self, arr1: list[int], arr2: list[int], d: int) -> int:
+        arr1.sort()
+        arr2.sort()
+
+        count = 0
+        j = 0
+
+        for num in arr1:
+            while j < len(arr2) and arr2[j] < num - d:
+                j += 1
+
+            if j == len(arr2) or arr2[j] > num + d:
+                count += 1
+
+        return count
+```
+
+### Complexity Analysis
+
+- **Time Complexity:** `O(n log n + m log m)`
+- **Space Complexity:** `O(1)` auxiliary, excluding sorting overhead
+
+---
+
+## 3. Optimized Solution — Binary Search (Left, Right, Mid)
+
+### Approach
+- Sort `arr2`.
+- Iterate through each element of `arr1`.
+- Perform binary search on `arr2`.
+- If `abs(arr2[mid] - num) <= d`, mark the element invalid.
+- If `arr2[mid] < num - d`, move right.
+- Otherwise, move left.
+- Count elements for which no invalidating match exists.
+
+### Python Code
+
+```python
+class Solution:
+    def findTheDistanceValue(self, arr1: list[int], arr2: list[int], d: int) -> int:
+        arr2.sort()
+        count = 0
+
+        for num in arr1:
+            left = 0
+            right = len(arr2) - 1
+            valid = True
+
+            while left <= right:
+                mid = (left + right) // 2
+
+                if abs(arr2[mid] - num) <= d:
+                    valid = False
+                    break
+
+                elif arr2[mid] < num - d:
+                    left = mid + 1
+
+                else:
+                    right = mid - 1
+
+            if valid:
+                count += 1
+
+        return count
+```
+
+### Complexity Analysis
+
+- **Time Complexity:** `O(m log m + n log m)`
+- **Space Complexity:** `O(1)` auxiliary, excluding sorting overhead
+
+---
+
+## Complexity Comparison
+
+| Approach | Time Complexity | Auxiliary Space |
+|----------|-----------------|-----------------|
+| Brute Force | O(n * m) | O(1) |
+| Sorting + Two Pointers | O(n log n + m log m) | O(1)* |
+| Binary Search | O(m log m + n log m) | O(1)* |
+
+`n = len(arr1)`  
+`m = len(arr2)`
+
+## LeetCode Link
+
+https://leetcode.com/problems/find-the-distance-value-between-two-arrays/
