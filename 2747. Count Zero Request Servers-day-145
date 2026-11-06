@@ -1,0 +1,170 @@
+
+# 2747. Count Zero Request Servers
+
+
+# 🟠 Approach 1: Brute Force
+
+### 💡 Intuition
+
+For every query:
+
+1. Calculate the time window `[query - x, query]`.
+2. Traverse all logs.
+3. Store the IDs of active servers in a set.
+4. Subtract the number of active servers from `n`.
+
+### 💻 Python Code
+
+```python
+from typing import List
+
+class Solution:
+    def countServers(self, n: int, logs: List[List[int]], x: int, queries: List[int]) -> List[int]:
+        result = []
+
+        for q in queries:
+            active = set()
+
+            for server_id, time in logs:
+                if q - x <= time <= q:
+                    active.add(server_id)
+
+            result.append(n - len(active))
+
+        return result
+```
+
+### ⏱ Complexity Analysis
+
+- **Time Complexity:** `O(Q * M)`
+- **Space Complexity:** `O(N + Q)`
+
+Where:
+- `N` = Number of servers
+- `M` = Number of logs
+- `Q` = Number of queries
+
+---
+
+# 🟡 Approach 2: Better Solution — Binary Search
+
+### 💡 Intuition
+
+1. Group request timestamps by server ID.
+2. Sort the timestamps for each server.
+3. For each query, use binary search to check whether a server has any request within the time window.
+4. Count the servers without requests.
+
+### 💻 Python Code
+
+```python
+from typing import List
+from collections import defaultdict
+from bisect import bisect_left, bisect_right
+
+class Solution:
+    def countServers(self, n: int, logs: List[List[int]], x: int, queries: List[int]) -> List[int]:
+        mp = defaultdict(list)
+
+        for server_id, time in logs:
+            mp[server_id].append(time)
+
+        for times in mp.values():
+            times.sort()
+
+        result = []
+
+        for q in queries:
+            active = 0
+
+            for times in mp.values():
+                left = bisect_left(times, q - x)
+                right = bisect_right(times, q)
+
+                if right > left:
+                    active += 1
+
+            result.append(n - active)
+
+        return result
+```
+
+### ⏱ Complexity Analysis
+
+- **Time Complexity:** `O(M log M + Q * N * log M)`
+- **Space Complexity:** `O(M + Q)`
+
+---
+
+# 🟢 Approach 3: Optimized Solution — Sliding Window + Hash Map
+
+### 💡 Intuition
+
+Instead of checking every log for every query, we use a **sliding window with two pointers**.
+
+1. Sort all logs by timestamp.
+2. Sort queries while preserving their original indices.
+3. Maintain a frequency map of servers active in the current window.
+4. Expand the right pointer to include valid logs.
+5. Shrink the left pointer to remove expired logs.
+6. Calculate `n - len(mp)` for each query.
+
+Each log is added and removed at most once.
+
+### 💻 Python Code
+
+```python
+from typing import List
+from collections import defaultdict
+
+class Solution:
+    def countServers(self, n: int, logs: List[List[int]], x: int, queries: List[int]) -> List[int]:
+        m = len(logs)
+
+        # Sort logs by timestamp
+        logs.sort(key=lambda log: log[1])
+
+        q = len(queries)
+
+        # Store (query time, original index)
+        timeIndex = sorted((queries[i], i) for i in range(q))
+
+        # Frequency of active servers in current window
+        mp = defaultdict(int)
+        result = [0] * q
+
+        i = 0
+        j = 0
+
+        for curtime, ind in timeIndex:
+            start = curtime - x
+            end = curtime
+
+            # Expand right pointer
+            while j < m and logs[j][1] <= end:
+                server_id = logs[j][0]
+                mp[server_id] += 1
+                j += 1
+
+            # Shrink left pointer
+            while i < j and logs[i][1] < start:
+                server_id = logs[i][0]
+                mp[server_id] -= 1
+
+                if mp[server_id] == 0:
+                    del mp[server_id]
+
+                i += 1
+
+            # Count servers without requests
+            result[ind] = n - len(mp)
+
+        return result
+```
+
+### ⏱ Complexity Analysis
+
+- **Time Complexity:** `O(M log M + Q log Q)`
+- **Space Complexity:** `O(N + Q)` auxiliary space, excluding sorting overhead.
+
+---
