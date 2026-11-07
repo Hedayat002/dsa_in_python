@@ -1,0 +1,163 @@
+
+# 1882. Process Tasks Using Servers
+
+# Approach 1: Brute Force
+
+### Python Solution
+
+```python
+class Solution:
+    def assignTasks(self, servers: list[int], tasks: list[int]) -> list[int]:
+        n = len(servers)
+        m = len(tasks)
+
+        availableTime = [0] * n
+        result = []
+
+        time = 0
+
+        for i in range(m):
+            time = max(time, i)
+
+            while True:
+                best = -1
+
+                for j in range(n):
+                    if availableTime[j] <= time:
+                        if best == -1 or (servers[j], j) < (servers[best], best):
+                            best = j
+
+                if best != -1:
+                    break
+
+                time = min(availableTime)
+
+            result.append(best)
+            availableTime[best] = time + tasks[i]
+
+        return result
+```
+
+### Complexity Analysis
+
+- **Time Complexity:** `O(m * n)`
+- **Space Complexity:** `O(n + m)`
+
+---
+
+# Approach 2: Better Solution (Single Min Heap)
+
+### Python Solution
+
+```python
+import heapq
+
+class Solution:
+    def assignTasks(self, servers: list[int], tasks: list[int]) -> list[int]:
+        n = len(servers)
+
+        heap = [(0, servers[i], i) for i in range(n)]
+        heapq.heapify(heap)
+
+        result = []
+        time = 0
+
+        for i, duration in enumerate(tasks):
+            time = max(time, i)
+
+            available = []
+
+            while heap and heap[0][0] <= time:
+                finish, weight, idx = heapq.heappop(heap)
+                heapq.heappush(available, (weight, idx))
+
+            if available:
+                weight, idx = heapq.heappop(available)
+                start = time
+            else:
+                start, weight, idx = heapq.heappop(heap)
+                time = start
+
+            result.append(idx)
+
+            heapq.heappush(
+                heap,
+                (start + duration, weight, idx)
+            )
+
+            while available:
+                weight, idx = heapq.heappop(available)
+                heapq.heappush(heap, (time, weight, idx))
+
+        return result
+```
+
+### Complexity Analysis
+
+- **Time Complexity:** `O(m * n * log n)` worst case
+- **Space Complexity:** `O(n + m)`
+
+---
+
+# Approach 3: Optimized Solution (Two Min Heaps)
+
+### Python Solution
+
+```python
+import heapq
+
+class Solution:
+    def assignTasks(self, servers: list[int], tasks: list[int]) -> list[int]:
+        n = len(servers)
+        m = len(tasks)
+
+        # Free servers: (weight, index)
+        freeServers = []
+
+        # Busy servers: (finishTime, weight, index)
+        busyServers = []
+
+        for i in range(n):
+            heapq.heappush(freeServers, (servers[i], i))
+
+        result = [0] * m
+
+        for i in range(m):
+
+            # Busy Servers ---> Free Servers
+            while busyServers and busyServers[0][0] <= i:
+                finTime, wt, idx = heapq.heappop(busyServers)
+                heapq.heappush(freeServers, (wt, idx))
+
+            # No free server available
+            if not freeServers:
+                finTime, wt, idx = heapq.heappop(busyServers)
+
+                result[i] = idx
+
+                heapq.heappush(
+                    busyServers,
+                    (finTime + tasks[i], wt, idx)
+                )
+
+            else:
+                # Free Servers ---> Busy Servers
+                wt, idx = heapq.heappop(freeServers)
+
+                result[i] = idx
+
+                heapq.heappush(
+                    busyServers,
+                    (i + tasks[i], wt, idx)
+                )
+
+        return result
+```
+
+### Complexity Analysis
+
+- **Time Complexity:** `O(n log n + m log n)`
+- **Space Complexity:** `O(n + m)`
+
+---
+
