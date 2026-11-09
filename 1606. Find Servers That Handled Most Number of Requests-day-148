@@ -1,0 +1,257 @@
+
+# 1606. Find Servers That Handled Most Number of Requests
+-
+
+# Approach 1: Brute Force
+
+## Intuition
+
+Simulate each request by checking servers one by one.
+
+For request `i`:
+
+1. Calculate preferred server `i % k`.
+2. Search all servers circularly.
+3. Assign the request to the first free server.
+4. Update its finish time and request count.
+5. Drop the request if no server is available.
+
+## Python Code
+
+```python
+class Solution:
+    def busiestServers(self, k: int, arrival: list[int], load: list[int]) -> list[int]:
+        freeTime = [0] * k
+        countRequests = [0] * k
+
+        for i in range(len(arrival)):
+            time = arrival[i]
+
+            for j in range(k):
+                server = (i + j) % k
+
+                if freeTime[server] <= time:
+                    freeTime[server] = time + load[i]
+                    countRequests[server] += 1
+                    break
+
+        maxRequests = max(countRequests)
+
+        result = []
+
+        for i in range(k):
+            if countRequests[i] == maxRequests:
+                result.append(i)
+
+        return result
+```
+
+## Complexity Analysis
+
+**Time Complexity:** `O(n * k)`
+
+- Each request may check all k servers.
+
+**Space Complexity:** `O(k)`
+
+- Store server finish times and request counts.
+
+---
+
+# Approach 2: Better Solution (Min Heap + Linear Search)
+
+## Intuition
+
+Use a min heap to track when busy servers become free.
+
+Maintain:
+
+- `available`: Boolean array tracking free servers.
+- `busyServers`: Min heap storing `(finishTime, serverId)`.
+- `countRequests`: Number of requests handled by each server.
+
+For each request:
+
+1. Release servers that have finished.
+2. Calculate the preferred server.
+3. Search circularly for an available server.
+4. Assign the request and update the heap.
+5. Update its request count.
+
+## Python Code
+
+```python
+import heapq
+
+class Solution:
+    def busiestServers(self, k: int, arrival: list[int], load: list[int]) -> list[int]:
+        available = [True] * k
+        busyServers = []
+        countRequests = [0] * k
+
+        for i in range(len(arrival)):
+            time = arrival[i]
+
+            # Release completed servers
+            while busyServers and busyServers[0][0] <= time:
+                finishTime, server = heapq.heappop(busyServers)
+                available[server] = True
+
+            target = i % k
+
+            # Search for available server
+            for j in range(k):
+                server = (target + j) % k
+
+                if available[server]:
+                    available[server] = False
+
+                    heapq.heappush(
+                        busyServers,
+                        (time + load[i], server)
+                    )
+
+                    countRequests[server] += 1
+                    break
+
+        maxRequests = max(countRequests)
+
+        result = []
+
+        for i in range(k):
+            if countRequests[i] == maxRequests:
+                result.append(i)
+
+        return result
+```
+
+## Complexity Analysis
+
+**Time Complexity:** `O(n * k + n * log(k))`
+
+- Linear search for an available server: O(k).
+- Heap insertion and removal: O(log k).
+
+**Space Complexity:** `O(k)`
+
+- Available servers, busy heap, and request counts.
+
+---
+
+# Approach 3: Optimized Solution (Min Heap + SortedList)
+
+## Intuition
+
+Use two data structures:
+
+**1. SortedList**
+
+Stores available server IDs in sorted order.
+
+Supports:
+
+- Finding the next available server.
+- Adding released servers.
+- Removing assigned servers.
+
+**2. Min Heap**
+
+Stores busy servers as:
+
+```python
+(finishTime, serverId)
+```
+
+The server with the earliest finish time stays at the top.
+
+### Algorithm
+
+1. Initialize all servers in `SortedList`.
+2. Initialize an empty min heap.
+3. Process requests in arrival order.
+4. Release servers whose finish time is <= current arrival time.
+5. If no server is free, drop the request.
+6. Calculate `target = i % k`.
+7. Use `bisect_left(target)` to find the next available server.
+8. Wrap around if necessary.
+9. Remove the selected server from `SortedList`.
+10. Add its finish time to the min heap.
+11. Increment its request count.
+12. Return all servers with the maximum count.
+
+## Python Code
+
+```python
+import heapq
+from sortedcontainers import SortedList
+
+class Solution:
+    def busiestServers(self, k: int, arrival: list[int], load: list[int]) -> list[int]:
+        available_servers = SortedList(range(k))
+
+        # Min Heap: (finishTime, serverId)
+        busyServers = []
+
+        countRequests = [0] * k
+
+        for i in range(len(arrival)):
+            time = arrival[i]
+
+            # Free servers that finished their requests
+            while busyServers and busyServers[0][0] <= time:
+                finishTime, server = heapq.heappop(busyServers)
+                available_servers.add(server)
+
+            # No available server
+            if not available_servers:
+                continue
+
+            target = i % k
+
+            # Find smallest available server >= target
+            idx = available_servers.bisect_left(target)
+
+            # Wrap around
+            if idx == len(available_servers):
+                idx = 0
+
+            targetServer = available_servers.pop(idx)
+
+            # Mark server as busy
+            heapq.heappush(
+                busyServers,
+                (time + load[i], targetServer)
+            )
+
+            countRequests[targetServer] += 1
+
+        maxNumberOfRequests = max(countRequests)
+
+        result = []
+
+        for i in range(k):
+            if countRequests[i] == maxNumberOfRequests:
+                result.append(i)
+
+        return result
+```
+
+## Complexity Analysis
+
+**Time Complexity:** `O(k log k + n log k)` (typical amortized analysis)
+
+- SortedList initialization: O(k log k) upper bound.
+- Finding available server: O(log k).
+- SortedList updates: approximately O(log k) amortized.
+- Heap operations: O(log k).
+- Each request is assigned and released at most once.
+
+**Space Complexity:** `O(k)`
+
+- SortedList: O(k).
+- Min heap: O(k).
+- Request counts: O(k).
+
+Note: SortedList uses a block-based implementation, so its precise operation bounds differ from a balanced binary search tree.
+
+---
