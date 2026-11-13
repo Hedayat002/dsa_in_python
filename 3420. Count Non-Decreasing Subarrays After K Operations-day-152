@@ -1,0 +1,108 @@
+
+# ============================================================
+# 3420. Count Non-Decreasing Subarrays After K Operations
+# Difficulty: Hard
+# Platform: LeetCode
+# ============================================================
+
+
+# ============================================================
+# 1. BRUTE FORCE SOLUTION
+# Time Complexity: O(n^3)
+# Space Complexity: O(1)
+# ============================================================
+
+from typing import List
+
+class Solution:
+    def countNonDecreasingSubarrays(self, nums: List[int], k: int) -> int:
+        n = len(nums)
+        ans = 0
+
+        for left in range(n):
+            for right in range(left, n):
+                cost = 0
+                prev = nums[left]
+
+                for i in range(left + 1, right + 1):
+                    if nums[i] < prev:
+                        cost += prev - nums[i]
+                    else:
+                        prev = nums[i]
+
+                if cost <= k:
+                    ans += 1
+
+        return ans
+
+
+# ============================================================
+# 2. BETTER SOLUTION
+# Time Complexity: O(n^2)
+# Space Complexity: O(1)
+# ============================================================
+
+class Solution:
+    def countNonDecreasingSubarrays(self, nums: List[int], k: int) -> int:
+        n = len(nums)
+        ans = 0
+
+        for left in range(n):
+            cost = 0
+            max_val = nums[left]
+
+            for right in range(left, n):
+                max_val = max(max_val, nums[right])
+                cost += max_val - nums[right]
+
+                if cost > k:
+                    break
+
+                ans += 1
+
+        return ans
+
+
+# ============================================================
+# 3. OPTIMIZED SOLUTION (MONOTONIC DEQUE + SLIDING WINDOW)
+# Time Complexity: O(n)
+# Space Complexity: O(n)
+# ============================================================
+
+from collections import deque
+
+class Solution:
+    def countNonDecreasingSubarrays(self, nums: List[int], k: int) -> int:
+        n = len(nums)
+        dq = deque()
+        right = n - 1
+        cost = 0
+        ans = 0
+
+        for left in range(n - 1, -1, -1):
+
+            # Add nums[left] to the window
+            while dq and nums[dq[-1]] < nums[left]:
+                j = dq.pop()
+
+                next_index = dq[-1] if dq else right + 1
+
+                cost += (
+                    nums[left] - nums[j]
+                ) * (next_index - j)
+
+            dq.append(left)
+
+            # Shrink window until valid
+            while cost > k:
+                cost -= nums[dq[0]] - nums[right]
+
+                if dq[0] == right:
+                    dq.popleft()
+
+                right -= 1
+
+            # Count all valid subarrays starting at left
+            ans += right - left + 1
+
+        return ans
