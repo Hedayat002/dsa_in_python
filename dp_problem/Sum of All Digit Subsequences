@@ -1,0 +1,104 @@
+# Sum of All Digit Subsequences
+
+## 1. Recursion
+
+```python
+class Solution:
+    MOD = 10**9 + 7
+
+    def solve(self, s, i, curr_sum):
+        if i == len(s):
+            return curr_sum
+
+        digit = int(s[i])
+
+        take = self.solve(s, i + 1, curr_sum + digit)
+        not_take = self.solve(s, i + 1, curr_sum)
+
+        return (take + not_take) % self.MOD
+
+    def subsequenceSum(self, s):
+        return self.solve(s, 0, 0)
+```
+
+**Time Complexity:** O(2^n)  
+**Space Complexity:** O(n)
+
+---
+
+## 2. Memoization (Top-Down)
+
+```python
+class Solution:
+    MOD = 10**9 + 7
+
+    def solve(self, s, i, dp):
+        if i == len(s):
+            return 0
+
+        if dp[i] != -1:
+            return dp[i]
+
+        digit = int(s[i])
+
+        take = (digit + self.solve(s, i + 1, dp)) % self.MOD
+        not_take = self.solve(s, i + 1, dp)
+
+        dp[i] = (take + not_take) % self.MOD
+        return dp[i]
+
+    def subsequenceSum(self, s):
+        n = len(s)
+        dp = [-1] * n
+        return self.solve(s, 0, dp)
+```
+
+**Time Complexity:** O(n)  
+**Space Complexity:** O(n)
+
+---
+
+## 3. Tabulation (Bottom-Up)
+
+```python
+class Solution:
+    MOD = 10**9 + 7
+
+    def subsequenceSum(self, s):
+        n = len(s)
+        dp = [0] * (n + 1)
+        power = 1
+
+        for i in range(1, n + 1):
+            digit = int(s[i - 1])
+
+            dp[i] = (2 * dp[i - 1] + digit * power) % self.MOD
+            power = (power * 2) % self.MOD
+
+        return dp[n]
+```
+
+**Time Complexity:** O(n)  
+**Space Complexity:** O(n)
+
+---
+
+## 4. Space Optimization
+
+```python
+class Solution:
+    MOD = 10**9 + 7
+
+    def subsequenceSum(self, s):
+        total = 0
+        power = 1
+
+        for digit in s:
+            total = (2 * total + int(digit) * power) % self.MOD
+            power = (power * 2) % self.MOD
+
+        return total
+```
+
+**Time Complexity:** O(n)  
+**Space Complexity:** O(1)
