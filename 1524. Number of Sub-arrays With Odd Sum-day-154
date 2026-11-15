@@ -1,0 +1,93 @@
+1. Recursion
+
+class Solution:
+    MOD = 10**9 + 7
+
+    def solve(self, arr, start, end, curr_sum):
+        n = len(arr)
+
+        if start == n:
+            return 0
+
+        if end == n:
+            return self.solve(arr, start + 1, start + 1, 0)
+
+        curr_sum += arr[end]
+
+        count = 1 if curr_sum % 2 == 1 else 0
+
+        return count + self.solve(
+            arr, start, end + 1, curr_sum
+        )
+
+    def numOfSubarrays(self, arr: list[int]) -> int:
+        return self.solve(arr, 0, 0, 0) % self.MOD
+
+
+2. Memoization (Top-Down)
+class Solution:
+    MOD = 10**9 + 7
+
+    def solve(self, arr, start, end, curr_sum, dp):
+        n = len(arr)
+
+        if start == n:
+            return 0
+
+        if end == n:
+            return self.solve(arr, start + 1, start + 1, 0, dp)
+
+        parity = curr_sum % 2
+
+        if dp[end][parity] != -1:
+            return dp[end][parity]
+
+        curr_sum += arr[end]
+
+        count = 1 if curr_sum % 2 == 1 else 0
+
+        dp[end][parity] = (
+            count + self.solve(
+                arr, start, end + 1, curr_sum, dp
+            )
+        ) % self.MOD
+
+        return dp[end][parity]
+class Solution:
+    MOD = 10**9 + 7
+
+    def numOfSubarrays(self, arr: list[int]) -> int:
+        n = len(arr)
+
+        dp = [[0] * 2 for _ in range(n + 1)]
+
+        ans = 0
+
+        for i in range(n - 1, -1, -1):
+            for parity in range(2):
+                curr = (parity + arr[i]) % 2
+
+                count = 1 if curr == 1 else 0
+
+                dp[i][parity] = (
+                    count + dp[i + 1][curr]
+                ) % self.MOD
+
+            ans = (ans + dp[i][0]) % self.MOD
+
+        return ans
+TC: O(n)
+SC: O(n)
+
+
+    def numOfSubarrays(self, arr: list[int]) -> int:
+        n = len(arr)
+        dp = [[-1] * 2 for _ in range(n)]
+
+        return self.solve(arr, 0, 0, 0, dp) % self.MOD
+
+TC: O(n)
+SC: O(n)
+
+3. Tabulation (Bottom-Up)
+
