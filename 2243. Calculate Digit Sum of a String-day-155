@@ -1,0 +1,122 @@
+
+# 2243. Calculate Digit Sum of a String
+---
+
+# Approach 1: Brute Force
+
+```python
+class Solution:
+    def digitSum(self, s: str, k: int) -> str:
+        while len(s) > k:
+            groups = []
+
+            for i in range(0, len(s), k):
+                group = s[i:i + k]
+                total = 0
+
+                for digit in group:
+                    total += int(digit)
+
+                groups.append(str(total))
+
+            s = "".join(groups)
+
+        return s
+```
+
+**Time Complexity:** O(n × r)  
+**Space Complexity:** O(n)
+
+---
+
+# Approach 2: Better Solution
+
+```python
+class Solution:
+    def digitSum(self, s: str, k: int) -> str:
+        while len(s) > k:
+            result = []
+
+            for i in range(0, len(s), k):
+                total = sum(map(int, s[i:i + k]))
+                result.append(str(total))
+
+            s = "".join(result)
+
+        return s
+```
+
+**Time Complexity:** O(n × r)  
+**Space Complexity:** O(n)
+
+---
+
+# Approach 3: Optimized Solution
+
+```python
+class Solution:
+    def digitSum(self, s: str, k: int) -> str:
+        while len(s) > k:
+            n = len(s)
+            st = ""
+
+            for i in range(0, n, k):
+                t = 0
+
+                for j in range(i, min(i + k, n)):
+                    t += int(s[j])
+
+                st += str(t)
+
+            s = st
+
+        return s
+```
+
+**Time Complexity:** O(n × r)  
+**Space Complexity:** O(n)
+
+---
+
+## Complexity Analysis
+
+Where:
+- `n` = Initial length of string
+- `r` = Number of rounds
+
+| Approach | Time Complexity | Space Complexity |
+|----------|-----------------|------------------|
+| Brute Force | O(n × r) | O(n) |
+| Better | O(n × r) | O(n) |
+| Optimized | O(n × r) | O(n) |
+
+**Note:** All three approaches use the same simulation algorithm. The second approach uses `join()` for efficient string construction, while the third preserves the original nested-loop solution.
+
+---
+
+## Final Solution
+
+```python
+class Solution:
+    def digitSum(self, s: str, k: int) -> str:
+        while len(s) > k:
+            n = len(s)
+            st = ""
+
+            for i in range(0, n, k):
+                t = 0
+
+                for j in range(i, min(i + k, n)):
+                    t += int(s[j])
+
+                st += str(t)
+
+            s = st
+
+        return s
+```
+
+**Time Complexity:** O(n × r)  
+**Space Complexity:** O(n)
+
+---
