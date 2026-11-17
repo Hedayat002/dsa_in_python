@@ -1,0 +1,188 @@
+
+# 2911. Minimum Changes to Make K Semi-palindromes
+
+---
+
+## 1. Recursion
+
+```python
+class Solution:
+    def getCost(self, s, i, j):
+        length = j - i + 1
+        minCost = float('inf')
+
+        for d in range(1, length):
+            if length % d != 0:
+                continue
+
+            cost = 0
+
+            for group in range(d):
+                l = i + group
+                r = l + (length // d - 1) * d
+
+                while l < r:
+                    if s[l] != s[r]:
+                        cost += 1
+
+                    l += d
+                    r -= d
+
+            minCost = min(minCost, cost)
+
+        return minCost
+
+    def solve(self, s, start, k):
+        n = len(s)
+
+        if k == 0:
+            return 0 if start == n else float('inf')
+
+        if start + 2 * k > n:
+            return float('inf')
+
+        result = float('inf')
+
+        for end in range(start + 1, n - 2 * (k - 1)):
+            remaining = self.solve(s, end + 1, k - 1)
+
+            result = min(
+                result,
+                self.getCost(s, start, end) + remaining
+            )
+
+        return result
+
+    def minimumChanges(self, s: str, k: int) -> int:
+        return self.solve(s, 0, k)
+```
+
+**Time Complexity:** O(n² log n × C(n-k-1, k-1))  
+**Space Complexity:** O(k)
+
+---
+
+## 2. Memoization (Top-Down)
+
+```python
+from functools import lru_cache
+
+class Solution:
+    def getCost(self, s, i, j):
+        length = j - i + 1
+        minCost = float('inf')
+
+        for d in range(1, length):
+            if length % d != 0:
+                continue
+
+            cost = 0
+
+            for group in range(d):
+                l = i + group
+                r = l + (length // d - 1) * d
+
+                while l < r:
+                    if s[l] != s[r]:
+                        cost += 1
+
+                    l += d
+                    r -= d
+
+            minCost = min(minCost, cost)
+
+        return minCost
+
+    def minimumChanges(self, s: str, k: int) -> int:
+        n = len(s)
+
+        cost = [[float('inf')] * n for _ in range(n)]
+
+        for i in range(n):
+            for j in range(i + 1, n):
+                cost[i][j] = self.getCost(s, i, j)
+
+        @lru_cache(None)
+        def solve(start, parts):
+            if parts == 0:
+                return 0 if start == n else float('inf')
+
+            if start + 2 * parts > n:
+                return float('inf')
+
+            result = float('inf')
+
+            for end in range(start + 1, n - 2 * (parts - 1)):
+                result = min(
+                    result,
+                    cost[start][end] + solve(end + 1, parts - 1)
+                )
+
+            return result
+
+        return solve(0, k)
+```
+
+**Time Complexity:** O(n³ log n + kn²)  
+**Space Complexity:** O(n² + nk)
+
+---
+
+## 3. Tabulation (Bottom-Up)
+
+```python
+class Solution:
+    def getCost(self, s, i, j):
+        length = j - i + 1
+        minCost = float('inf')
+
+        for d in range(1, length):
+            if length % d != 0:
+                continue
+
+            cost = 0
+
+            for group in range(d):
+                l = i + group
+                r = l + (length // d - 1) * d
+
+                while l < r:
+                    if s[l] != s[r]:
+                        cost += 1
+
+                    l += d
+                    r -= d
+
+            minCost = min(minCost, cost)
+
+        return minCost
+
+    def minimumChanges(self, s: str, k: int) -> int:
+        n = len(s)
+        INF = float('inf')
+
+        cost = [[INF] * n for _ in range(n)]
+
+        for i in range(n):
+            for j in range(i + 1, n):
+                cost[i][j] = self.getCost(s, i, j)
+
+        dp = [[INF] * (k + 1) for _ in range(n + 1)]
+        dp[n][0] = 0
+
+        for parts in range(1, k + 1):
+            for start in range(n - 2 * parts, -1, -1):
+                for end in range(start + 1, n - 2 * (parts - 1)):
+                    dp[start][parts] = min(
+                        dp[start][parts],
+                        cost[start][end] + dp[end + 1][parts - 1]
+                    )
+
+        return dp[0][k]
+```
+
+**Time Complexity:** O(n³ log n + kn²)  
+**Space Complexity:** O(n² + nk)
+
+---
+
