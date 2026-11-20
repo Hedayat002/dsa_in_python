@@ -1,0 +1,186 @@
+
+# 3041. Maximize Consecutive Elements in an Array After Modification
+
+**Difficulty:** Hard  
+**Problem:** [LeetCode 3041](https://leetcode.com/problems/maximize-consecutive-elements-in-an-array-after-modification/)
+
+## 1. Recursion
+
+```python
+from typing import List
+from bisect import bisect_left
+
+class Solution:
+
+    def findMethod(self, nums, start, target):
+        n = len(nums)
+        j = bisect_left(nums, target, start)
+
+        if j < n and nums[j] == target:
+            return j
+
+        return -1
+
+    def solve(self, i, inc, nums):
+        currVal = nums[i] + inc
+        length = 1
+
+        j = self.findMethod(nums, i + 1, currVal + 1)
+
+        if j != -1:
+            length = max(length, 1 + self.solve(j, 0, nums))
+
+        j = self.findMethod(nums, i + 1, currVal)
+
+        if j != -1:
+            length = max(length, 1 + self.solve(j, 1, nums))
+
+        return length
+
+    def maxSelectedElements(self, nums: List[int]) -> int:
+        nums.sort()
+        n = len(nums)
+        result = 0
+
+        for i in range(n):
+            result = max(
+                result,
+                self.solve(i, 0, nums),
+                self.solve(i, 1, nums)
+            )
+
+        return result
+```
+
+**Time Complexity:** O(n * 2^n * log n) — loose upper bound  
+**Space Complexity:** O(n)
+
+---
+
+## 2. Memoization (Top-Down)
+
+```python
+from typing import List
+from bisect import bisect_left
+
+class Solution:
+
+    def findMethod(self, nums, start, target):
+        n = len(nums)
+        j = bisect_left(nums, target, start)
+
+        if j < n and nums[j] == target:
+            return j
+
+        return -1
+
+    def solve(self, i, inc, nums, dp):
+        if dp[i][inc] != -1:
+            return dp[i][inc]
+
+        currVal = nums[i] + inc
+        length = 1
+
+        j = self.findMethod(nums, i + 1, currVal + 1)
+
+        if j != -1:
+            length = max(
+                length,
+                1 + self.solve(j, 0, nums, dp)
+            )
+
+        j = self.findMethod(nums, i + 1, currVal)
+
+        if j != -1:
+            length = max(
+                length,
+                1 + self.solve(j, 1, nums, dp)
+            )
+
+        dp[i][inc] = length
+        return dp[i][inc]
+
+    def maxSelectedElements(self, nums: List[int]) -> int:
+        nums.sort()
+        n = len(nums)
+
+        dp = [[-1] * 2 for _ in range(n)]
+        result = 0
+
+        for i in range(n):
+            result = max(
+                result,
+                self.solve(i, 0, nums, dp),
+                self.solve(i, 1, nums, dp)
+            )
+
+        return result
+```
+
+**Time Complexity:** O(n log n)  
+**Space Complexity:** O(n)
+
+---
+
+## 3. Tabulation (Bottom-Up)
+
+```python
+from typing import List
+from bisect import bisect_left
+
+class Solution:
+
+    def findMethod(self, nums, start, target):
+        n = len(nums)
+
+        j = bisect_left(nums, target, start)
+
+        if j < n and nums[j] == target:
+            return j
+
+        return -1
+
+    def maxSelectedElements(self, nums: List[int]) -> int:
+        nums.sort()
+        n = len(nums)
+
+        dp = [[0] * 2 for _ in range(n)]
+        result = 0
+
+        for i in range(n - 1, -1, -1):
+            for inc in range(2):
+
+                currVal = nums[i] + inc
+                length = 1
+
+                j = self.findMethod(nums, i + 1, currVal + 1)
+
+                if j != -1:
+                    length = max(
+                        length,
+                        1 + dp[j][0]
+                    )
+
+                j = self.findMethod(nums, i + 1, currVal)
+
+                if j != -1:
+                    length = max(
+                        length,
+                        1 + dp[j][1]
+                    )
+
+                dp[i][inc] = length
+
+                result = max(result, dp[i][inc])
+
+        return result
+```
+
+**Time Complexity:** O(n log n)  
+**Space Complexity:** O(n)
+
+---
+
+
+---
+
