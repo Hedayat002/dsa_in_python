@@ -1,0 +1,104 @@
+
+# 1352. Product of the Last K Numbers
+---
+
+## 1. Brute Force Solution
+
+```python
+class ProductOfNumbers:
+
+    def __init__(self):
+        self.nums = []
+
+    def add(self, num: int) -> None:
+        self.nums.append(num)
+
+    def getProduct(self, k: int) -> int:
+        product = 1
+
+        for i in range(len(self.nums) - k, len(self.nums)):
+            product *= self.nums[i]
+
+        return product
+```
+
+**Time Complexity:**
+- `add()` → O(1)
+- `getProduct(k)` → O(k)
+
+**Space Complexity:** O(n)
+
+---
+
+## 2. Better Solution — Prefix Product Array
+
+```python
+class ProductOfNumbers:
+
+    def __init__(self):
+        self.prefix = [1]
+        self.last_zero = -1
+        self.count = 0
+
+    def add(self, num: int) -> None:
+        self.count += 1
+
+        if num == 0:
+            self.last_zero = self.count - 1
+            self.prefix.append(self.prefix[-1])
+        else:
+            self.prefix.append(self.prefix[-1] * num)
+
+    def getProduct(self, k: int) -> int:
+        if self.last_zero >= self.count - k:
+            return 0
+
+        return self.prefix[-1] // self.prefix[-k - 1]
+```
+
+**Time Complexity:**
+- `add()` → O(1)
+- `getProduct(k)` → O(1)
+
+**Space Complexity:** O(n)
+
+---
+
+## 3. Optimized Solution — Prefix Product with Zero Reset
+
+```python
+class ProductOfNumbers:
+
+    def __init__(self):
+        self.prefix = [1]
+
+    def add(self, num: int) -> None:
+        if num == 0:
+            self.prefix = [1]
+        else:
+            self.prefix.append(self.prefix[-1] * num)
+
+    def getProduct(self, k: int) -> int:
+        if k >= len(self.prefix):
+            return 0
+
+        return self.prefix[-1] // self.prefix[-k - 1]
+```
+
+**Time Complexity:**
+- `add()` → O(1)
+- `getProduct(k)` → O(1)
+
+**Space Complexity:** O(n)
+
+---
+
+## Complexity Comparison
+
+| Approach | Add TC | GetProduct TC | SC |
+|----------|--------|---------------|----|
+| Brute Force | O(1) | O(k) | O(n) |
+| Better | O(1) | O(1) | O(n) |
+| Optimized | O(1) | O(1) | O(n) |
+
+---
