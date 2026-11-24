@@ -1,0 +1,114 @@
+# 3411. Maximum Subarray With Equal Products
+
+## 1. Brute Force Solution
+
+```python
+from typing import List
+from math import gcd, lcm
+
+class Solution:
+    def maxLength(self, nums: List[int]) -> int:
+        n = len(nums)
+        ans = 0
+
+        for i in range(n):
+            for j in range(i, n):
+                p = 1
+                g = 0
+                l = 1
+
+                for k in range(i, j + 1):
+                    p *= nums[k]
+                    g = gcd(g, nums[k])
+                    l = lcm(l, nums[k])
+
+                if p == g * l:
+                    ans = max(ans, j - i + 1)
+
+        return ans
+```
+
+### Complexity Analysis
+- Time Complexity: O(n³ log M)
+- Space Complexity: O(1)
+
+---
+
+## 2. Better Solution
+
+```python
+from typing import List
+from math import gcd, lcm
+
+class Solution:
+    def maxLength(self, nums: List[int]) -> int:
+        n = len(nums)
+        ans = 0
+
+        for i in range(n):
+            p = 1
+            g = 0
+            l = 1
+
+            for j in range(i, n):
+                p *= nums[j]
+                g = gcd(g, nums[j])
+                l = lcm(l, nums[j])
+
+                if p == g * l:
+                    ans = max(ans, j - i + 1)
+
+        return ans
+```
+
+### Complexity Analysis
+- Time Complexity: O(n² log M)
+- Space Complexity: O(1)
+
+---
+
+## 3. Optimized Solution (Sliding Window + GCD)
+
+```python
+from typing import List
+from math import gcd
+
+class Solution:
+    def maxLength(self, nums: List[int]) -> int:
+        n = len(nums)
+        i = 0
+        p = 1
+        ans = 2
+
+        for j in range(n):
+            while gcd(p, nums[j]) != 1:
+                p //= nums[i]
+                i += 1
+
+            p *= nums[j]
+
+            ans = max(ans, j - i + 1)
+
+        return ans
+```
+
+### Complexity Analysis
+- Time Complexity: O(n log M)
+- Space Complexity: O(1)
+
+---
+
+## Complexity Comparison
+
+| Approach | Time Complexity | Space Complexity |
+|----------|-----------------|------------------|
+| Brute Force | O(n³ log M) | O(1) |
+| Better | O(n² log M) | O(1) |
+| Optimized | O(n log M) | O(1) |
+
+Where:
+- n = Length of the array.
+- M = Maximum element in the array.
+
+Complexities assume fixed-size arithmetic and exclude
+Python's arbitrary-precision integer overhead.
