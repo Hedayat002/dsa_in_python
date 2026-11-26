@@ -1,0 +1,76 @@
+# 3360. Stone Removal Game
+
+**Difficulty:** Easy  
+**Platform:** LeetCode  
+**Topics:** Math, Simulation  
+**Problem Link:** [Stone Removal Game](https://leetcode.com/problems/stone-removal-game/)
+
+## Approach 1: Brute Force (Simulation)
+
+```python
+class Solution:
+    def canAliceWin(self, n: int) -> bool:
+        take = 10
+        moves = 0
+
+        while n >= take:
+            n -= take
+            take -= 1
+            moves += 1
+
+        return moves % 2 == 1
+```
+
+### Complexity Analysis
+- Time Complexity: O(1)
+- Space Complexity: O(1)
+
+---
+
+## Approach 2: Better Solution (Pair Simulation)
+
+```python
+class Solution:
+    def canAliceWin(self, n: int) -> bool:
+        take = 10
+
+        while n >= take:
+            # Alice's move
+            n -= take
+            take -= 1
+
+            # Bob cannot make a move
+            if n < take:
+                return True
+
+            # Bob's move
+            n -= take
+            take -= 1
+
+        return False
+```
+
+### Complexity Analysis
+- Time Complexity: O(1)
+- Space Complexity: O(1)
+
+---
+
+## Approach 3: Optimized Solution (Mathematical Range Checking)
+
+```python
+class Solution:
+    def canAliceWin(self, n: int) -> bool:
+        return (
+            10 <= n < 19 or
+            27 <= n < 34 or
+            40 <= n < 45 or
+            49 <= n <= 50
+        )
+```
+
+### Complexity Analysis
+- Time Complexity: O(1)
+- Space Complexity: O(1)
+
+---
