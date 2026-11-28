@@ -1,0 +1,175 @@
+# 3947. Maximum Number of Items From Sale II
+
+## Approach 1: Brute Force — Dynamic Programming
+
+### Python Solution
+
+```python
+from typing import List
+
+class Solution:
+    def maximumSaleItems(self, items: List[List[int]], budget: int) -> int:
+        n = len(items)
+
+        minPrice = min(price for factor, price in items)
+
+        # Initialize regular purchases
+        dp = [b // minPrice for b in range(budget + 1)]
+
+        for i in range(n):
+            factor, price = items[i]
+
+            freeCount = 0
+
+            # Count eligible free items
+            for j in range(n):
+                if i != j and items[j][0] % factor == 0:
+                    freeCount += 1
+
+            # Process purchases with free benefits
+            for _ in range(freeCount):
+                for b in range(budget, price - 1, -1):
+                    dp[b] = max(dp[b], dp[b - price] + 2)
+
+        return dp[budget]
+```
+
+### Complexity Analysis
+
+- **Time Complexity:** O(n² × B)
+- **Space Complexity:** O(B)
+
+Where `B` represents the budget.
+
+**Limitation:** May cause Time Limit Exceeded and Memory Limit Exceeded.
+
+---
+
+## Approach 2: Better — Greedy + Sorting
+
+### Python Solution
+
+```python
+from typing import List
+
+class Solution:
+    def maximumSaleItems(self, items: List[List[int]], budget: int) -> int:
+        n = len(items)
+
+        minPrice = min(price for factor, price in items)
+
+        offers = []
+
+        # Count eligible free items for every item
+        for i in range(n):
+            factor, price = items[i]
+
+            freeCount = 0
+
+            for j in range(n):
+                if i != j and items[j][0] % factor == 0:
+                    freeCount += 1
+
+            offers.append((price, freeCount))
+
+        # Sort offers by purchase price
+        offers.sort()
+
+        ans = 0
+
+        # Purchase items with free benefits
+        for price, freeCount in offers:
+
+            if price >= 2 * minPrice:
+                break
+
+            count = min(freeCount, budget // price)
+
+            ans += 2 * count
+            budget -= count * price
+
+        # Purchase cheapest items with remaining budget
+        ans += budget // minPrice
+
+        return ans
+```
+
+### Complexity Analysis
+
+- **Time Complexity:** O(n²)
+- **Space Complexity:** O(n)
+
+**Limitation:** May cause Time Limit Exceeded for large inputs.
+
+---
+
+## Approach 3: Optimized — Frequency Array + Sieve + Greedy
+
+### Python Solution
+
+```python
+from typing import List
+
+class Solution:
+    def maximumSaleItems(self, items: List[List[int]], budget: int) -> int:
+        n = len(items)
+
+        # Step 1: Find minimum purchase price
+        minPrice = min(price for factor, price in items)
+
+        # Step 2: Count frequency of each factor
+        freq = [0] * (n + 1)
+
+        for factor, price in items:
+            freq[factor] += 1
+
+        # Step 3: Calculate maximum eligible free items
+        freeCount = [0] * (n + 1)
+
+        for i in range(1, n + 1):
+            for j in range(i, n + 1, i):
+                freeCount[i] += freq[j]
+
+            # Exclude the item itself
+            freeCount[i] -= 1
+
+        # Step 4: Sort items by price
+        items.sort(key=lambda x: x[1])
+
+        ans = 0
+
+        # Step 5: Purchase items with free benefits
+        for factor, price in items:
+
+            if price >= 2 * minPrice:
+                break
+
+            count = min(freeCount[factor], budget // price)
+
+            ans += 2 * count
+            budget -= count * price
+
+        # Step 6: Purchase cheapest items with remaining budget
+        ans += budget // minPrice
+
+        return ans
+```
+
+### Approach Explanation
+
+1. Find the minimum purchase price among all items.
+2. Build a frequency array containing the occurrence of each factor.
+3. Use sieve-based traversal to count eligible free items efficiently.
+4. Exclude the item itself from its eligible free item count.
+5. Sort all items by their purchase prices.
+6. Prioritize purchases that provide two items for less than twice
+   the minimum purchase price.
+7. Spend the remaining budget on the cheapest available item.
+
+### Complexity Analysis
+
+- **Time Complexity:** O(n log n)
+- **Space Complexity:** O(n)
+
+
+`Dynamic Programming` `Frequency Array` `Medium` `DSA`
